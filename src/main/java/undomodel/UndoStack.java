@@ -3,6 +3,7 @@ package undomodel;
 import com.sun.istack.internal.Nullable;
 import lombok.NonNull;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -14,13 +15,13 @@ public class UndoStack {
     public UndoStack(@Nullable UndoStack parent) {
     }
 
-    public void push(@NonNull UndoCommand command) throws IllegalAccessException {
+    public void push(@NonNull UndoCommand command) throws IllegalAccessException, InvocationTargetException {
         command.redo();
         commandList.add(command);
         setIndex(index + 1, false);
     }
 
-    public void undo() throws IllegalAccessException {
+    public void undo() throws IllegalAccessException, InvocationTargetException {
         if (index == 0) {
             return;
         }
@@ -29,7 +30,7 @@ public class UndoStack {
         setIndex(idx, false);
     }
 
-    public void redo() throws IllegalAccessException {
+    public void redo() throws IllegalAccessException, InvocationTargetException {
         if (index == commandList.size()) {
             return;
         }
