@@ -1,12 +1,9 @@
 import model.Point;
-import model.UndoFieldCommand;
-import model.UndoMethodCommand;
+import model.UndoPointCommand;
 import org.junit.Test;
 import undomodel.UndoStack;
 
 import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.util.function.UnaryOperator;
 
 import static org.junit.Assert.assertEquals;
 
@@ -44,7 +41,7 @@ public class TestUndoStack {
             // Test that field value changed after pushing command to stack
             for (Integer i :
                     arrInt) {
-                stackforField.push(new UndoFieldCommand<Point, Integer>(null, point, "x", arrInt[i]));
+                stackforField.push(new UndoPointCommand<>(null, null, point, "x", arrInt[i]));
                 assertEquals(arrInt[i], point.x);
             }
             // All linked properties must be valid
@@ -69,12 +66,10 @@ public class TestUndoStack {
             // Without parent means not in a group
             UndoStack stackForMethod = new UndoStack(null);
 
-//            Setter2<Integer> u = point::setY;
-
             // Test that field value changed after pushing command to stack
             for (Integer i :
                     arrInt) {
-                stackForMethod.push(new UndoMethodCommand<>("", null, point, "x", point::getY, point::setY, arrInt[i]));
+                stackForMethod.push(new UndoPointCommand<>(null, null, point, point::getY, point::setY, arrInt[i]));
                 assertEquals(arrInt[i], point.getY());
             }
             // All linked properties must be valid
@@ -93,7 +88,46 @@ public class TestUndoStack {
             }
         }
         // ~Test for method
-        
+
+    }
+
+    @Test
+    public void testStringUndo() throws InvocationTargetException, IllegalAccessException, NoSuchFieldException {
+
+        final int max = 10;
+        // Prepare data
+        String[] arr = new String[max];
+        for(int i = 0; i < max; i++) {
+            arr[i] = i % 2 == 0 ?  "s: " + i : null;
+        }
+
+        // Init
+        Point point = new Point();
+        point.setLabel(null);
+
+        UndoStack stack = new UndoStack(null);
+
+        // Test that field value changed after pushing command to stack
+        for(int i = 0; i < max; i++) {
+            stack.push(new UndoPointCommand<>(null, null, point, point::getLabel, point::setLabel, arr[i]));
+            assertEquals(arr[i], point.getLabel());
+        }
+
+        // All linked properties must be valid
+        assertEquals(max, stack.count());
+        assertEquals(stack.getIndex(), stack.count());
+
+        // Walk here and there
+        for(int i = max-1; i > 0; i--) {
+            stack.undo();
+            assertEquals(arr[i-1], point.getLabel());
+        }
+        for(int i = 1; i < max; i++) {
+            stack.redo();
+            assertEquals(arr[i], point.getLabel());
+        }
+        // ~Walk here and there
+
     }
 
 }
