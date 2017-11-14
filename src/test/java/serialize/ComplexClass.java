@@ -4,7 +4,8 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class PointForSer implements Serializable {
+
+public class ComplexClass implements Serializable {
 
     public static class Item implements Serializable{
         @Override
@@ -23,7 +24,7 @@ public class PointForSer implements Serializable {
 
     List<Item> items = new ArrayList<>();
 
-    public PointForSer() {
+    public ComplexClass() {
         items.add(new Item(1));
         items.add(new Item(2));
         items.add(new Item(3));
@@ -62,7 +63,7 @@ public class PointForSer implements Serializable {
 
     @Override
     public String toString() {
-        return "PointForSer{" +
+        return "ComplexClass{" +
                 "y=" + y +
                 ", label='" + label + '\'' +
                 ", items=" + items +

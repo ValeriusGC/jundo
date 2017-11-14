@@ -1,147 +1,164 @@
-import model.Point;
-import model.UndoPointCommand;
 import org.junit.Test;
-import undomodel.UndoStack;
+import serialize.NonTrivialClass;
+import serialize.SimpleClass;
+import undomodel.*;
 
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
 
 import static org.junit.Assert.assertEquals;
 
 public class TestUndoStack {
 
-    @Test
-    public void simpleTest() {
-        assertEquals(true, true);
+    UndoStack stack;
+    Object[] arr;
+    Object object;
+
+    public <V> void initSimple(V[] array) throws Exception {
+        arr = array;
+        object = new SimpleClass<V>();
+        stack = new UndoStackT<>(null, object);
+        for (V i : array) {
+            stack.push(new UndoCommandT<>(((SimpleClass<V>)object)::getValue, ((SimpleClass<V>)object)::setValue, i));
+//            System.out.println(object);
+        }
     }
 
+    public <V> void testSimple() throws IOException, ClassNotFoundException {
+
+        UndoStackT<SimpleClass<V>> stackBack = UndoUtils.deserialize(UndoUtils.serialize(stack));
+        assertEquals(stack, stackBack);
+        SimpleClass<V> objBack = stackBack.getObject();
+        assertEquals(object, objBack);
+
+//        System.out.println("-----------------");
+        // Walk here and there
+        for(int i = arr.length - 1; i > 0; i--) {
+            stackBack.undo();
+//            System.out.println(objBack);
+            assertEquals((arr[i-1]), objBack.getValue());
+        }
+//        System.out.println("-----------------");
+        for(int i = 1; i < arr.length; i++) {
+            stackBack.redo();
+//            System.out.println(objBack);
+            assertEquals(arr[i], objBack.getValue());
+        }
+//        System.out.println("=================");
+    }
     /**
-     * Tests simple undo chain
+     * Undo props like {@link Integer}, {@link String}, etc
      */
     @Test
-    public void undoInteger() throws NoSuchFieldException, IllegalAccessException, NoSuchMethodException, InvocationTargetException {
+    public void testSimpleUndo() throws Exception {
 
-        final int max = 10;
-        // Prepare data
-        Integer[] arrInt = new Integer[max];
-        for(int i = 0; i < max; i++) {
-            arrInt[i] = i;
-        }
+        initSimple(new Integer[]{1,2,3,null, 8});
+        testSimple();
 
-        // Init
-        Point point = new Point();
-        point.x = arrInt[0];
-        point.setY(arrInt[0]);
+        initSimple(new Long[]{1L,2L,3L, null, 5L});
+        testSimple();
 
+        initSimple(new String[]{"one", null, "two"});
+        testSimple();
 
-        // Test for field
-        {
-            // Without parent means not in a group
-            UndoStack stackforField = new UndoStack(null);
+        initSimple(new Double[]{1.1,2.2,3.222});
+        testSimple();
 
-            // Test that field value changed after pushing command to stack
-            for (Integer i :
-                    arrInt) {
-                stackforField.push(new UndoPointCommand<>(null, null, point, "x", arrInt[i]));
-                assertEquals(arrInt[i], point.x);
-            }
-            // All linked properties must be valid
-            assertEquals(max, stackforField.count());
-            assertEquals(stackforField.getIndex(), stackforField.count());
-
-            // Walk here and there
-            for(int i = max; i > 1; i--) {
-                stackforField.undo();
-                assertEquals((Integer) (arrInt[i-1] - 1), point.x);
-            }
-
-            for(int i = 1; i < max; i++) {
-                stackforField.redo();
-                assertEquals(arrInt[i], point.x);
-            }
-        }
-        // ~Test for field
-
-        // Test for method
-        {
-            // Without parent means not in a group
-            UndoStack stackForMethod = new UndoStack(null);
-
-            // Test that field value changed after pushing command to stack
-            for (Integer i :
-                    arrInt) {
-                stackForMethod.push(new UndoPointCommand<>(null, null, point, point::getY, point::setY, arrInt[i]));
-                assertEquals(arrInt[i], point.getY());
-            }
-            // All linked properties must be valid
-            assertEquals(max, stackForMethod.count());
-            assertEquals(stackForMethod.getIndex(), stackForMethod.count());
-
-            // Walk here and there
-            for(int i = max; i > 1; i--) {
-                stackForMethod.undo();
-                assertEquals((Integer) (arrInt[i-1] - 1), point.getY());
-            }
-
-            for(int i = 1; i < max; i++) {
-                stackForMethod.redo();
-                assertEquals(arrInt[i], point.getY());
-            }
-        }
-        // ~Test for method
+        initSimple(new Boolean[]{true, false, true, null});
+        testSimple();
 
     }
 
     @Test
-    public void testStringUndo() throws InvocationTargetException, IllegalAccessException, NoSuchFieldException, IOException {
+    public void testNonTrivial() throws Exception {
+        NonTrivialClass aClass = new NonTrivialClass();
+        UndoStack stack = new UndoStackT<>(null, aClass);
+        assertEquals(0, aClass.items.size());
 
-        final int max = 10;
-        // Prepare data
-        String[] arr = new String[max];
-        for(int i = 0; i < max; i++) {
-            arr[i] = i % 2 == 0 ?  "s: " + i : null;
-        }
+        {
+            stack.push(new NonTrivialClass.AddCommand(NonTrivialClass.Item.Type.CIRCLE, aClass));
+            assertEquals(1, stack.count());
+            assertEquals(1, stack.getIndex());
+            assertEquals(1, aClass.items.size());
+            System.out.println(aClass);
 
-        // Init
-        Point point = new Point();
-        point.setLabel(null);
+            stack.push(new NonTrivialClass.AddCommand(NonTrivialClass.Item.Type.RECT, aClass));
+            assertEquals(2, stack.count());
+            assertEquals(2, stack.getIndex());
+            assertEquals(2, aClass.items.size());
+            System.out.println(aClass);
 
-        UndoStack stack = new UndoStack(null);
-
-        // Test that field value changed after pushing command to stack
-        for(int i = 0; i < max; i++) {
-            stack.push(new UndoPointCommand<>(null, null, point, point::getLabel, point::setLabel, arr[i]));
-            assertEquals(arr[i], point.getLabel());
-        }
-
-        // All linked properties must be valid
-        assertEquals(max, stack.count());
-        assertEquals(stack.getIndex(), stack.count());
-
-        // Walk here and there
-        for(int i = max-1; i > 0; i--) {
             stack.undo();
-            assertEquals(arr[i-1], point.getLabel());
-        }
-        for(int i = 1; i < max; i++) {
-            stack.redo();
-            assertEquals(arr[i], point.getLabel());
-        }
-        // ~Walk here and there
+            assertEquals(2, stack.count());
+            assertEquals(1, stack.getIndex());
+            assertEquals(1, aClass.items.size());
+            System.out.println(aClass);
 
-//        ObjectMapper mapper = new ObjectMapper();
-//        mapper.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
-//        String json = mapper.writeValueAsString(stack);
-//        System.out.println(json);
-//
-//        {
-//            UndoStack stackBack = mapper.readValue(json, UndoStack.class);
-//            stackBack.setIndex(0, false);
-//            for(int i = 1; i < max; i++) {
-//                stackBack.redo();
-//                assertEquals(arr[i], point.getLabel());
-//            }
-//        }
+            stack.undo();
+            assertEquals(2, stack.count());
+            assertEquals(0, stack.getIndex());
+            assertEquals(0, aClass.items.size());
+            System.out.println(aClass);
+
+            UndoStackT<NonTrivialClass> stackBack = UndoUtils.deserialize(UndoUtils.serialize(stack));
+//            assertEquals(stack, stackBack);
+            NonTrivialClass objBack = stackBack.getObject();
+//            assertEquals(object, objBack);
+
+            System.out.println("-------serializ -");
+
+            assertEquals(2, stackBack.count());
+            assertEquals(0, stackBack.getIndex());
+            assertEquals(0, objBack.items.size());
+            System.out.println(objBack);
+
+            stackBack.redo();
+            assertEquals(1, objBack.items.size());
+            System.out.println(objBack);
+
+            stackBack.redo();
+            assertEquals(2, objBack.items.size());
+            System.out.println(objBack);
+        }
+
+
+        {
+            System.out.println("--- Add/Del ---");
+            stack.push(new NonTrivialClass.AddCommand(NonTrivialClass.Item.Type.CIRCLE, aClass));
+            assertEquals(1, stack.count());
+            assertEquals(1, stack.getIndex());
+            assertEquals(1, aClass.items.size());
+            System.out.println(aClass);
+            stack.push(new NonTrivialClass.DeleteCommand(aClass));
+            assertEquals(2, stack.count());
+            assertEquals(2, stack.getIndex());
+            assertEquals(0, aClass.items.size());
+            System.out.println(aClass);
+
+            stack.undo();
+            assertEquals(2, stack.count());
+            assertEquals(1, stack.getIndex());
+            assertEquals(1, aClass.items.size());
+            System.out.println(aClass);
+
+            stack.undo();
+            assertEquals(2, stack.count());
+            assertEquals(0, stack.getIndex());
+            assertEquals(0, aClass.items.size());
+            System.out.println(aClass);
+
+            stack.undo();
+            assertEquals(2, stack.count());
+            assertEquals(0, stack.getIndex());
+            assertEquals(0, aClass.items.size());
+            System.out.println(aClass);
+
+        }
+
+        {
+            System.out.println("--- Add/Del/Move ---");
+            // TODO: 14.11.17 Продолжать доделывать команды и тестировать
+        }
+
 
     }
 
