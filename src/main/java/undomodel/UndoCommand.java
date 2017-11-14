@@ -1,13 +1,12 @@
 package undomodel;
 
+import com.sun.istack.internal.NotNull;
 import com.sun.istack.internal.Nullable;
-import lombok.NonNull;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 
-
-abstract public class UndoCommand<T, V> extends UndoBaseCommand{
+public class UndoCommand<T, V> extends UndoBaseCommand{
 
     protected final T object;
     protected final Field f;
@@ -15,6 +14,16 @@ abstract public class UndoCommand<T, V> extends UndoBaseCommand{
     protected final UndoSetter<V> setter;
     protected final V oldValue;
     protected final V newValue;
+
+    public UndoCommand() {
+        super();
+        this.object = null;
+        this.f = null;
+        this.getter = null;
+        this.setter = null;
+        this.oldValue = null;
+        this.newValue = null;
+    }
 
     /**
      * For direct access to field.
@@ -26,8 +35,8 @@ abstract public class UndoCommand<T, V> extends UndoBaseCommand{
      * @throws NoSuchFieldException
      * @throws IllegalAccessException
      */
-    public UndoCommand(@Nullable String text, @Nullable UndoCommand parent, @NonNull T object,
-                       @NonNull String fieldName, @Nullable V newValue) throws NoSuchFieldException, IllegalAccessException {
+    public UndoCommand(@Nullable String text, @Nullable UndoCommand parent, @NotNull T object,
+                       @NotNull String fieldName, @Nullable V newValue) throws NoSuchFieldException, IllegalAccessException {
         super(text, parent);
         this.object = object;
         f = object.getClass().getDeclaredField(fieldName);
@@ -47,8 +56,8 @@ abstract public class UndoCommand<T, V> extends UndoBaseCommand{
      * @param newValue
      * @throws NoSuchFieldException
      */
-    public UndoCommand(@Nullable String text, @Nullable UndoCommand parent, @NonNull T object,
-                       @NonNull UndoGetter<V> getter, @NonNull UndoSetter<V> setter, @Nullable V newValue) {
+    public UndoCommand(@Nullable String text, @Nullable UndoCommand parent, @NotNull T object,
+                       @NotNull UndoGetter<V> getter, @NotNull UndoSetter<V> setter, @Nullable V newValue) {
         super(text, parent);
         this.object = object;
         f = null;
@@ -57,10 +66,6 @@ abstract public class UndoCommand<T, V> extends UndoBaseCommand{
         this.newValue = newValue;
         this.oldValue = getter.get();
     }
-
-    abstract public void undo() throws IllegalAccessException;
-
-    abstract public void redo() throws IllegalAccessException;
 
     protected void doUndo() throws IllegalAccessException {
         if(getter == null) {

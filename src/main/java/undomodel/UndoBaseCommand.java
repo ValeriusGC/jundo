@@ -1,13 +1,12 @@
 package undomodel;
 
 import com.sun.istack.internal.Nullable;
-import lombok.NonNull;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 
 
-abstract public class UndoBaseCommand {
+public class UndoBaseCommand {
 
     /**
      *
@@ -17,14 +16,24 @@ abstract public class UndoBaseCommand {
     private final String text;
     private final UndoBaseCommand parent;
 
+    public UndoBaseCommand() {
+        this.text = null;
+        this.parent = null;
+    }
+
+
     public UndoBaseCommand(@Nullable String text, @Nullable UndoBaseCommand parent) {
         this.text = text;
         this.parent = parent;
     }
 
-    abstract public void undo() throws IllegalAccessException;
+    public void undo() throws IllegalAccessException {
 
-    abstract public void redo() throws IllegalAccessException;
+    }
+
+    public void redo() throws IllegalAccessException {
+
+    }
 
     public String text() {
         return text;

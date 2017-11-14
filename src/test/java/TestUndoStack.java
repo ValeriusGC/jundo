@@ -3,6 +3,7 @@ import model.UndoPointCommand;
 import org.junit.Test;
 import undomodel.UndoStack;
 
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 
 import static org.junit.Assert.assertEquals;
@@ -92,7 +93,7 @@ public class TestUndoStack {
     }
 
     @Test
-    public void testStringUndo() throws InvocationTargetException, IllegalAccessException, NoSuchFieldException {
+    public void testStringUndo() throws InvocationTargetException, IllegalAccessException, NoSuchFieldException, IOException {
 
         final int max = 10;
         // Prepare data
@@ -127,6 +128,20 @@ public class TestUndoStack {
             assertEquals(arr[i], point.getLabel());
         }
         // ~Walk here and there
+
+//        ObjectMapper mapper = new ObjectMapper();
+//        mapper.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
+//        String json = mapper.writeValueAsString(stack);
+//        System.out.println(json);
+//
+//        {
+//            UndoStack stackBack = mapper.readValue(json, UndoStack.class);
+//            stackBack.setIndex(0, false);
+//            for(int i = 1; i < max; i++) {
+//                stackBack.redo();
+//                assertEquals(arr[i], point.getLabel());
+//            }
+//        }
 
     }
 
