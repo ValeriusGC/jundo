@@ -45,9 +45,11 @@ public class NonTrivialClass implements Serializable{
         private final int initialPos;
 
         public AddCommand(Item.Type type, NonTrivialClass scene) {
+            super(null);
             this.scene = scene;
             item = new Item(type);
             initialPos = this.scene.items.size() * 2;
+            setText(ConstForTest.CMD_ADD + " at " + initialPos);
         }
 
         @Override
@@ -71,8 +73,10 @@ public class NonTrivialClass implements Serializable{
         private final Item item;
 
         public DeleteCommand(NonTrivialClass scene) {
+            super(null);
             this.scene = scene;
             this.item = scene.items.size() > 0 ? scene.items.get(0) : null;
+            setText(ConstForTest.CMD_DEL + " at " + item.x);
         }
 
         @Override
@@ -94,16 +98,18 @@ public class NonTrivialClass implements Serializable{
     /**
      *
      */
-    public static class MoveCommand extends UndoCommand {
+    public static class MovedCommand extends UndoCommand {
 
         private final Item item;
         private final int oldPos;
-        private final int newPos;
+        private int newPos;
 
-        public MoveCommand(Item item, int oldPos) {
+        public MovedCommand(Item item, int oldPos) {
+            super(null);
             this.item = item;
             this.oldPos = oldPos;
             this.newPos = item.x;
+            setText(ConstForTest.CMD_MOV + " to " + item.x);
         }
 
         @Override
@@ -116,7 +122,23 @@ public class NonTrivialClass implements Serializable{
             item.x = newPos;
         }
 
+        @Override
+        public boolean mergeWith(UndoCommand cmd) {
+            if(cmd instanceof MovedCommand){
+                Item item = ((MovedCommand) cmd).item;
+                if(item == this.item) {
+                    newPos = item.x;
+                    setText(ConstForTest.CMD_MOV + " to " + item.x);
+                    return true;
+                }
+            }
+            return false;
+        }
 
+        @Override
+        public int id() {
+            return 1234;
+        }
     }
 
     //----------------------------------------------------------

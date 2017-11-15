@@ -1,94 +1,162 @@
 package undomodel;
 
 import com.sun.istack.internal.NotNull;
-import com.sun.istack.internal.Nullable;
 
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-public class UndoStack implements Serializable{
+abstract public class UndoStack implements Serializable{
 
     /**
-     * Can be used for linking to appropriate object
+     * Not public 'cause is hidden.
      */
-    private final String id;
-    private int index;
-    private List<UndoCommand> commandList = new ArrayList<>();
+    UndoGroup group;
 
-    public UndoStack(@Nullable String id) {
-        this.id = id;
+    private int idx;
+    private int cleanIdx;
+    private List<UndoCommand> cmdLst = new ArrayList<>();
+
+    public UndoStack(UndoGroup group) {
+        if(null != group) {
+            group.add(this);
+        }
     }
 
-    public String getId() {
-        return id;
+    public void setActive(boolean active) {
+        if(group != null) {
+            if(active) {
+                group.setActive(this);
+            }else if(group.getActive() == this) {
+                group.setActive(null);
+            }
+        }
     }
 
-    public void push(@NotNull UndoCommand command) throws Exception {
-        if(command == null) {
+    public boolean isActive() {
+        return group == null || group.getActive() == this;
+    }
+
+    public boolean isClean() {
+        return cleanIdx == idx;
+    }
+
+    public int getCleanIdx() {
+        return cleanIdx;
+    }
+
+    public void setClean() {
+        setIndex(idx, true);
+    }
+
+    public void clear() {
+        if(cmdLst.isEmpty()) {
+            return;
+        }
+
+    }
+
+    /**
+     * Used to get concrete object via base class
+     * @return
+     */
+    public Object getObject() {
+        return doGetObject();
+    }
+
+    protected abstract Object doGetObject();
+
+    public void push(@NotNull UndoCommand cmd) throws Exception {
+        if(cmd == null) {
             throw new Exception("command must be not null");
         }
 
         // FIA
-        command.redo();
+        cmd.redo();
 
         UndoCommand cur = null;
-        if(index > 0) {
-            cur = commandList.get(index - 1);
+        if(idx > 0) {
+            cur = cmdLst.get(idx - 1);
         }
-        while (index < commandList.size()) {
-            commandList.remove(commandList.size() - 1);
+        while (idx < cmdLst.size()) {
+            cmdLst.remove(cmdLst.size() - 1);
         }
 
         boolean canMerge = cur != null
                 && cur.id() != -1
-                && cur.id() == command.id();
-
-        // And last actions
-        commandList.add(command);
-        setIndex(index + 1, false);
+                && cur.id() == cmd.id();
+        if(!(canMerge && cur.mergeWith(cmd))){
+            // And last actions
+            cmdLst.add(cmd);
+            setIndex(idx + 1, false);
+        }
     }
 
     public void setIndex(int index, boolean clean) {
-        if (this.index != index) {
-            this.index = index;
+
+        boolean wasClean = idx == cleanIdx;
+
+        if (this.idx != index) {
+            this.idx = index;
         }
+
+        if(clean) {
+            cleanIdx = idx;
+        }
+
+        boolean isClean = idx == cleanIdx;
+
     }
 
     public void undo() {
-        if (index == 0) {
+        if (idx == 0) {
             return;
         }
-        int idx = index - 1;
-        commandList.get(idx).undo();
+        int idx = this.idx - 1;
+        cmdLst.get(idx).undo();
         setIndex(idx, false);
     }
 
     public void redo() {
-        if (index == commandList.size()) {
+        if (idx == cmdLst.size()) {
             return;
         }
 
-        commandList.get(index).redo();
-        setIndex(index + 1, false);
+        cmdLst.get(idx).redo();
+        setIndex(idx + 1, false);
 
     }
 
     public int count() {
-        return commandList.size();
+        return cmdLst.size();
     }
 
-    public int getIndex() {
-        return index;
+    public int getIdx() {
+        return idx;
+    }
+
+    public boolean canUndo() {
+        return idx > 0;
+    }
+
+    public boolean canRedo() {
+        return idx < cmdLst.size();
+    }
+
+    public String undoText() {
+        return idx > 0 ? cmdLst.get(idx - 1).getText() : "";
+    }
+
+    public String redoText() {
+        return idx < cmdLst.size() ? cmdLst.get(idx).getText() : "";
     }
 
     @Override
     public String toString() {
         return "UndoStack{" +
-                "id='" + id + '\'' +
-                ", index=" + index +
-                ", commandList=" + commandList +
+                "idx=" + idx +
+                ", cmdLst=" + cmdLst +
                 '}';
     }
 
@@ -97,13 +165,12 @@ public class UndoStack implements Serializable{
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         UndoStack stack = (UndoStack) o;
-        return index == stack.index &&
-                Objects.equals(id, stack.id) &&
-                Objects.equals(commandList, stack.commandList);
+        return idx == stack.idx &&
+                Objects.equals(cmdLst, stack.cmdLst);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, index, commandList);
+        return Objects.hash(idx, cmdLst);
     }
 }

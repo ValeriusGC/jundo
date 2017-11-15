@@ -3,7 +3,9 @@ import serialize.NonTrivialClass;
 import serialize.SimpleClass;
 import undomodel.*;
 
-import java.io.IOException;
+import java.io.*;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 
 import static org.junit.Assert.assertEquals;
 
@@ -16,10 +18,10 @@ public class TestUndoStack {
     public <V> void initSimple(V[] array) throws Exception {
         arr = array;
         object = new SimpleClass<V>();
-        stack = new UndoStackT<>(null, object);
+        stack = new UndoStackT<>(object, null);
         for (V i : array) {
-            stack.push(new UndoCommandT<>(((SimpleClass<V>)object)::getValue, ((SimpleClass<V>)object)::setValue, i));
-//            System.out.println(object);
+            stack.push(new UndoCommandT<>(null, ((SimpleClass<V>)object)::getValue,
+                    ((SimpleClass<V>)object)::setValue, i));
         }
     }
 
@@ -27,7 +29,7 @@ public class TestUndoStack {
 
         UndoStackT<SimpleClass<V>> stackBack = UndoUtils.deserialize(UndoUtils.serialize(stack));
         assertEquals(stack, stackBack);
-        SimpleClass<V> objBack = stackBack.getObject();
+        SimpleClass<V> objBack = (SimpleClass<V>)stackBack.getObject();
         assertEquals(object, objBack);
 
 //        System.out.println("-----------------");
@@ -70,44 +72,44 @@ public class TestUndoStack {
 
     @Test
     public void testNonTrivial() throws Exception {
-        NonTrivialClass aClass = new NonTrivialClass();
-        UndoStack stack = new UndoStackT<>(null, aClass);
-        assertEquals(0, aClass.items.size());
+        NonTrivialClass ntc = new NonTrivialClass();
+        UndoStackT<NonTrivialClass> stack = new UndoStackT<>(ntc,null);
+        assertEquals(0, ntc.items.size());
 
         {
-            stack.push(new NonTrivialClass.AddCommand(NonTrivialClass.Item.Type.CIRCLE, aClass));
+            stack.push(new NonTrivialClass.AddCommand(NonTrivialClass.Item.Type.CIRCLE, ntc));
             assertEquals(1, stack.count());
-            assertEquals(1, stack.getIndex());
-            assertEquals(1, aClass.items.size());
-            System.out.println(aClass);
+            assertEquals(1, stack.getIdx());
+            assertEquals(1, ntc.items.size());
+            System.out.println(ntc);
 
-            stack.push(new NonTrivialClass.AddCommand(NonTrivialClass.Item.Type.RECT, aClass));
+            stack.push(new NonTrivialClass.AddCommand(NonTrivialClass.Item.Type.RECT, ntc));
             assertEquals(2, stack.count());
-            assertEquals(2, stack.getIndex());
-            assertEquals(2, aClass.items.size());
-            System.out.println(aClass);
-
-            stack.undo();
-            assertEquals(2, stack.count());
-            assertEquals(1, stack.getIndex());
-            assertEquals(1, aClass.items.size());
-            System.out.println(aClass);
+            assertEquals(2, stack.getIdx());
+            assertEquals(2, ntc.items.size());
+            System.out.println(ntc);
 
             stack.undo();
             assertEquals(2, stack.count());
-            assertEquals(0, stack.getIndex());
-            assertEquals(0, aClass.items.size());
-            System.out.println(aClass);
+            assertEquals(1, stack.getIdx());
+            assertEquals(1, ntc.items.size());
+            System.out.println(ntc);
+
+            stack.undo();
+            assertEquals(2, stack.count());
+            assertEquals(0, stack.getIdx());
+            assertEquals(0, ntc.items.size());
+            System.out.println(ntc);
 
             UndoStackT<NonTrivialClass> stackBack = UndoUtils.deserialize(UndoUtils.serialize(stack));
 //            assertEquals(stack, stackBack);
-            NonTrivialClass objBack = stackBack.getObject();
+            NonTrivialClass objBack = (NonTrivialClass) stackBack.getObject();
 //            assertEquals(object, objBack);
 
             System.out.println("-------serializ -");
 
             assertEquals(2, stackBack.count());
-            assertEquals(0, stackBack.getIndex());
+            assertEquals(0, stackBack.getIdx());
             assertEquals(0, objBack.items.size());
             System.out.println(objBack);
 
@@ -123,40 +125,118 @@ public class TestUndoStack {
 
         {
             System.out.println("--- Add/Del ---");
-            stack.push(new NonTrivialClass.AddCommand(NonTrivialClass.Item.Type.CIRCLE, aClass));
+            stack.push(new NonTrivialClass.AddCommand(NonTrivialClass.Item.Type.CIRCLE, ntc));
             assertEquals(1, stack.count());
-            assertEquals(1, stack.getIndex());
-            assertEquals(1, aClass.items.size());
-            System.out.println(aClass);
-            stack.push(new NonTrivialClass.DeleteCommand(aClass));
+            assertEquals(1, stack.getIdx());
+            assertEquals(1, ntc.items.size());
+            System.out.println(ntc);
+            stack.push(new NonTrivialClass.DeleteCommand(ntc));
             assertEquals(2, stack.count());
-            assertEquals(2, stack.getIndex());
-            assertEquals(0, aClass.items.size());
-            System.out.println(aClass);
+            assertEquals(2, stack.getIdx());
+            assertEquals(0, ntc.items.size());
+            System.out.println(ntc);
 
             stack.undo();
             assertEquals(2, stack.count());
-            assertEquals(1, stack.getIndex());
-            assertEquals(1, aClass.items.size());
-            System.out.println(aClass);
+            assertEquals(1, stack.getIdx());
+            assertEquals(1, ntc.items.size());
+            System.out.println(ntc);
 
             stack.undo();
             assertEquals(2, stack.count());
-            assertEquals(0, stack.getIndex());
-            assertEquals(0, aClass.items.size());
-            System.out.println(aClass);
+            assertEquals(0, stack.getIdx());
+            assertEquals(0, ntc.items.size());
+            System.out.println(ntc);
 
             stack.undo();
             assertEquals(2, stack.count());
-            assertEquals(0, stack.getIndex());
-            assertEquals(0, aClass.items.size());
-            System.out.println(aClass);
+            assertEquals(0, stack.getIdx());
+            assertEquals(0, ntc.items.size());
+            System.out.println(ntc);
 
         }
 
         {
             System.out.println("--- Add/Del/Move ---");
-            // TODO: 14.11.17 Продолжать доделывать команды и тестировать
+            stack.redo();
+            assertEquals(2, stack.count());
+            assertEquals(1, stack.getIdx());
+            assertEquals(1, ntc.items.size());
+
+            NonTrivialClass.Item item = ((NonTrivialClass)stack.getObject()).items.get(0);
+            int newPos = 100;
+            int oldPos = item.x;
+            item.x = newPos; // Moved
+            System.out.println("1: " + item);
+            stack.push(new NonTrivialClass.MovedCommand(item, oldPos));
+            System.out.println("2: " + item);
+            assertEquals(2, stack.count());
+            assertEquals(2, stack.getIdx());
+            assertEquals(1, ntc.items.size());
+
+            assertEquals(newPos, item.x);
+            stack.undo();
+            assertEquals(oldPos, item.x);
+            stack.redo();
+            assertEquals(newPos, item.x);
+
+            // Merge
+            newPos = 200;
+            item.x = newPos; // Moved again
+            stack.push(new NonTrivialClass.MovedCommand(item, item.x));
+            System.out.println("3: " + item);
+            assertEquals(2, stack.count());
+            assertEquals(2, stack.getIdx());
+            assertEquals(1, ntc.items.size());
+            System.out.println("4: " + stack);
+
+
+            // Back
+            stack.undo();
+            assertEquals(oldPos, item.x);
+            assertEquals(2, stack.count());
+            assertEquals(1, stack.getIdx());
+            assertEquals(1, ntc.items.size());
+            System.out.println("4: " + item);
+
+            // Serialize
+            UndoStackT<NonTrivialClass> stackBack = UndoUtils.deserialize(UndoUtils.serialize(stack));
+            NonTrivialClass objBack = (NonTrivialClass) stackBack.getObject();
+
+            System.out.println("-------serializ -");
+
+            assertEquals(2, stackBack.count());
+            assertEquals(1, stackBack.getIdx());
+            assertEquals(1, objBack.items.size());
+            System.out.println(objBack);
+
+            stackBack.redo();
+            assertEquals(1, objBack.items.size());
+            System.out.println(objBack);
+
+        }
+
+        {
+
+            String str = UndoUtils.serialize(stack);
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            GZIPOutputStream gzip = new GZIPOutputStream(baos);
+            gzip.write(str.getBytes("UTF-8"));
+            gzip.close();
+            System.out.println("Output String : " + str);
+            System.out.println("Zipped length : " + baos.size());
+            System.out.println("Zip : " + new String(baos.toByteArray()));
+
+            GZIPInputStream gis = new GZIPInputStream(new ByteArrayInputStream(baos.toByteArray()));
+            BufferedReader bf = new BufferedReader(new InputStreamReader(gis));
+            StringBuilder str2 = new StringBuilder();
+            while (bf.ready()){
+                str2.append(bf.readLine());
+            }
+            String outStr = str2.toString();
+            System.out.println("Output String : " + outStr);
+            assertEquals(str, outStr);
+
         }
 
 

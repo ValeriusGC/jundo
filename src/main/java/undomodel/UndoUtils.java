@@ -4,6 +4,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.*;
 import java.util.Base64;
+import java.util.zip.GZIPInputStream;
 
 public class UndoUtils {
 
@@ -20,6 +21,11 @@ public class UndoUtils {
         }
     }
 
+
+    public static boolean isCompressed(final byte[] compressed) {
+        return (compressed[0] == (byte) (GZIPInputStream.GZIP_MAGIC))
+                && (compressed[1] == (byte) (GZIPInputStream.GZIP_MAGIC >> 8));
+    }
 
 
 //    @NotNull

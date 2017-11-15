@@ -7,12 +7,12 @@ public class UndoStackT<T> extends UndoStack {
 
     private final T object;
 
-    public UndoStackT(@Nullable String id, @NotNull T object) {
-        super(id);
+    public UndoStackT(@NotNull T object, UndoGroup group) {
+        super(group);
         this.object = object;
     }
 
-    public T getObject() {
+    protected T doGetObject() {
         return object;
     }
 

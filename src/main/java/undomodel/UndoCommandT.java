@@ -10,8 +10,9 @@ public class UndoCommandT<V> extends UndoCommand {
     private final V oldValue;
     private final V newValue;
 
-    public UndoCommandT(@NotNull UndoGetter<V> getter, @NotNull UndoSetter<V> setter, V newValue)
+    public UndoCommandT(String text, @NotNull UndoGetter<V> getter, @NotNull UndoSetter<V> setter, V newValue)
             throws Exception {
+        super(text);
         if(getter == null || setter == null) {
             throw new Exception("null parameters!");
         }
