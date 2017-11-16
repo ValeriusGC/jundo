@@ -1,12 +1,13 @@
 package serialize;
 
 import undomodel.UndoCommand;
+import undomodel.UndoSubject;
 
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class NonTrivialClass implements Serializable{
+public class NonTrivialClass extends UndoSubject{
 
     /**
      * Inner Item for collection.

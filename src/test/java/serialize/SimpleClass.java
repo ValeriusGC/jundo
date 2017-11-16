@@ -1,8 +1,10 @@
 package serialize;
 
+import undomodel.UndoSubject;
+
 import java.io.Serializable;
 
-public class SimpleClass<V> implements Serializable {
+public class SimpleClass<V> extends UndoSubject{
 
     @Override
     public String toString() {

@@ -13,24 +13,24 @@ public class TestUndoStack {
 
     UndoStack stack;
     Object[] arr;
-    Object object;
+    UndoSubject subj;
 
     public <V> void initSimple(V[] array) throws Exception {
         arr = array;
-        object = new SimpleClass<V>();
-        stack = new UndoStackT<>(object, null);
+        subj = new SimpleClass<V>();
+        stack = new UndoStackT<>(subj, null);
         for (V i : array) {
-            stack.push(new UndoCommandT<>(null, ((SimpleClass<V>)object)::getValue,
-                    ((SimpleClass<V>)object)::setValue, i));
+            stack.push(new UndoCommandT<>(null, ((SimpleClass<V>) subj)::getValue,
+                    ((SimpleClass<V>) subj)::setValue, i));
         }
     }
 
-    public <V> void testSimple() throws IOException, ClassNotFoundException {
+    public <V extends UndoSubject> void testSimple() throws IOException, ClassNotFoundException {
 
         UndoStackT<SimpleClass<V>> stackBack = UndoUtils.deserialize(UndoUtils.serialize(stack));
         assertEquals(stack, stackBack);
-        SimpleClass<V> objBack = (SimpleClass<V>)stackBack.getObject();
-        assertEquals(object, objBack);
+        SimpleClass<V> objBack = stackBack.getSubject();
+        assertEquals(subj, objBack);
 
 //        System.out.println("-----------------");
         // Walk here and there
@@ -103,8 +103,8 @@ public class TestUndoStack {
 
             UndoStackT<NonTrivialClass> stackBack = UndoUtils.deserialize(UndoUtils.serialize(stack));
 //            assertEquals(stack, stackBack);
-            NonTrivialClass objBack = (NonTrivialClass) stackBack.getObject();
-//            assertEquals(object, objBack);
+            NonTrivialClass objBack = (NonTrivialClass) stackBack.getSubject();
+//            assertEquals(subj, objBack);
 
             System.out.println("-------serializ -");
 
@@ -163,7 +163,7 @@ public class TestUndoStack {
             assertEquals(1, stack.getIdx());
             assertEquals(1, ntc.items.size());
 
-            NonTrivialClass.Item item = ((NonTrivialClass)stack.getObject()).items.get(0);
+            NonTrivialClass.Item item = ((NonTrivialClass)stack.getSubject()).items.get(0);
             int newPos = 100;
             int oldPos = item.x;
             item.x = newPos; // Moved
@@ -201,7 +201,7 @@ public class TestUndoStack {
 
             // Serialize
             UndoStackT<NonTrivialClass> stackBack = UndoUtils.deserialize(UndoUtils.serialize(stack));
-            NonTrivialClass objBack = (NonTrivialClass) stackBack.getObject();
+            NonTrivialClass objBack = (NonTrivialClass) stackBack.getSubject();
 
             System.out.println("-------serializ -");
 
@@ -224,6 +224,7 @@ public class TestUndoStack {
             gzip.write(str.getBytes("UTF-8"));
             gzip.close();
             System.out.println("Output String : " + str);
+            System.out.println("Unzipped length : " + str.length());
             System.out.println("Zipped length : " + baos.size());
             System.out.println("Zip : " + new String(baos.toByteArray()));
 

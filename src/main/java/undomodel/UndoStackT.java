@@ -3,17 +3,15 @@ package undomodel;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class UndoStackT<T> extends UndoStack {
+public class UndoStackT<T extends UndoSubject> extends UndoStack {
 
-    private final T object;
-
-    public UndoStackT(@NotNull T object, UndoGroup group) {
-        super(group);
-        this.object = object;
+    public UndoStackT(@NotNull T subject, UndoGroup group) {
+        super(subject, group);
     }
 
-    protected T doGetObject() {
-        return object;
+    @SuppressWarnings("unchecked")
+    public T getSubject() {
+        return (T)super.getSubject();
     }
 
 }

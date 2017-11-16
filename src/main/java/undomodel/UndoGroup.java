@@ -16,8 +16,7 @@ public class UndoGroup implements Serializable {
      * Ensure all UndoStacks no longer refer to this group when it's time to do it.
      */
     public void clear() {
-        for (UndoStack stack:
-                stacks) {
+        for (UndoStack stack : stacks) {
             stack.group = null;
         }
         stacks.clear();
@@ -29,12 +28,12 @@ public class UndoGroup implements Serializable {
      * @param stack stack to be added
      */
     public void add(@NotNull UndoStack stack) {
-        if(stacks.contains(stack)) {
+        if (stacks.contains(stack)) {
             return;
         }
 
         stacks.add(stack);
-        if(null != stack.group){
+        if (null != stack.group) {
             stack.group.remove(stack);
         }
         stack.group = this;
@@ -44,14 +43,15 @@ public class UndoGroup implements Serializable {
     /**
      * Removes stack from this group. If the stack was the active stack in the group,
      * the active stack becomes null.
+     *
      * @param stack stack to be removed
      */
     public void remove(@NotNull UndoStack stack) {
-        if(!stacks.remove(stack)) {
+        if (!stacks.remove(stack)) {
             return;
         }
 
-        if(stack == active) {
+        if (stack == active) {
             setActive(null);
         }
         stack.group = null;
@@ -59,6 +59,7 @@ public class UndoGroup implements Serializable {
 
     /**
      * Returns a list of stacks in this group.
+     *
      * @return stack list.
      */
     public List<UndoStack> getStacks() {
@@ -71,10 +72,11 @@ public class UndoGroup implements Serializable {
      * If the stack is not a member of this group, this function does nothing.
      * Synonymous with calling UndoStack.setActive() on stack.
      * <p>
+     *
      * @param stack stack to make active or null
      */
     public void setActive(UndoStack stack) {
-        if(active == stack) {
+        if (active == stack) {
             return;
         }
         active = stack;
@@ -97,7 +99,7 @@ public class UndoGroup implements Serializable {
      * If none of the stacks are active, or if the group is empty, this function  does nothing.
      */
     public void undo() {
-        if(active != null){
+        if (active != null) {
             active.undo();
         }
     }
@@ -108,7 +110,7 @@ public class UndoGroup implements Serializable {
      * If none of the stacks are active, or if the group is empty, this function  does nothing.
      */
     public void redo() {
-        if(active != null){
+        if (active != null) {
             active.redo();
         }
     }
@@ -158,10 +160,10 @@ public class UndoGroup implements Serializable {
     }
 
     /**
-     *
      * Returns the value of the active stack's UndoStack.isClean().
      * <p></p>
      * If none of the stacks are active, or if the group is empty, this function returns true.
+     *
      * @return the value of the active stack's UndoStack.isClean() or true.
      */
     public boolean isClean() {
