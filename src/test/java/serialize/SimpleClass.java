@@ -16,11 +16,17 @@ public class SimpleClass<V> extends UndoSubject{
     private V value;
 
     public V getValue() {
+        if(value != null) {
+            System.out.println("getV: " + value.getClass().getCanonicalName());
+        }
         return value;
     }
 
     public void setValue(V value) {
         this.value = value;
+        if(value != null) {
+            System.out.println("setV: " + value.getClass().getCanonicalName());
+        }
     }
 
     @Override

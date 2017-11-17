@@ -9,13 +9,10 @@ import java.util.Objects;
 
 abstract public class UndoStack implements Serializable{
 
-    // TODO: 15.11.17 Документация длл UndoStack, UndoCommand. Тотольное тестирование.
+    // TODO: 15.11.17 Документация длл UndoStack, UndoCommand. Тотальное тестирование.
 
-    /**
-     * Visible for package.
-     */
     UndoGroup group;
-    protected final UndoSubject subject;
+    private final UndoSubject subject;
     private int idx;
     private int cleanIdx;
     private List<UndoCommand> cmdLst = new ArrayList<>();
@@ -74,7 +71,7 @@ abstract public class UndoStack implements Serializable{
      */
     public void push(@NotNull UndoCommand cmd) throws Exception {
 
-        // FIA
+        // FOA
         cmd.redo();
 
         UndoCommand cur = null;
@@ -84,6 +81,9 @@ abstract public class UndoStack implements Serializable{
         while (idx < cmdLst.size()) {
             cmdLst.remove(cmdLst.size() - 1);
         }
+        if(cleanIdx > idx){
+            cleanIdx = -1;
+        }
 
         boolean canMerge = cur != null
                 && cur.id() != -1
@@ -91,6 +91,7 @@ abstract public class UndoStack implements Serializable{
         if(!(canMerge && cur.mergeWith(cmd))){
             // And last actions
             cmdLst.add(cmd);
+            checkUndoLimit();
             setIndex(idx + 1, false);
         }
     }
@@ -351,12 +352,13 @@ abstract public class UndoStack implements Serializable{
         if (o == null || getClass() != o.getClass()) return false;
         UndoStack stack = (UndoStack) o;
         return idx == stack.idx &&
+                subject.equals(((UndoStack) o).subject) &&
                 Objects.equals(cmdLst, stack.cmdLst);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(idx, cmdLst);
+        return Objects.hash(idx, subject, cmdLst);
     }
 
     /**
