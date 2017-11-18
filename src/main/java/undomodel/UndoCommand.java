@@ -1,20 +1,18 @@
 package undomodel;
 
-import com.sun.istack.internal.NotNull;
-import com.sun.istack.internal.Nullable;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
 
-abstract public class UndoCommand implements Serializable{
+/**
+ * The UndoCommand class is the base class of all commands stored on an UndoStack.
+ */
+abstract public class UndoCommand implements Serializable {
 
     private String text;
-    //private final List<UndoCommand> childList = new ArrayList<>();
-
 
     /**
-     * Constructs a UndoCommand object with the given text.
+     * Constructs an UndoCommand object with the given text.
      *
      * @param text
      */
@@ -54,7 +52,9 @@ abstract public class UndoCommand implements Serializable{
      * @param cmd Command to try merge with
      * @return True on success; otherwise returns false.
      */
-    public boolean mergeWith(@NotNull UndoCommand cmd) {return false;}
+    public boolean mergeWith(@NotNull UndoCommand cmd) {
+        return false;
+    }
 
     /**
      * Calls doRedo()  in derived classes.
@@ -66,7 +66,9 @@ abstract public class UndoCommand implements Serializable{
     /**
      * Calls doUndo()  in derived classes.
      */
-    public void undo() { doUndo(); }
+    public void undo() {
+        doUndo();
+    }
 
     /**
      * Returns a short text string describing what this command does.
@@ -97,7 +99,7 @@ abstract public class UndoCommand implements Serializable{
     /**
      * Reverts a change to the document. After undo() is called, the state of the document should be the same
      * as before redo() was called. This function must be implemented in the derived class.
-     * Calling UndoStack::push(), UndoStack::undo() or UndoStack::redo() from this function leads to undefined behavior.
+     * Calling UndoStack.push(), UndoStack.undo() or UndoStack.redo() from this function leads to undefined behavior.
      */
     abstract protected void doUndo();
 

@@ -6,8 +6,9 @@ import undomodel.UndoSubject;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
-public class NonTrivialClass extends UndoSubject{
+public class NonTrivialClass implements UndoSubject{
 
     /**
      * Inner Item for collection.
@@ -25,6 +26,20 @@ public class NonTrivialClass extends UndoSubject{
 
         public Item(Type type) {
             this.type = type;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            Item item = (Item) o;
+            return x == item.x &&
+                    type == item.type;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(x, type);
         }
 
         @Override
@@ -63,6 +78,20 @@ public class NonTrivialClass extends UndoSubject{
             scene.items.add(item);
             item.x = initialPos;
         }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            AddCommand that = (AddCommand) o;
+            return initialPos == that.initialPos &&
+                    Objects.equals(item, that.item);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(item, initialPos);
+        }
     }
 
     /**
@@ -93,6 +122,20 @@ public class NonTrivialClass extends UndoSubject{
                 scene.items.remove(item);
             }
 
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            DeleteCommand that = (DeleteCommand) o;
+            return Objects.equals(scene, that.scene) &&
+                    Objects.equals(item, that.item);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(scene, item);
         }
     }
 
@@ -140,6 +183,21 @@ public class NonTrivialClass extends UndoSubject{
         public int id() {
             return 1234;
         }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            MovedCommand that = (MovedCommand) o;
+            return oldPos == that.oldPos &&
+                    newPos == that.newPos &&
+                    Objects.equals(item, that.item);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(item, oldPos, newPos);
+        }
     }
 
     //----------------------------------------------------------
@@ -153,6 +211,19 @@ public class NonTrivialClass extends UndoSubject{
 
     void removeItem(Item item) {
         items.remove(item);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        NonTrivialClass aClass = (NonTrivialClass) o;
+        return Objects.equals(items, aClass.items);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(items);
     }
 
     @Override

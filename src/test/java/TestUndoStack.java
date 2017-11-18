@@ -1,3 +1,4 @@
+import com.sun.org.apache.xpath.internal.operations.Bool;
 import org.junit.Test;
 import serialize.NonTrivialClass;
 import serialize.SimpleClass;
@@ -8,6 +9,7 @@ import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThat;
 
 public class TestUndoStack {
@@ -15,6 +17,39 @@ public class TestUndoStack {
     UndoStack stack;
     Object[] arr;
     UndoSubject subj;
+
+    @SuppressWarnings("unchecked")
+    public <V> void initSimple(Class<V> type, V[] array) throws Exception {
+        arr = array;
+        subj = new SimpleClass<V>(type);
+        stack = new UndoStackT<>(subj, null);
+        for (V i : array) {
+            stack.push(new UndoCommandT<>(null, ((SimpleClass<V>) subj)::getValue,
+                    ((SimpleClass<V>) subj)::setValue, i));
+        }
+    }
+
+    public <V> void testSimple() throws IOException, ClassNotFoundException {
+
+        UndoStackT<SimpleClass<V>> stackBack = UndoUtils.deserialize(UndoUtils.serialize(stack));
+        assertEquals(stack, stackBack);
+        SimpleClass<V> objBack = stackBack.getSubject();
+        assertEquals(subj, objBack);
+        objBack.getValue();
+
+        // Walk here and there
+        for (int i = arr.length - 1; i > 0; i--) {
+            stackBack.undo();
+            System.out.println(objBack.getValue());
+            assertEquals((arr[i - 1]), objBack.getValue());
+        }
+        for (int i = 1; i < arr.length; i++) {
+            stackBack.redo();
+            assertEquals(arr[i], objBack.getValue());
+        }
+    }
+
+
 
     /**
      * Create {@link UndoStack} with or without groups.
@@ -24,7 +59,7 @@ public class TestUndoStack {
 
         {
             // Create without group
-            UndoSubject subj = new SimpleClass<Integer>();
+            UndoSubject subj = new SimpleClass<>(Integer.class);
             UndoStack stack = new UndoStackT<>(subj, null);
             assertEquals(true, stack.isClean());
             assertEquals(false, stack.canRedo());
@@ -44,8 +79,9 @@ public class TestUndoStack {
             // Checks:
             //  - setActive()
             //  - active()
-            UndoSubject subjA = new SimpleClass<Integer>();
-            UndoSubject subjB = new SimpleClass<Integer>();
+            UndoSubject subjA = new SimpleClass<>(Integer.class);
+            UndoSubject subjB = new SimpleClass<>(String.class);
+            assertNotEquals(subjA, subjB);
             UndoGroup group = new UndoGroup();
             assertEquals(0, group.getStacks().size());
 
@@ -123,7 +159,7 @@ public class TestUndoStack {
     @Test
     public void limits() throws Exception {
 
-        SimpleClass<Integer> subj = new SimpleClass<Integer>();
+        SimpleClass<Integer> subj = new SimpleClass<Integer>(Integer.class);
         UndoGroup group = new UndoGroup();
         UndoStack stack = new UndoStackT<>(subj, group);
         stack.setUndoLimit(5);
@@ -146,7 +182,7 @@ public class TestUndoStack {
     @Test
     public void clean() throws Exception {
 
-        SimpleClass<Integer> subj = new SimpleClass<Integer>();
+        SimpleClass<Integer> subj = new SimpleClass<>(Integer.class);
         UndoGroup group = new UndoGroup();
         UndoStack stack = new UndoStackT<>(subj, group);
         for (int i = 0; i < 10; ++i) {
@@ -191,7 +227,7 @@ public class TestUndoStack {
      */
     @Test
     public void auxProps() throws Exception {
-        SimpleClass<Integer> subj = new SimpleClass<Integer>();
+        SimpleClass<Integer> subj = new SimpleClass<>(Integer.class);
         UndoGroup group = new UndoGroup();
         UndoStack stack = new UndoStackT<>(subj, group);
         group.setActive(stack);
@@ -243,19 +279,19 @@ public class TestUndoStack {
     @Test
     public void testSimpleUndo() throws Exception {
 
-//        initSimple(new String[]{"one", null, "two"});
-//        testSimple();
-
-//        initSimple(new Integer[]{1, 2, 3, null, 8});
-//        testSimple();
-
-        initSimple(new Long[]{11L, 12L, 13L, 14L, 15L});
+        initSimple(String.class, new String[]{"one", null, "two"});
         testSimple();
 
-        initSimple(new Double[]{1.1, 2.2, 3.222});
+        initSimple(Integer.class, new Integer[]{1, 2, 3, null, 8});
         testSimple();
 
-        initSimple(new Boolean[]{true, false, true, null});
+        initSimple(Long.class, new Long[]{11L, 12L, 13L, 14L, null});
+        testSimple();
+
+        initSimple(Double.class, new Double[]{1.1, 2.2, 3.222});
+        testSimple();
+
+        initSimple(Boolean.class, new Boolean[]{true, false, true, null});
         testSimple();
 
     }
@@ -357,9 +393,7 @@ public class TestUndoStack {
             int newPos = 100;
             int oldPos = item.x;
             item.x = newPos; // Moved
-            System.out.println("1: " + item);
             stack.push(new NonTrivialClass.MovedCommand(item, oldPos));
-            System.out.println("2: " + item);
             assertEquals(2, stack.count());
             assertEquals(2, stack.getIdx());
             assertEquals(1, ntc.items.size());
@@ -374,7 +408,6 @@ public class TestUndoStack {
             newPos = 200;
             item.x = newPos; // Moved again
             stack.push(new NonTrivialClass.MovedCommand(item, item.x));
-            System.out.println("3: " + item);
             assertEquals(2, stack.count());
             assertEquals(2, stack.getIdx());
             assertEquals(1, ntc.items.size());
@@ -387,7 +420,6 @@ public class TestUndoStack {
             assertEquals(2, stack.count());
             assertEquals(1, stack.getIdx());
             assertEquals(1, ntc.items.size());
-            System.out.println("4: " + item);
 
             // Serialize
             UndoStackT<NonTrivialClass> stackBack = UndoUtils.deserialize(UndoUtils.serialize(stack));
@@ -436,35 +468,6 @@ public class TestUndoStack {
 
     //------ Private section -------------------------------------------------------------------------------------------
 
-    private <V> void initSimple(V[] array) throws Exception {
-        System.out.println("initSimple: " + array.getClass().getCanonicalName());
-        arr = array;
-        subj = new SimpleClass<V>();
-        stack = new UndoStackT<>(subj, null);
-        for (V i : array) {
-            stack.push(new UndoCommandT<>(null, ((SimpleClass<V>) subj)::getValue,
-                    ((SimpleClass<V>) subj)::setValue, i));
-        }
-    }
 
-    private <V> void testSimple() throws IOException, ClassNotFoundException {
-
-        UndoStackT<SimpleClass<V>> stackBack = UndoUtils.deserialize(UndoUtils.serialize(stack));
-        assertEquals(stack, stackBack);
-        SimpleClass<V> objBack = stackBack.getSubject();
-        assertEquals(subj, objBack);
-        objBack.getValue();
-
-        // Walk here and there
-        for (int i = arr.length - 1; i > 0; i--) {
-            stackBack.undo();
-            System.out.println(objBack.getValue());
-            assertEquals((arr[i - 1]), objBack.getValue());
-        }
-        for (int i = 1; i < arr.length; i++) {
-            stackBack.redo();
-            assertEquals(arr[i], objBack.getValue());
-        }
-    }
 
 }

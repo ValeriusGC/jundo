@@ -9,15 +9,10 @@ import java.util.zip.GZIPInputStream;
 public class UndoUtils {
 
     public static <T extends Serializable> String serialize(T object) throws IOException {
-        final ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-        final ObjectOutputStream objectOutputStream;
-        try {
-            objectOutputStream = new ObjectOutputStream(byteArrayOutputStream);
-            objectOutputStream.writeObject(object);
-            objectOutputStream.close();
-            return Base64.getUrlEncoder().encodeToString(byteArrayOutputStream.toByteArray());
-        } catch (IOException e) {
-            throw new Error(e);
+        final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        try(final ObjectOutputStream oos = new ObjectOutputStream(baos)) {
+            oos.writeObject(object);
+            return Base64.getUrlEncoder().encodeToString(baos.toByteArray());
         }
     }
 
@@ -45,15 +40,12 @@ public class UndoUtils {
 //        return objectInputStream;
 //    }
 
+    @SuppressWarnings({"unchecked"})
     public static <T extends Serializable> T deserialize(String data) throws ClassNotFoundException, IOException {
         byte[] dataBytes = Base64.getUrlDecoder().decode(data);
-        final ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(dataBytes);
-        final ObjectInputStream objectInputStream = new ObjectInputStream(byteArrayInputStream);
-
-        @SuppressWarnings({"unchecked"}) final T obj = (T) objectInputStream.readObject();
-
-        objectInputStream.close();
-        return obj;
+        try(final ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(dataBytes))) {
+            return (T) ois.readObject();
+        }
     }
 
 }

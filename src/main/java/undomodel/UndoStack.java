@@ -7,9 +7,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+/**
+ * <b>Main characteristic of {@link UndoStack} is that two different stack should not share one subject.</b>
+ * <br/>
+ *  Otherwise {@link UndoGroup} may not add them both, and there will be collision when undoing one subject
+ *  via different stacks.
+ */
 abstract public class UndoStack implements Serializable{
-
-    // TODO: 15.11.17 Документация длл UndoStack, UndoCommand. Тотальное тестирование.
 
     UndoGroup group;
     private final UndoSubject subject;

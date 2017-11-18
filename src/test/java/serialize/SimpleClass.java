@@ -4,29 +4,29 @@ import undomodel.UndoSubject;
 
 import java.io.Serializable;
 
-public class SimpleClass<V> extends UndoSubject{
+public class SimpleClass<V> implements UndoSubject{
+
+    private V value;
+    // Local technique to diff one Type from another in equal()
+    private Class<V> type;
+
+    public SimpleClass(Class<V> type) {
+        this.type = type;
+    }
+
+    public V getValue() {
+        return value;
+    }
+
+    public void setValue(V value) {
+        this.value = value;
+    }
 
     @Override
     public String toString() {
         return "SimpleClass{" +
                 "value=" + value +
                 '}';
-    }
-
-    private V value;
-
-    public V getValue() {
-        if(value != null) {
-            System.out.println("getV: " + value.getClass().getCanonicalName());
-        }
-        return value;
-    }
-
-    public void setValue(V value) {
-        this.value = value;
-        if(value != null) {
-            System.out.println("setV: " + value.getClass().getCanonicalName());
-        }
     }
 
     @Override
@@ -36,11 +36,14 @@ public class SimpleClass<V> extends UndoSubject{
 
         SimpleClass<?> that = (SimpleClass<?>) o;
 
-        return value != null ? value.equals(that.value) : that.value == null;
+        return value != null ? value.equals(that.value) : that.value == null
+                && type.equals(that.type);
     }
 
     @Override
     public int hashCode() {
         return value != null ? value.hashCode() : 0;
     }
+
+
 }
