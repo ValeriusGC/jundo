@@ -71,7 +71,7 @@ public class UndoManager implements Serializable {
         this.stack = stack;
     }
 
-    public Serializable getStack() {
+    public UndoStack getStack() {
         return stack;
     }
 

@@ -28,9 +28,12 @@ public class TestUndoStack {
         }
     }
 
+    @SuppressWarnings("unchecked")
     public <V> void testSimple() throws IOException, ClassNotFoundException {
 
-        UndoStackT<SimpleClass<V>> stackBack = UndoUtils.deserialize(UndoUtils.serialize(stack));
+        UndoManager manager = new UndoManager(333, stack);
+        UndoManager managerBack = UndoManager.deserialize(UndoManager.serialize(manager, false));
+        UndoStackT<SimpleClass<V>> stackBack = (UndoStackT<SimpleClass<V>>)managerBack.getStack();
         assertEquals(stack, stackBack);
         SimpleClass<V> objBack = stackBack.getSubject();
         assertEquals(subj, objBack);
@@ -326,9 +329,11 @@ public class TestUndoStack {
             assertEquals(0, ntc.items.size());
             System.out.println(ntc);
 
-            UndoStackT<NonTrivialClass> stackBack = UndoUtils.deserialize(UndoUtils.serialize(stack));
+            UndoManager manager = new UndoManager(333, stack);
+            UndoManager managerBack = UndoManager.deserialize(UndoManager.serialize(manager, false));
+            UndoStackT<NonTrivialClass> stackBack = (UndoStackT<NonTrivialClass>)managerBack.getStack();
 //            assertEquals(stack, stackBack);
-            NonTrivialClass objBack = (NonTrivialClass) stackBack.getSubject();
+            NonTrivialClass objBack = stackBack.getSubject();
 //            assertEquals(subj, objBack);
 
             System.out.println("-------serializ -");
@@ -421,7 +426,9 @@ public class TestUndoStack {
             assertEquals(1, ntc.items.size());
 
             // Serialize
-            UndoStackT<NonTrivialClass> stackBack = UndoUtils.deserialize(UndoUtils.serialize(stack));
+            UndoManager manager = new UndoManager(333, stack);
+            UndoManager managerBack = UndoManager.deserialize(UndoManager.serialize(manager, false));
+            UndoStackT<NonTrivialClass> stackBack = (UndoStackT<NonTrivialClass>)managerBack.getStack();
             NonTrivialClass objBack = (NonTrivialClass) stackBack.getSubject();
 
             System.out.println("-------serializ -");
@@ -439,7 +446,9 @@ public class TestUndoStack {
 
         {
 
-            String str = UndoUtils.serialize(stack);
+            UndoManager manager = new UndoManager(333, stack);
+            String str = UndoManager.serialize(manager, false);
+
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             GZIPOutputStream gzip = new GZIPOutputStream(baos);
             gzip.write(str.getBytes("UTF-8"));
