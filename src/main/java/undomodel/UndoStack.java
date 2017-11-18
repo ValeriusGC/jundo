@@ -13,7 +13,7 @@ import java.util.Objects;
  *  Otherwise {@link UndoGroup} may not add them both, and there will be collision when undoing one subject
  *  via different stacks.
  */
-abstract public class UndoStack implements Serializable{
+public class UndoStack implements Serializable{
 
     UndoGroup group;
     private final Serializable subject;

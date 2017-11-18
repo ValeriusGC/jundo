@@ -1,7 +1,7 @@
 import org.junit.Test;
 import undomodel.UndoManager;
 import serialize.NonTrivialClass;
-import undomodel.UndoStackT;
+import undomodel.UndoStack;
 
 import static org.junit.Assert.assertEquals;
 
@@ -11,7 +11,7 @@ public class TestUndoManager {
     public void serialize() throws Exception {
 
         NonTrivialClass ntc = new NonTrivialClass();
-        UndoStackT<NonTrivialClass> stack = new UndoStackT<>(ntc, null);
+        UndoStack stack = new UndoStack(ntc, null);
         for(int i = 0; i < 1000; ++i){
             stack.push(new NonTrivialClass.AddCommand(NonTrivialClass.Item.Type.CIRCLE, ntc));
         }
@@ -34,7 +34,7 @@ public class TestUndoManager {
             System.out.println("1: " + data.length());
             UndoManager managerBack = UndoManager.deserialize(data);
             assertEquals(manager, managerBack);
-            assertEquals(NonTrivialClass.class, ((UndoStackT<NonTrivialClass>)manager.getStack()).getSubject().getClass());
+            assertEquals(NonTrivialClass.class, manager.getStack().getSubject().getClass());
         }
         {
             UndoManager manager = new UndoManager(2, stack);
@@ -42,7 +42,7 @@ public class TestUndoManager {
             System.out.println("zipped length : " + z_data.length());
             UndoManager managerBack = UndoManager.deserialize(z_data);
             assertEquals(manager, managerBack);
-            assertEquals(NonTrivialClass.class, ((UndoStackT<NonTrivialClass>)manager.getStack()).getSubject().getClass());
+            assertEquals(NonTrivialClass.class, manager.getStack().getSubject().getClass());
         }
 
         // Check out
