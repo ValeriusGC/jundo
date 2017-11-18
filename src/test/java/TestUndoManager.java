@@ -1,4 +1,5 @@
 import org.junit.Test;
+import serialize.UndoWather;
 import undomodel.UndoManager;
 import serialize.NonTrivialClass;
 import undomodel.UndoStack;
@@ -11,7 +12,7 @@ public class TestUndoManager {
     public void serialize() throws Exception {
 
         NonTrivialClass ntc = new NonTrivialClass();
-        UndoStack stack = new UndoStack(ntc, null);
+        UndoStack stack = new UndoStack(ntc, null, new UndoWather());
         for(int i = 0; i < 1000; ++i){
             stack.push(new NonTrivialClass.AddCommand(NonTrivialClass.Item.Type.CIRCLE, ntc));
         }

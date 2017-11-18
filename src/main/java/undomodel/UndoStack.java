@@ -16,6 +16,7 @@ import java.util.Objects;
 public class UndoStack implements Serializable{
 
     UndoGroup group;
+    private final transient UndoEvents subscriber;
     private final Serializable subject;
     private int idx;
     private int cleanIdx;
@@ -28,11 +29,12 @@ public class UndoStack implements Serializable{
      * If parent is not a null the stack is automatically added to the group.
      * @param group possible group for this {@link UndoStack}
      */
-    public UndoStack(@NotNull Serializable subject, UndoGroup group) {
+    public UndoStack(@NotNull Serializable subject, UndoGroup group, UndoEvents subscriber) {
         this.subject = subject;
         if(null != group) {
             group.add(this);
         }
+        this.subscriber = subscriber;
     }
 
     /**
@@ -51,6 +53,17 @@ public class UndoStack implements Serializable{
         cmdLst.clear();
         idx = 0;
         cleanIdx = 0;
+
+        if(null != subscriber){
+            subscriber.indexChanged(0);
+            subscriber.canUndoChanged(false);
+            subscriber.undoTextChanged("");
+            subscriber.canRedoChanged(false);
+            subscriber.redoTextChanged("");
+            if(!wasClean){
+                subscriber.cleanChanged(true);
+            }
+        }
     }
 
     /**
@@ -75,7 +88,6 @@ public class UndoStack implements Serializable{
      */
     public void push(@NotNull UndoCommand cmd) throws Exception {
 
-        // FOA
         cmd.redo();
 
         UndoCommand cur = null;
@@ -92,7 +104,16 @@ public class UndoStack implements Serializable{
         boolean canMerge = cur != null
                 && cur.id() != -1
                 && cur.id() == cmd.id();
-        if(!(canMerge && cur.mergeWith(cmd))){
+
+        if(canMerge && cur.mergeWith(cmd)){
+            if(null != subscriber) {
+                subscriber.indexChanged(idx);
+                subscriber.canUndoChanged(canUndo());
+                subscriber.undoTextChanged(undoText());
+                subscriber.canRedoChanged(canRedo());
+                subscriber.redoTextChanged(redoText());
+            }
+        }else{
             // And last actions
             cmdLst.add(cmd);
             checkUndoLimit();
@@ -374,17 +395,27 @@ public class UndoStack implements Serializable{
      */
     private void setIndex(int index, boolean clean) {
 
-        boolean wasClean = idx == cleanIdx;
+        final boolean wasClean = idx == cleanIdx;
 
         if (this.idx != index) {
             this.idx = index;
+            if(null != subscriber){
+                subscriber.indexChanged(idx);
+                subscriber.canUndoChanged(canUndo());
+                subscriber.undoTextChanged(undoText());
+                subscriber.canRedoChanged(canRedo());
+                subscriber.redoTextChanged(redoText());
+            }
         }
 
         if(clean) {
             cleanIdx = idx;
         }
 
-        boolean isClean = idx == cleanIdx;
+        final boolean isClean = idx == cleanIdx;
+        if(isClean != wasClean && null != subscriber) {
+            subscriber.cleanChanged(isClean);
+        }
     }
 
     /**
