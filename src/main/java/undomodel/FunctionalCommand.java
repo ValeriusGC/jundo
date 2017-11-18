@@ -4,13 +4,17 @@ import com.sun.istack.internal.NotNull;
 
 import java.util.Objects;
 
-public class UndoCommandT<V> extends UndoCommand {
+/**
+ *
+ * @param <V>
+ */
+public class FunctionalCommand<V> extends UndoCommand {
 
-    private final UndoSetter<V> setter;
+    private final Setter<V> setter;
     private final V oldValue;
     private final V newValue;
 
-    public UndoCommandT(String text, @NotNull UndoGetter<V> getter, @NotNull UndoSetter<V> setter, V newValue)
+    public FunctionalCommand(String text, @NotNull Getter<V> getter, @NotNull Setter<V> setter, V newValue)
             throws Exception {
         super(text);
         if(getter == null || setter == null) {
@@ -33,7 +37,7 @@ public class UndoCommandT<V> extends UndoCommand {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        UndoCommandT<?> that = (UndoCommandT<?>) o;
+        FunctionalCommand<?> that = (FunctionalCommand<?>) o;
         return Objects.equals(oldValue, that.oldValue) &&
                 Objects.equals(newValue, that.newValue);
     }
@@ -45,7 +49,7 @@ public class UndoCommandT<V> extends UndoCommand {
 
     @Override
     public String toString() {
-        return "UndoCommandT{" +
+        return "FunctionalCommand{" +
                 "oldValue=" + oldValue +
                 ", newValue=" + newValue +
                 '}';

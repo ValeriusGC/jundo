@@ -1,4 +1,3 @@
-import com.sun.org.apache.xpath.internal.operations.Bool;
 import org.junit.Test;
 import serialize.NonTrivialClass;
 import serialize.SimpleClass;
@@ -24,7 +23,7 @@ public class TestUndoStack {
         subj = new SimpleClass<V>(type);
         stack = new UndoStackT<>(subj, null);
         for (V i : array) {
-            stack.push(new UndoCommandT<>(null, ((SimpleClass<V>) subj)::getValue,
+            stack.push(new FunctionalCommand<>(null, ((SimpleClass<V>) subj)::getValue,
                     ((SimpleClass<V>) subj)::setValue, i));
         }
     }
@@ -164,7 +163,7 @@ public class TestUndoStack {
         UndoStack stack = new UndoStackT<>(subj, group);
         stack.setUndoLimit(5);
         for (int i = 0; i < 10; ++i) {
-            stack.push(new UndoCommandT<>(String.valueOf(i), subj::getValue, subj::setValue, i));
+            stack.push(new FunctionalCommand<>(String.valueOf(i), subj::getValue, subj::setValue, i));
         }
         assertEquals(5, stack.count());
         stack.setIndex(0);
@@ -186,7 +185,7 @@ public class TestUndoStack {
         UndoGroup group = new UndoGroup();
         UndoStack stack = new UndoStackT<>(subj, group);
         for (int i = 0; i < 10; ++i) {
-            stack.push(new UndoCommandT<>(String.valueOf(i), subj::getValue, subj::setValue, i));
+            stack.push(new FunctionalCommand<>(String.valueOf(i), subj::getValue, subj::setValue, i));
         }
         assertEquals(10, stack.count());
         stack.setIndex(5);
@@ -206,7 +205,7 @@ public class TestUndoStack {
         // Now set limit, set clean, and go out of it
         stack.setUndoLimit(5);
         for (int i = 0; i < 5; ++i) {
-            stack.push(new UndoCommandT<>(String.valueOf(i), subj::getValue, subj::setValue, i));
+            stack.push(new FunctionalCommand<>(String.valueOf(i), subj::getValue, subj::setValue, i));
         }
         assertEquals(5, stack.count());
         stack.setIndex(2);
@@ -214,7 +213,7 @@ public class TestUndoStack {
         assertEquals(2, stack.getCleanIdx());
         stack.setIndex(0);
         assertEquals(2, stack.getCleanIdx());
-        stack.push(new UndoCommandT<>(String.valueOf(10), subj::getValue, subj::setValue, 10));
+        stack.push(new FunctionalCommand<>(String.valueOf(10), subj::getValue, subj::setValue, 10));
         assertEquals(-1, stack.getCleanIdx());
         assertEquals(false, stack.isClean());
     }
@@ -241,7 +240,7 @@ public class TestUndoStack {
         assertEquals(false, group.canRedo());
 
         for (int i = 0; i < 3; ++i) {
-            stack.push(new UndoCommandT<>(String.valueOf(i), subj::getValue, subj::setValue, i));
+            stack.push(new FunctionalCommand<>(String.valueOf(i), subj::getValue, subj::setValue, i));
         }
         assertEquals(true, stack.canUndo());
         assertEquals(false, stack.canRedo());
