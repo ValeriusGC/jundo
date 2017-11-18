@@ -16,7 +16,7 @@ import java.util.Objects;
 abstract public class UndoStack implements Serializable{
 
     UndoGroup group;
-    private final UndoSubject subject;
+    private final Serializable subject;
     private int idx;
     private int cleanIdx;
     private List<UndoCommand> cmdLst = new ArrayList<>();
@@ -28,7 +28,7 @@ abstract public class UndoStack implements Serializable{
      * If parent is not a null the stack is automatically added to the group.
      * @param group possible group for this {@link UndoStack}
      */
-    public UndoStack(@NotNull UndoSubject subject, UndoGroup group) {
+    public UndoStack(@NotNull Serializable subject, UndoGroup group) {
         this.subject = subject;
         if(null != group) {
             group.add(this);
@@ -338,7 +338,7 @@ abstract public class UndoStack implements Serializable{
      *
      * @return Object via calling descendants real object.
      */
-    public UndoSubject getSubject() {
+    public Serializable getSubject() {
         return subject;
     }
 

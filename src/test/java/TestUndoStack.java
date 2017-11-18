@@ -16,7 +16,7 @@ public class TestUndoStack {
 
     UndoStack stack;
     Object[] arr;
-    UndoSubject subj;
+    Serializable subj;
 
     @SuppressWarnings("unchecked")
     public <V> void initSimple(Class<V> type, V[] array) throws Exception {
@@ -59,7 +59,7 @@ public class TestUndoStack {
 
         {
             // Create without group
-            UndoSubject subj = new SimpleClass<>(Integer.class);
+            Serializable subj = new SimpleClass<>(Integer.class);
             UndoStack stack = new UndoStackT<>(subj, null);
             assertEquals(true, stack.isClean());
             assertEquals(false, stack.canRedo());
@@ -79,8 +79,8 @@ public class TestUndoStack {
             // Checks:
             //  - setActive()
             //  - active()
-            UndoSubject subjA = new SimpleClass<>(Integer.class);
-            UndoSubject subjB = new SimpleClass<>(String.class);
+            Serializable subjA = new SimpleClass<>(Integer.class);
+            Serializable subjB = new SimpleClass<>(String.class);
             assertNotEquals(subjA, subjB);
             UndoGroup group = new UndoGroup();
             assertEquals(0, group.getStacks().size());

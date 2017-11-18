@@ -1,9 +1,10 @@
 package undomodel;
 
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
-public class UndoStackT<T extends UndoSubject> extends UndoStack {
+import java.io.Serializable;
+
+public class UndoStackT<T extends Serializable> extends UndoStack {
 
     public UndoStackT(@NotNull T subject, UndoGroup group) {
         super(subject, group);

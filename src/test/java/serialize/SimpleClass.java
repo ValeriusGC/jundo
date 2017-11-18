@@ -1,10 +1,8 @@
 package serialize;
 
-import undomodel.UndoSubject;
-
 import java.io.Serializable;
 
-public class SimpleClass<V> implements UndoSubject{
+public class SimpleClass<V> implements Serializable {
 
     private V value;
     // Local technique to diff one Type from another in equal()

@@ -34,7 +34,7 @@ public class TestUndoManager {
             System.out.println("1: " + data.length());
             UndoManager managerBack = UndoManager.deserialize(data);
             assertEquals(manager, managerBack);
-            assertEquals(NonTrivialClass.class, ((UndoStackT<NonTrivialClass>)manager.getSubject()).getSubject().getClass());
+            assertEquals(NonTrivialClass.class, ((UndoStackT<NonTrivialClass>)manager.getStack()).getSubject().getClass());
         }
         {
             UndoManager manager = new UndoManager(2, stack);
@@ -42,7 +42,7 @@ public class TestUndoManager {
             System.out.println("zipped length : " + z_data.length());
             UndoManager managerBack = UndoManager.deserialize(z_data);
             assertEquals(manager, managerBack);
-            assertEquals(NonTrivialClass.class, ((UndoStackT<NonTrivialClass>)manager.getSubject()).getSubject().getClass());
+            assertEquals(NonTrivialClass.class, ((UndoStackT<NonTrivialClass>)manager.getStack()).getSubject().getClass());
         }
 
         // Check out

@@ -14,7 +14,7 @@ public class UndoManager implements Serializable {
 
     public final int VER = 1;
     public final int DATA_VER;
-    private final Serializable subject;
+    private final UndoStack stack;
     private final Map<String, String> extras = new TreeMap<>();
 
     /**
@@ -66,13 +66,13 @@ public class UndoManager implements Serializable {
         }
     }
 
-    public UndoManager(int dataVersion, @NotNull Serializable subject) {
+    public UndoManager(int dataVersion, @NotNull UndoStack stack) {
         this.DATA_VER = dataVersion;
-        this.subject = subject;
+        this.stack = stack;
     }
 
-    public Serializable getSubject() {
-        return subject;
+    public Serializable getStack() {
+        return stack;
     }
 
     public Map<String, String> getExtras() {
@@ -86,12 +86,12 @@ public class UndoManager implements Serializable {
         UndoManager manager = (UndoManager) o;
         return VER == manager.VER &&
                 DATA_VER == manager.DATA_VER &&
-                Objects.equals(subject, manager.subject) &&
+                Objects.equals(stack, manager.stack) &&
                 Objects.equals(extras, manager.extras);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(VER, DATA_VER, subject, extras);
+        return Objects.hash(VER, DATA_VER, stack, extras);
     }
 }
