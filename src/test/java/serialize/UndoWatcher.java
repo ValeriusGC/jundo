@@ -12,10 +12,10 @@ public class UndoWatcher implements UndoEvents, Serializable {
 
     private static int cnt;
 
-    @Override
-    public void indexChanged(int idx) {
-        System.out.println("" + ++cnt + ": " + "UndoWatcher.indexChanged: " + idx);
-    }
+//    @Override
+//    public void indexChanged(int idx) {
+//        System.out.println("" + ++cnt + ": " + "UndoWatcher.indexChanged: " + idx);
+//    }
 
 //    @Override
 //    public void cleanChanged(boolean clean) {

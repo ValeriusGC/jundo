@@ -36,7 +36,8 @@ public class TestUndoStack {
         UndoManager manager = new UndoManager(333, stack);
         UndoManager managerBack = UndoManager.deserialize(UndoManager.serialize(manager, false));
         UndoStack stackBack = managerBack.getStack();
-        assertEquals(stack, stackBack);
+        // Here we can not compare stacks themselves 'cause of stack's comparison principle
+        assertEquals(stack.getSubject(), stackBack.getSubject());
         SimpleClass<V> objBack = (SimpleClass<V>)stackBack.getSubject();
         assertEquals(subj, objBack);
         objBack.getValue();

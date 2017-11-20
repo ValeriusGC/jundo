@@ -383,9 +383,9 @@ public class UndoStack implements Serializable{
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         UndoStack stack = (UndoStack) o;
-        return idx == stack.idx &&
-                subject.equals(((UndoStack) o).subject) &&
-                Objects.equals(cmdLst, stack.cmdLst);
+
+        return idx == stack.idx
+                && subject == stack.subject;
     }
 
     @Override
