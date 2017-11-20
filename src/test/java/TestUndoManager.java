@@ -1,5 +1,5 @@
 import org.junit.Test;
-import serialize.UndoWather;
+import serialize.UndoWatcher;
 import undomodel.UndoManager;
 import serialize.NonTrivialClass;
 import undomodel.UndoStack;
@@ -12,7 +12,7 @@ public class TestUndoManager {
     public void serialize() throws Exception {
 
         NonTrivialClass ntc = new NonTrivialClass();
-        UndoStack stack = new UndoStack(ntc, null, new UndoWather());
+        UndoStack stack = new UndoStack(ntc, null, new UndoWatcher());
         for(int i = 0; i < 1000; ++i){
             stack.push(new NonTrivialClass.AddCommand(NonTrivialClass.Item.Type.CIRCLE, ntc));
         }
@@ -30,6 +30,7 @@ public class TestUndoManager {
         assertEquals(3000, stack.count());
 
         {
+            // Make unzipped serialization
             UndoManager manager = new UndoManager(2, stack);
             String data = UndoManager.serialize(manager, false);
             System.out.println("1: " + data.length());
@@ -38,6 +39,7 @@ public class TestUndoManager {
             assertEquals(NonTrivialClass.class, manager.getStack().getSubject().getClass());
         }
         {
+            // Make zipped serialization
             UndoManager manager = new UndoManager(2, stack);
             String z_data = UndoManager.serialize(manager, true);
             System.out.println("zipped length : " + z_data.length());
