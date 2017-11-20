@@ -8,7 +8,7 @@ import java.util.Objects;
  *
  * @param <V>
  */
-public class FunctionalCommand<V> extends UndoCommand {
+public class FunctionalCommand<V extends java.io.Serializable> extends UndoCommand {
 
     private final Setter<V> setter;
     private final V oldValue;

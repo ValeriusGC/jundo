@@ -3,6 +3,6 @@ package undomodel;
 import java.io.Serializable;
 
 @FunctionalInterface
-public interface Setter<V> extends Serializable{
+public interface Setter<V extends java.io.Serializable> extends Serializable{
     void set(V v);
 }

@@ -19,7 +19,7 @@ public class TestUndoStack {
     Serializable subj;
 
     @SuppressWarnings("unchecked")
-    public <V> void initSimple(Class<V> type, V[] array) throws Exception {
+    public <V extends java.io.Serializable> void initSimple(Class<V> type, V[] array) throws Exception {
         arr = array;
         subj = new SimpleClass<V>(type);
         stack = new UndoStack(subj, null);
@@ -31,7 +31,7 @@ public class TestUndoStack {
     }
 
     @SuppressWarnings("unchecked")
-    public <V> void testSimple() throws IOException, ClassNotFoundException {
+    public <V extends java.io.Serializable> void testSimple() throws IOException, ClassNotFoundException {
 
         UndoManager manager = new UndoManager(333, stack);
         UndoManager managerBack = UndoManager.deserialize(UndoManager.serialize(manager, false));
