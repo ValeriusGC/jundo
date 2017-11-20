@@ -15,17 +15,17 @@ public class TestUndoManager {
         UndoStack stack = new UndoStack(ntc, null);
         stack.setSubscriber(new UndoWatcher());
         for(int i = 0; i < 1000; ++i){
-            stack.push(new NonTrivialClass.AddCommand(NonTrivialClass.Item.Type.CIRCLE, ntc));
+            stack.push(new NonTrivialClass.AddCommand(NonTrivialClass.Item.Type.CIRCLE, ntc, null));
         }
         assertEquals(1000, ntc.items.size());
         assertEquals(1000, stack.count());
         for(int i = 0; i < 1000; ++i){
-            stack.push(new NonTrivialClass.MovedCommand(ntc.items.get(i), 10));
+            stack.push(new NonTrivialClass.MovedCommand(ntc.items.get(i), 10, null));
         }
         assertEquals(1000, ntc.items.size());
         assertEquals(2000, stack.count());
         for(int i = 0; i < 1000; ++i){
-            stack.push(new NonTrivialClass.DeleteCommand(ntc));
+            stack.push(new NonTrivialClass.DeleteCommand(ntc, null));
         }
         assertEquals(0, ntc.items.size());
         assertEquals(3000, stack.count());

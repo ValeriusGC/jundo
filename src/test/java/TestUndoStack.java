@@ -26,7 +26,7 @@ public class TestUndoStack {
         stack.setSubscriber(new UndoWatcher());
         for (V i : array) {
             stack.push(new FunctionalCommand<>(null, ((SimpleClass<V>) subj)::getValue,
-                    ((SimpleClass<V>) subj)::setValue, i));
+                    ((SimpleClass<V>) subj)::setValue, i, null));
         }
     }
 
@@ -148,10 +148,10 @@ public class TestUndoStack {
         stack.setSubscriber(new UndoWatcher());
         group.setActive(stack);
 
-        stack.push(new NonTrivialClass.AddCommand(NonTrivialClass.Item.Type.CIRCLE, scene));
+        stack.push(new NonTrivialClass.AddCommand(NonTrivialClass.Item.Type.CIRCLE, scene, null));
         assertEquals(1, stack.count());
         assertEquals(1, stack.getIdx());
-        stack.push(new NonTrivialClass.AddCommand(NonTrivialClass.Item.Type.CIRCLE, scene));
+        stack.push(new NonTrivialClass.AddCommand(NonTrivialClass.Item.Type.CIRCLE, scene, null));
         assertEquals(2, stack.count());
         assertEquals(2, stack.getIdx());
         stack.clear();
@@ -174,7 +174,7 @@ public class TestUndoStack {
         stack.setSubscriber(new UndoWatcher());
         stack.setUndoLimit(5);
         for (int i = 0; i < 10; ++i) {
-            stack.push(new FunctionalCommand<>(String.valueOf(i), subj::getValue, subj::setValue, i));
+            stack.push(new FunctionalCommand<>(String.valueOf(i), subj::getValue, subj::setValue, i, null));
         }
         assertEquals(5, stack.count());
         stack.setIndex(0);
@@ -197,7 +197,7 @@ public class TestUndoStack {
         UndoStack stack = new UndoStack(subj, group);
         stack.setSubscriber(new UndoWatcher());
         for (int i = 0; i < 10; ++i) {
-            stack.push(new FunctionalCommand<>(String.valueOf(i), subj::getValue, subj::setValue, i));
+            stack.push(new FunctionalCommand<>(String.valueOf(i), subj::getValue, subj::setValue, i, null));
         }
         assertEquals(10, stack.count());
         stack.setIndex(5);
@@ -217,7 +217,7 @@ public class TestUndoStack {
         // Now set limit, set clean, and go out of it
         stack.setUndoLimit(5);
         for (int i = 0; i < 5; ++i) {
-            stack.push(new FunctionalCommand<>(String.valueOf(i), subj::getValue, subj::setValue, i));
+            stack.push(new FunctionalCommand<>(String.valueOf(i), subj::getValue, subj::setValue, i, null));
         }
         assertEquals(5, stack.count());
         stack.setIndex(2);
@@ -225,7 +225,7 @@ public class TestUndoStack {
         assertEquals(2, stack.getCleanIdx());
         stack.setIndex(0);
         assertEquals(2, stack.getCleanIdx());
-        stack.push(new FunctionalCommand<>(String.valueOf(10), subj::getValue, subj::setValue, 10));
+        stack.push(new FunctionalCommand<>(String.valueOf(10), subj::getValue, subj::setValue, 10, null));
         assertEquals(-1, stack.getCleanIdx());
         assertEquals(false, stack.isClean());
     }
@@ -253,7 +253,7 @@ public class TestUndoStack {
         assertEquals(false, group.canRedo());
 
         for (int i = 0; i < 3; ++i) {
-            stack.push(new FunctionalCommand<>(String.valueOf(i), subj::getValue, subj::setValue, i));
+            stack.push(new FunctionalCommand<>(String.valueOf(i), subj::getValue, subj::setValue, i, null));
         }
         assertEquals(true, stack.canUndo());
         assertEquals(false, stack.canRedo());
@@ -316,13 +316,13 @@ public class TestUndoStack {
         assertEquals(0, ntc.items.size());
 
         {
-            stack.push(new NonTrivialClass.AddCommand(NonTrivialClass.Item.Type.CIRCLE, ntc));
+            stack.push(new NonTrivialClass.AddCommand(NonTrivialClass.Item.Type.CIRCLE, ntc, null));
             assertEquals(1, stack.count());
             assertEquals(1, stack.getIdx());
             assertEquals(1, ntc.items.size());
             System.out.println(ntc);
 
-            stack.push(new NonTrivialClass.AddCommand(NonTrivialClass.Item.Type.RECT, ntc));
+            stack.push(new NonTrivialClass.AddCommand(NonTrivialClass.Item.Type.RECT, ntc, null));
             assertEquals(2, stack.count());
             assertEquals(2, stack.getIdx());
             assertEquals(2, ntc.items.size());
@@ -366,12 +366,12 @@ public class TestUndoStack {
 
         {
             System.out.println("--- Add/Del ---");
-            stack.push(new NonTrivialClass.AddCommand(NonTrivialClass.Item.Type.CIRCLE, ntc));
+            stack.push(new NonTrivialClass.AddCommand(NonTrivialClass.Item.Type.CIRCLE, ntc, null));
             assertEquals(1, stack.count());
             assertEquals(1, stack.getIdx());
             assertEquals(1, ntc.items.size());
             System.out.println(ntc);
-            stack.push(new NonTrivialClass.DeleteCommand(ntc));
+            stack.push(new NonTrivialClass.DeleteCommand(ntc, null));
             assertEquals(2, stack.count());
             assertEquals(2, stack.getIdx());
             assertEquals(0, ntc.items.size());
@@ -408,7 +408,7 @@ public class TestUndoStack {
             int newPos = 100;
             int oldPos = item.x;
             item.x = newPos; // Moved
-            stack.push(new NonTrivialClass.MovedCommand(item, oldPos));
+            stack.push(new NonTrivialClass.MovedCommand(item, oldPos, null));
             assertEquals(2, stack.count());
             assertEquals(2, stack.getIdx());
             assertEquals(1, ntc.items.size());
@@ -422,7 +422,7 @@ public class TestUndoStack {
             // Merge
             newPos = 200;
             item.x = newPos; // Moved again
-            stack.push(new NonTrivialClass.MovedCommand(item, item.x));
+            stack.push(new NonTrivialClass.MovedCommand(item, item.x, null));
             assertEquals(2, stack.count());
             assertEquals(2, stack.getIdx());
             assertEquals(1, ntc.items.size());

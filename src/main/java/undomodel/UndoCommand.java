@@ -3,21 +3,30 @@ package undomodel;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * The UndoCommand class is the base class of all commands stored on an UndoStack.
  */
-abstract public class UndoCommand implements Serializable {
+public class UndoCommand implements Serializable {
 
     private String text;
+    List<UndoCommand> childLst;
 
     /**
      * Constructs an UndoCommand object with the given text.
      *
      * @param text
      */
-    public UndoCommand(String text) {
+    public UndoCommand(String text, UndoCommand parent) {
         setText(text);
+        if(parent != null) {
+            if(parent.childLst == null) {
+                parent.childLst = new ArrayList<>();
+            }
+            parent.childLst.add(this);
+        }
     }
 
     /**
@@ -54,6 +63,17 @@ abstract public class UndoCommand implements Serializable {
      */
     public boolean mergeWith(@NotNull UndoCommand cmd) {
         return false;
+    }
+
+    public int childCount() {
+        return childLst.size();
+    }
+
+    public UndoCommand child(int idx) {
+        if(idx < 0 || idx >= childCount()) {
+            return null;
+        }
+        return childLst.get(idx);
     }
 
     /**
@@ -94,14 +114,26 @@ abstract public class UndoCommand implements Serializable {
      * Applies a change to the document. This function must be implemented in the derived class.
      * Calling UndoStack.push(), UndoStack.undo() or UndoStack.redo() from this function leads to  undefined behavior.
      */
-    abstract protected void doRedo();
+    protected void doRedo() {
+        if(childLst != null) {
+            for (UndoCommand cmd : childLst) {
+                cmd.redo();
+            }
+        }
+    }
 
     /**
      * Reverts a change to the document. After undo() is called, the state of the document should be the same
      * as before redo() was called. This function must be implemented in the derived class.
      * Calling UndoStack.push(), UndoStack.undo() or UndoStack.redo() from this function leads to undefined behavior.
      */
-    abstract protected void doUndo();
+    protected void doUndo() {
+        if(childLst != null) {
+            for (UndoCommand cmd : childLst) {
+                cmd.undo();
+            }
+        }
+    }
 
     @Override
     public String toString() {

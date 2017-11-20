@@ -14,9 +14,9 @@ public class FunctionalCommand<V extends java.io.Serializable> extends UndoComma
     private final V oldValue;
     private final V newValue;
 
-    public FunctionalCommand(String text, @NotNull Getter<V> getter, @NotNull Setter<V> setter, V newValue)
+    public FunctionalCommand(String text, @NotNull Getter<V> getter, @NotNull Setter<V> setter, V newValue, UndoCommand parent)
             throws Exception {
-        super(text);
+        super(text, parent);
         if(getter == null || setter == null) {
             throw new Exception("null parameters!");
         }
