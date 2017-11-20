@@ -1,5 +1,9 @@
 package undomodel;
 
+/**
+ * Methods for subscribers.
+ *
+ */
 public interface UndoEvents {
 
     default void indexChanged(int idx) {}

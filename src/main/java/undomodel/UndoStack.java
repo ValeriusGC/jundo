@@ -16,12 +16,12 @@ import java.util.Objects;
 public class UndoStack implements Serializable{
 
     UndoGroup group;
-    private final transient UndoEvents subscriber;
     private final Serializable subject;
     private int idx;
     private int cleanIdx;
     private List<UndoCommand> cmdLst = new ArrayList<>();
     private int undoLimit;
+    private UndoEvents subscriber;
 
     /**
      *
@@ -29,12 +29,11 @@ public class UndoStack implements Serializable{
      * If parent is not a null the stack is automatically added to the group.
      * @param group possible group for this {@link UndoStack}
      */
-    public UndoStack(@NotNull Serializable subject, UndoGroup group, UndoEvents subscriber) {
+    public UndoStack(@NotNull Serializable subject, UndoGroup group) {
         this.subject = subject;
         if(null != group) {
             group.add(this);
         }
-        this.subscriber = subscriber;
     }
 
     /**
@@ -361,6 +360,14 @@ public class UndoStack implements Serializable{
      */
     public Serializable getSubject() {
         return subject;
+    }
+
+    public UndoEvents getSubscriber() {
+        return subscriber;
+    }
+
+    public void setSubscriber(UndoEvents subscriber) {
+        this.subscriber = subscriber;
     }
 
     @Override

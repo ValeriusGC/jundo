@@ -2,18 +2,21 @@ package serialize;
 
 import undomodel.UndoEvents;
 
+import java.io.Serializable;
+
 /**
  * Tester for event subscribing.
  * {@link UndoEvents} has all the methods with default realization so client can realize just methods it wants.
  */
-public class UndoWatcher implements UndoEvents {
+public class UndoWatcher implements UndoEvents, Serializable {
 
     private static int cnt;
 
-//    @Override
-//    public void indexChanged(int idx) {
-//        System.out.println("" + ++cnt + ": " + "UndoWatcher.indexChanged: " + idx);
-//    }
+    @Override
+    public void indexChanged(int idx) {
+        System.out.println("" + ++cnt + ": " + "UndoWatcher.indexChanged: " + idx);
+    }
+
 //    @Override
 //    public void cleanChanged(boolean clean) {
 //        System.out.println("" + ++cnt + ": " + "UndoWatcher.cleanChanged: " + clean);

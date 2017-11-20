@@ -22,7 +22,8 @@ public class TestUndoStack {
     public <V> void initSimple(Class<V> type, V[] array) throws Exception {
         arr = array;
         subj = new SimpleClass<V>(type);
-        stack = new UndoStack(subj, null, new UndoWatcher());
+        stack = new UndoStack(subj, null);
+        stack.setSubscriber(new UndoWatcher());
         for (V i : array) {
             stack.push(new FunctionalCommand<>(null, ((SimpleClass<V>) subj)::getValue,
                     ((SimpleClass<V>) subj)::setValue, i));
@@ -63,7 +64,8 @@ public class TestUndoStack {
         {
             // Create without group
             Serializable subj = new SimpleClass<>(Integer.class);
-            UndoStack stack = new UndoStack(subj, null, new UndoWatcher());
+            UndoStack stack = new UndoStack(subj, null);
+            stack.setSubscriber(new UndoWatcher());
             assertEquals(true, stack.isClean());
             assertEquals(false, stack.canRedo());
             assertEquals(false, stack.canUndo());
@@ -88,7 +90,8 @@ public class TestUndoStack {
             UndoGroup group = new UndoGroup();
             assertEquals(0, group.getStacks().size());
 
-            UndoStack stackA = new UndoStack(subjA, group, new UndoWatcher());
+            UndoStack stackA = new UndoStack(subjA, group);
+            stackA.setSubscriber(new UndoWatcher());
             assertEquals(1, group.getStacks().size());
             assertEquals(null, group.getActive());
             assertEquals(false, stackA.isActive());
@@ -112,7 +115,8 @@ public class TestUndoStack {
             assertEquals(false, stackA.isActive());
 
             // Second stack. Do the same
-            UndoStack stackB = new UndoStack(subjB, group, new UndoWatcher());
+            UndoStack stackB = new UndoStack(subjB, group);
+            stackB.setSubscriber(new UndoWatcher());
             assertEquals(2, group.getStacks().size());
             assertEquals(null, group.getActive());
             assertEquals(false, stackA.isActive());
@@ -139,7 +143,8 @@ public class TestUndoStack {
 
         NonTrivialClass scene = new NonTrivialClass();
         UndoGroup group = new UndoGroup();
-        UndoStack stack = new UndoStack(scene, group, new UndoWatcher());
+        UndoStack stack = new UndoStack(scene, group);
+        stack.setSubscriber(new UndoWatcher());
         group.setActive(stack);
 
         stack.push(new NonTrivialClass.AddCommand(NonTrivialClass.Item.Type.CIRCLE, scene));
@@ -164,7 +169,8 @@ public class TestUndoStack {
 
         SimpleClass<Integer> subj = new SimpleClass<Integer>(Integer.class);
         UndoGroup group = new UndoGroup();
-        UndoStack stack = new UndoStack(subj, group, new UndoWatcher());
+        UndoStack stack = new UndoStack(subj, group);
+        stack.setSubscriber(new UndoWatcher());
         stack.setUndoLimit(5);
         for (int i = 0; i < 10; ++i) {
             stack.push(new FunctionalCommand<>(String.valueOf(i), subj::getValue, subj::setValue, i));
@@ -187,7 +193,8 @@ public class TestUndoStack {
 
         SimpleClass<Integer> subj = new SimpleClass<>(Integer.class);
         UndoGroup group = new UndoGroup();
-        UndoStack stack = new UndoStack(subj, group, new UndoWatcher());
+        UndoStack stack = new UndoStack(subj, group);
+        stack.setSubscriber(new UndoWatcher());
         for (int i = 0; i < 10; ++i) {
             stack.push(new FunctionalCommand<>(String.valueOf(i), subj::getValue, subj::setValue, i));
         }
@@ -232,7 +239,8 @@ public class TestUndoStack {
     public void auxProps() throws Exception {
         SimpleClass<Integer> subj = new SimpleClass<>(Integer.class);
         UndoGroup group = new UndoGroup();
-        UndoStack stack = new UndoStack(subj, group, new UndoWatcher());
+        UndoStack stack = new UndoStack(subj, group);
+        stack.setSubscriber(new UndoWatcher());
         group.setActive(stack);
         assertEquals(false, stack.canUndo());
         assertEquals(false, stack.canRedo());
@@ -302,7 +310,8 @@ public class TestUndoStack {
     @Test
     public void testNonTrivial() throws Exception {
         NonTrivialClass ntc = new NonTrivialClass();
-        UndoStack stack = new UndoStack(ntc, null, new UndoWatcher());
+        UndoStack stack = new UndoStack(ntc, null);
+        stack.setSubscriber(new UndoWatcher());
         assertEquals(0, ntc.items.size());
 
         {

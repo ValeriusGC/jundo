@@ -12,7 +12,8 @@ public class TestUndoManager {
     public void serialize() throws Exception {
 
         NonTrivialClass ntc = new NonTrivialClass();
-        UndoStack stack = new UndoStack(ntc, null, new UndoWatcher());
+        UndoStack stack = new UndoStack(ntc, null);
+        stack.setSubscriber(new UndoWatcher());
         for(int i = 0; i < 1000; ++i){
             stack.push(new NonTrivialClass.AddCommand(NonTrivialClass.Item.Type.CIRCLE, ntc));
         }
@@ -29,12 +30,13 @@ public class TestUndoManager {
         assertEquals(0, ntc.items.size());
         assertEquals(3000, stack.count());
 
+        UndoManager managerBack = null;
         {
             // Make unzipped serialization
             UndoManager manager = new UndoManager(2, stack);
             String data = UndoManager.serialize(manager, false);
             System.out.println("1: " + data.length());
-            UndoManager managerBack = UndoManager.deserialize(data);
+            managerBack = UndoManager.deserialize(data);
             assertEquals(manager, managerBack);
             assertEquals(NonTrivialClass.class, manager.getStack().getSubject().getClass());
         }
@@ -43,24 +45,27 @@ public class TestUndoManager {
             UndoManager manager = new UndoManager(2, stack);
             String z_data = UndoManager.serialize(manager, true);
             System.out.println("zipped length : " + z_data.length());
-            UndoManager managerBack = UndoManager.deserialize(z_data);
+            managerBack = UndoManager.deserialize(z_data);
             assertEquals(manager, managerBack);
             assertEquals(NonTrivialClass.class, manager.getStack().getSubject().getClass());
         }
 
+        UndoStack stackBack = managerBack.getStack();
+        NonTrivialClass ntcBack = (NonTrivialClass)stackBack.getSubject();
+        stackBack.setSubscriber(new UndoWatcher());
         // Check out
         for(int i = 0; i < 1000; ++i) {
-            stack.undo();
+            stackBack.undo();
         }
-        assertEquals(1000, ntc.items.size());
+        assertEquals(1000, ntcBack.items.size());
         for(int i = 0; i < 1000; ++i) {
-            stack.undo();
+            stackBack.undo();
         }
-        assertEquals(1000, ntc.items.size());
+        assertEquals(1000, ntcBack.items.size());
         for(int i = 0; i < 1000; ++i) {
-            stack.undo();
+            stackBack.undo();
         }
-        assertEquals(0, ntc.items.size());
+        assertEquals(0, ntcBack.items.size());
 
     }
 
