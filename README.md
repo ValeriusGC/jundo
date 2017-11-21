@@ -46,8 +46,8 @@ Point ptBack = (Point)stackBack.getSubject();
 In addition framework contains:
 
 - `FunctionalCommand<V>`: Generic realization for command with ordinary data changing via accessors
-- `Getter<V>`: auxiliary interface for standard geter realization
-- `Setter<V>`: auxiliary interface for standard seter realization
+- `Getter<V>`: auxiliary interface for standard getter realization
+- `Setter<V>`: auxiliary interface for standard setter realization
 
 ## Concepts
 
