@@ -14,18 +14,19 @@ The `Command pattern` is based on the idea that all editing in an application is
 So, a template implementation of UndoCommand was added, which allows creating a command for simply changing a property without creating a class (FunctionalCommand <V extends java.io.Serializable>).
 
  ```java
- // How FunctionalCommand works
- Point pt = new Point(-30, -40);
- UndoStack stack = new UndoStack(pt, null);
- UndoCommand undoCommand = new UndoCommand("Move point", null);
- new FunctionalCommand<>("Change x", pt::getX, pt::setX, 10, undoCommand);
- new FunctionalCommand<>("Change y", pt::getY, pt::setY, 20, undoCommand);
- stack.push(undoCommand);
+// How FunctionalCommand works
+Point pt = new Point(-30, -40);
+UndoStack stack = new UndoStack(pt, null);
+UndoCommand undoCommand = new UndoCommand("Move point", null);
+new FunctionalCommand<>("Change x", pt::getX, pt::setX, 10, undoCommand);
+new FunctionalCommand<>("Change y", pt::getY, pt::setY, 20, undoCommand);
+stack.push(undoCommand);
 ```
 
 Besides serialization mechanism was added, so one can save all undo/redo chains to Base64 string and deserialize them later to objects again.
 
 ```java
+// How serialization works - there and back
 UndoManager manager = new UndoManager(4, stack);
 UndoManager mgrBack = UndoManager.deserialize(UndoManager.serialize(manager, true));
 UndoStack stackBack = mgrBack.getStack();
