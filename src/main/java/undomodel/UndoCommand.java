@@ -17,6 +17,28 @@ public class UndoCommand implements Serializable {
     /**
      * Constructs an UndoCommand object with the given text.
      *
+     *
+     *
+     *
+
+     // Technique for emulating macrocommand without macro ))
+
+     QUndoCommand *parent = new QUndoCommand(tr("Add robot"));
+
+     new AddShapeCommand(doc, Shape(Shape::Rectangle, Qt::green, QRect(115, 15, 81, 70)), parent);
+     new AddShapeCommand(doc, Shape(Shape::Rectangle, Qt::green, QRect(82, 89, 148, 188)), parent);
+     new AddShapeCommand(doc, Shape(Shape::Rectangle, Qt::green, QRect(76, 280, 80, 165)), parent);
+     new AddShapeCommand(doc, Shape(Shape::Rectangle, Qt::green, QRect(163, 280, 80, 164)), parent);
+     new AddShapeCommand(doc, Shape(Shape::Circle, Qt::blue, QRect(116, 25, 80, 50)), parent);
+     new AddShapeCommand(doc, Shape(Shape::Rectangle, Qt::green, QRect(232, 92, 80, 127)), parent);
+     new AddShapeCommand(doc, Shape(Shape::Rectangle, Qt::green, QRect(2, 92, 80, 125)), parent);
+
+     doc->undoStack()->push(parent);
+
+     // ~Technique for emulating macrocommand without macro ))
+
+     *
+     *
      * @param text
      */
     public UndoCommand(String text, UndoCommand parent) {

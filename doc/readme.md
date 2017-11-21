@@ -45,6 +45,32 @@
 - `Один субъект - один стек...`
 - Чистое состояние: Используется для сигнализации, что документ вошел или покинул момент, когда происходило сохранение на диск. Это можно использовать для отражения в состоянии зависимых визуальных контролов приложения (доступность кнопки "Сохранить", и т.п.)
 - `Clean state: Used to signal when the document enters and leaves a state that has been saved to disk. This is typically used to disable or enable the save actions, and to update the document's title bar`
-- Компрессия команд: Используется для объединения однотипныз последовательностей в единую команду. В текстовом документе можно воспользоваться для объединения печатания одиночных символов в команду, печатающую целое слово. В графическом многократное перемещение объекта в одно перемещение от стартовой до конечной точки
+- Компрессия команд: Используется для объединения однотипных последовательностей в единую команду. В текстовом документе можно воспользоваться для объединения печатания одиночных символов в команду, печатающую целое слово. В графическом многократное перемещение объекта в одно перемещение от стартовой до конечной точки
 - `Command compression: Used to compress sequences of commands into a single command. For example: In a text editor, the commands that insert individual characters into the document can be compressed into a single command that inserts whole sections of text. These bigger changes are more convenient for the user to undo and redo`
+- Макрокоманды: Последовательность команд, выполняемых undo/redo за один раз. Это упрощает создание задач для приложений, когда совокупность взаимосвязанных команд должна быть выполнена одномоментно. К примеру, удаление/восстановление множества выделенных объектов графической сцены можно оформить как макрос "Удаление выделенных объектов".
+- `Command macros: A sequence of commands, all of which are undone or redone in one step. These simplify the task of writing an application, since a set of simpler commands can be composed into more complex commands. For example, a command that moves a set of selected objects in a document can be created by combining a set of commands, each of which moves a single object`
+
+### Howto
+
+#### Создать цепочку команд без использования макросов
+Создать базовую команду типа UndoCommand, а для всех последующих указать ее, как парент. В стек добавлять только первую команду. Таким образом все последующие команды окажутся не в стеке, а в листе субкоманд первой команды, и автоматически выполнятся при вызове `UndoCommand.undo()`:
+
+```
+UndoCommand parent = new UndoCommand("Add robot");
+new AddShapeCommand(doc, ShapeRectangle, parent);
+new AddShapeCommand(doc, ShapeRectangle, parent);
+new AddShapeCommand(doc, ShapeRectangle, parent);
+new AddShapeCommand(doc, ShapeRectangle, parent);
+doc.undoStack().push(parent);
+```
+
+#### Создать цепочку команд с макросом
+```
+doc.undoStack().beginMacro("Add robot");
+doc.undoStack().push(new AddShapeCommand(doc, ShapeRectangle, parent));
+doc.undoStack().push(new AddShapeCommand(doc, ShapeRectangle, parent));
+doc.undoStack().push(new AddShapeCommand(doc, ShapeRectangle, parent));
+doc.undoStack().push(new AddShapeCommand(doc, ShapeRectangle, parent));
+doc.undoStack().endMacro();
+```
 

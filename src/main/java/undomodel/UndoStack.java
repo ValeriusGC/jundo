@@ -15,8 +15,6 @@ import java.util.Objects;
  */
 public class UndoStack implements Serializable{
 
-    // TODO: 20.11.17 Тестировать все с макрокомандами: одна, ни одной, связь с другими пропертями. Документация!!
-
     UndoGroup group;
     private final Serializable subject;
     private int idx;
@@ -109,8 +107,9 @@ public class UndoStack implements Serializable{
         }
 
         UndoCommand cur = null;
+        UndoCommand macroCmd = null;
         if(macro) {
-            UndoCommand macroCmd = macroStack.get(macroStack.size() - 1);
+            macroCmd = macroStack.get(macroStack.size() - 1);
             if(macroCmd.childLst != null && !macroCmd.childLst.isEmpty()) {
                 cur = macroCmd.childLst.get(macroCmd.childLst.size() - 1);
             }
@@ -142,7 +141,10 @@ public class UndoStack implements Serializable{
             }
         }else{
             if(macro) {
-                macroStack.get(macroStack.size() - 1).childLst.add(cmd);
+                if(macroCmd.childLst == null) {
+                    macroCmd.childLst = new ArrayList<>();
+                }
+                macroCmd.childLst.add(cmd);
             }else {
                 // And last actions
                 cmdLst.add(cmd);
@@ -340,6 +342,28 @@ public class UndoStack implements Serializable{
         return (cmdLst != null && idx < cmdLst.size()) ? cmdLst.get(idx).getText() : "";
     }
 
+    /**
+     * Begins composition of a macro command with the given description.
+     * <br/>
+     * An empty command described by the specified \a text is pushed on the stack.
+     * Any subsequent commands pushed on the stack will be appended to the empty command's children
+     * until endMacro() is called.
+     * <br/>
+     * Calls to beginMacro() and endMacro() may be nested, but every call to beginMacro() must have a matching call
+     * to endMacro().
+     * <br/>
+     * While a macro is composed, the stack is disabled. This means that:
+     * <ul>
+     *  <li>indexChanged() and cleanChanged() are not emitted,</li>
+     *  <li>canUndo() and canRedo() return false,
+     *  <li>calling undo() or redo() has no effect,
+     *  <li>the undo/redo actions are disabled
+     * </ul>
+     * <p/>
+     * The stack becomes enabled and appropriate signals are emitted when endMacro() is called for the outermost macro.
+     *
+     * @param text
+     */
     public void beginMacro(String text) {
 
         UndoCommand cmd = new UndoCommand(text, null);
@@ -374,6 +398,12 @@ public class UndoStack implements Serializable{
         }
     }
 
+    /**
+     * Ends composition of a macro command.
+     * <br/>
+     * If this is the outermost macro in a set nested macros, this function emits indexChanged()
+     * once for the entire macro command.
+     */
     public void endMacro() {
         if(macroStack == null || macroStack.isEmpty()) {
             System.err.println("UndoStack.endMacro(): no matching beginMacro()");
