@@ -66,11 +66,13 @@ The following concepts are supported by the framework
 Use `parent` property
 
 ```java
-UndoCommand parent = new UndoCommand("Add robot");
+UndoCommand parent = new UndoCommand("Add robot", null);
+// Next commands store as child ones for parent one and will be used one by one there and back in undo/redo processes.
 new AddShapeCommand(doc, ShapeRectangle, parent);
 new AddShapeCommand(doc, ShapeRectangle, parent);
 new AddShapeCommand(doc, ShapeRectangle, parent);
 new AddShapeCommand(doc, ShapeRectangle, parent);
+// Only parent pushes to stack
 doc.undoStack().push(parent);
 ```
 
@@ -78,9 +80,10 @@ doc.undoStack().push(parent);
 
 ```java
 doc.undoStack().beginMacro("Add robot");
-doc.undoStack().push(new AddShapeCommand(doc, ShapeRectangle, parent));
-doc.undoStack().push(new AddShapeCommand(doc, ShapeRectangle, parent));
-doc.undoStack().push(new AddShapeCommand(doc, ShapeRectangle, parent));
-doc.undoStack().push(new AddShapeCommand(doc, ShapeRectangle, parent));
+// Next commands don't use parent one 'cause they are stored as  'macro' in the stack.
+doc.undoStack().push(new AddShapeCommand(doc, ShapeRectangle, null));
+doc.undoStack().push(new AddShapeCommand(doc, ShapeRectangle, null));
+doc.undoStack().push(new AddShapeCommand(doc, ShapeRectangle, null));
+doc.undoStack().push(new AddShapeCommand(doc, ShapeRectangle, null));
 doc.undoStack().endMacro();
 ```
