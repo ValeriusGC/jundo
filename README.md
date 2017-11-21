@@ -48,3 +48,38 @@ In addition framework contains:
 - `Getter<V>`: auxiliary interface for standard geter realization
 - `Setter<V>`: auxiliary interface for standard seter realization
 
+## Concepts
+
+The following concepts are supported by the framework
+
+- **One subject - one UndoStack**: Keeping subject changes in more than one stack can lead to application crash because of potential clashings and collisions. That's why no way to place 2 or more stacks with one subject in UndoGroup (they compare by address). Stacks that are not in the group it should be controlled by developer.
+- **Clean state**: Used to signal when the document enters and leaves a state that has been saved to disk. This is typically used to disable or enable the save actions, and to update the document's title bar
+- **Command compression**: Used to compress sequences of commands into a single command. For example: In a text editor, the commands that insert individual characters into the document can be compressed into a single command that inserts whole sections of text. These bigger changes are more convenient for the user to undo and redo
+- **Command macros**: A sequence of commands, all of which are undone or redone in one step. These simplify the task of writing an application, since a set of simpler commands can be composed into more complex commands. For example, a command that moves a set of selected objects in a document can be created by combining a set of commands, each of which moves a single object
+- **Smart serialization**: Making serialization via UndoManager one can use `DATA_VER` to pass subject and `undo stack` version to the side of deserialization so one can use correct mechanisms to restore data (migration to other version, etc). Moreover, using pairs of property in extras one can send any extra data. UndoManager has ability to compress data using gzip
+
+## HowTo
+
+### Makes command chain without using macrocommands
+
+Use `parent` property
+
+```java
+UndoCommand parent = new UndoCommand("Add robot");
+new AddShapeCommand(doc, ShapeRectangle, parent);
+new AddShapeCommand(doc, ShapeRectangle, parent);
+new AddShapeCommand(doc, ShapeRectangle, parent);
+new AddShapeCommand(doc, ShapeRectangle, parent);
+doc.undoStack().push(parent);
+```
+
+#### Makes command chain with macrocommands
+
+```java
+doc.undoStack().beginMacro("Add robot");
+doc.undoStack().push(new AddShapeCommand(doc, ShapeRectangle, parent));
+doc.undoStack().push(new AddShapeCommand(doc, ShapeRectangle, parent));
+doc.undoStack().push(new AddShapeCommand(doc, ShapeRectangle, parent));
+doc.undoStack().push(new AddShapeCommand(doc, ShapeRectangle, parent));
+doc.undoStack().endMacro();
+```
