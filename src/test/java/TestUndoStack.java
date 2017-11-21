@@ -1,5 +1,6 @@
 import org.junit.Test;
 import serialize.NonTrivialClass;
+import serialize.Point;
 import serialize.SimpleClass;
 import serialize.UndoWatcher;
 import undomodel.*;
@@ -55,6 +56,46 @@ public class TestUndoStack {
     }
 
 
+    /**
+     * Simply shows how elegant {@link FunctionalCommand} works
+     */
+    @Test
+    public void testIntegerClass() throws Exception {
+
+        Point pt = new Point(-30, -40);
+        UndoStack stack = new UndoStack(pt, null);
+        UndoCommand undoCommand = new UndoCommand("Move point", null);
+        new FunctionalCommand<>("Change x", pt::getX, pt::setX, 10, undoCommand);
+        new FunctionalCommand<>("Change y", pt::getY, pt::setY, 20, undoCommand);
+        stack.push(undoCommand);
+        assertEquals(1, stack.count());
+        assertEquals(10, pt.getX());
+        assertEquals(20, pt.getY());
+        stack.undo();
+        assertEquals(-30, pt.getX());
+        assertEquals(-40, pt.getY());
+        assertEquals(0, stack.getIdx());
+
+        UndoManager manager = new UndoManager(4, stack);
+        manager = UndoManager.deserialize(UndoManager.serialize(manager, true));
+
+        UndoStack stackBack = manager.getStack();
+        Point ptBack = (Point)stackBack.getSubject();
+        assertEquals(pt, ptBack);
+        assertEquals(-30, ptBack.getX());
+        assertEquals(-40, ptBack.getY());
+        assertEquals(1, stackBack.count());
+        assertEquals(0, stackBack.getIdx());
+
+        stackBack.redo();
+        // ))
+        stackBack.redo();
+        stackBack.redo();
+        assertEquals(10, ptBack.getX());
+        assertEquals(20, ptBack.getY());
+
+
+    }
 
     /**
      * Create {@link UndoStack} with or without groups.
