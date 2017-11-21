@@ -1,5 +1,5 @@
 # jundo
 Java undo/redo framework
 
+[![Build Status](https://travis-ci.org/ValeriusGC/jundo.svg?branch=master)](https://travis-ci.org/ValeriusGC/jundo)
 
-[![Build Status](https://https://travis-ci.org/ValeriusGC/jundo.svg?branch=master)](https://https://travis-ci.org/ValeriusGC/jundo)
