@@ -1,6 +1,6 @@
 package serialize;
 
-import undomodel.UndoCommand;
+import com.gdetotut.jundo.UndoCommand;
 
 import java.io.Serializable;
 import java.util.ArrayList;

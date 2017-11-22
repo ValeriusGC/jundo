@@ -1,6 +1,6 @@
 package serialize;
 
-import undomodel.UndoEvents;
+import com.gdetotut.jundo.UndoEvents;
 
 import java.io.Serializable;
 

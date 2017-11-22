@@ -1,4 +1,4 @@
-package undomodel;
+package com.gdetotut.jundo;
 
 import org.jetbrains.annotations.NotNull;
 

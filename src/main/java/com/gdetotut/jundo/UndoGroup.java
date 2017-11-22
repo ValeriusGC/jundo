@@ -1,4 +1,4 @@
-package undomodel;
+package com.gdetotut.jundo;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -6,6 +6,20 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * The UndoGroup class is a group of UndoStack objects.
+ * <p>An application often has multiple undo stacks, one for each opened document. At the same time,
+ * an application usually has one undo action and one redo action, which triggers undo or redo in the active document.</p>
+ * <p>UndoGroup is a group of UndoStack objects, one of which may be active. It has an undo() and redo() methods,
+ * which calls UndoStack::undo() and UndoStack::redo() for the active stack.</p>
+ * <p>Stacks are added to a group with add() and removed with remove(). A stack is implicitly added to a group
+ * when it is created with the group as its parent.</p>
+ * <p><b>UndoGroup doesn't allow to add 2 stacks with the same subject (compares by address) because
+ * it is logical violation.</b></p>
+ * <p>It is the programmer's responsibility to specify which stack is active by calling UndoStack::setActive(),
+ * usually when the associated document window receives focus. The active stack may also be set with setActiveStack(),
+ * and is returned by getActive().</p>
+ */
 public class UndoGroup implements Serializable {
 
     private UndoStack active;

@@ -1,4 +1,4 @@
-package undomodel;
+package com.gdetotut.jundo;
 
 /**
  * Methods for subscribers.

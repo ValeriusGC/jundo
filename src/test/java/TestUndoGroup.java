@@ -1,7 +1,7 @@
 import org.junit.Test;
 import serialize.SimpleClass;
-import undomodel.UndoGroup;
-import undomodel.UndoStack;
+import com.gdetotut.jundo.UndoGroup;
+import com.gdetotut.jundo.UndoStack;
 
 import static org.junit.Assert.assertEquals;
 

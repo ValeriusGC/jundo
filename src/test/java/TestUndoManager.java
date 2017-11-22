@@ -1,8 +1,8 @@
 import org.junit.Test;
 import serialize.UndoWatcher;
-import undomodel.UndoManager;
+import com.gdetotut.jundo.UndoManager;
 import serialize.NonTrivialClass;
-import undomodel.UndoStack;
+import com.gdetotut.jundo.UndoStack;
 
 import static org.junit.Assert.assertEquals;
 
@@ -35,12 +35,11 @@ public class TestUndoManager {
             // Make unzipped serialization
             UndoManager manager = new UndoManager(2, stack);
             String data = UndoManager.serialize(manager, false);
-            System.out.println("1: " + data.length());
+//            System.out.println("1: " + data.length());
             managerBack = UndoManager.deserialize(data);
             // Here we can't compare managers themselves 'cause of stack's comparison principle it leads at last
             // ------- assertEquals(manager, managerBack);
-            assertEquals(manager.DATA_VER, managerBack.DATA_VER);
-            assertEquals(manager.VER, managerBack.VER);
+            assertEquals(manager.VERSION, managerBack.VERSION);
             assertEquals(manager.getExtras(), managerBack.getExtras());
             assertEquals(manager.getStack().getSubject(), managerBack.getStack().getSubject());
             //~
@@ -50,12 +49,11 @@ public class TestUndoManager {
             // Make zipped serialization
             UndoManager manager = new UndoManager(2, stack);
             String z_data = UndoManager.serialize(manager, true);
-            System.out.println("zipped length : " + z_data.length());
+//            System.out.println("zipped length : " + z_data.length());
             managerBack = UndoManager.deserialize(z_data);
             // Here we can't compare managers themselves 'cause of stack's comparison principle it leads at last
             // ------- assertEquals(manager, managerBack);
-            assertEquals(manager.DATA_VER, managerBack.DATA_VER);
-            assertEquals(manager.VER, managerBack.VER);
+            assertEquals(manager.VERSION, managerBack.VERSION);
             assertEquals(manager.getExtras(), managerBack.getExtras());
             assertEquals(manager.getStack().getSubject(), managerBack.getStack().getSubject());
             //~
