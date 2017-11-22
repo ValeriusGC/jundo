@@ -100,14 +100,15 @@ public class UndoManager implements Serializable {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        UndoManager manager = (UndoManager) o;
-        return VERSION == manager.VERSION &&
-                Objects.equals(stack, manager.stack) &&
-                Objects.equals(extras, manager.extras);
+        UndoManager that = (UndoManager) o;
+        return VERSION == that.VERSION &&
+                Objects.equals(ID, that.ID) &&
+                Objects.equals(getStack(), that.getStack()) &&
+                Objects.equals(getExtras(), that.getExtras());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(VERSION, stack, extras);
+        return Objects.hash(ID, VERSION, getStack(), getExtras());
     }
 }

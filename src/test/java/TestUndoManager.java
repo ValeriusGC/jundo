@@ -33,7 +33,7 @@ public class TestUndoManager {
         UndoManager managerBack = null;
         {
             // Make unzipped serialization
-            UndoManager manager = new UndoManager(2, stack);
+            UndoManager manager = new UndoManager(null,2, stack);
             String data = UndoManager.serialize(manager, false);
 //            System.out.println("1: " + data.length());
             managerBack = UndoManager.deserialize(data);
@@ -47,7 +47,7 @@ public class TestUndoManager {
         }
         {
             // Make zipped serialization
-            UndoManager manager = new UndoManager(2, stack);
+            UndoManager manager = new UndoManager(null,2, stack);
             String z_data = UndoManager.serialize(manager, true);
 //            System.out.println("zipped length : " + z_data.length());
             managerBack = UndoManager.deserialize(z_data);
