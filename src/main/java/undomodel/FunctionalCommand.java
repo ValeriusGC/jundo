@@ -6,7 +6,7 @@ import java.util.Objects;
 
 /**
  *
- * @param <V>
+ * @param <V> generic type for this class.
  */
 public class FunctionalCommand<V extends java.io.Serializable> extends UndoCommand {
 
@@ -17,9 +17,6 @@ public class FunctionalCommand<V extends java.io.Serializable> extends UndoComma
     public FunctionalCommand(String text, @NotNull Getter<V> getter, @NotNull Setter<V> setter, V newValue, UndoCommand parent)
             throws Exception {
         super(text, parent);
-        if(getter == null || setter == null) {
-            throw new Exception("null parameters!");
-        }
         this.setter = setter;
         this.oldValue = getter.get();
         this.newValue = newValue;

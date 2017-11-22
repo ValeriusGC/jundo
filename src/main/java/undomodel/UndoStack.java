@@ -9,8 +9,7 @@ import java.util.Objects;
 
 /**
  * <b>Main characteristic of {@link UndoStack} is that two different stack should not share one subject.</b>
- * <br/>
- *  Otherwise {@link UndoGroup} may not add them both, and there will be collision when undoing one subject
+ * <p>Otherwise {@link UndoGroup} may not add them both, and there will be collision when undoing one subject
  *  via different stacks.
  */
 public class UndoStack implements Serializable{
@@ -30,6 +29,13 @@ public class UndoStack implements Serializable{
      * If parent is not a null the stack is automatically added to the group.
      * @param group possible group for this {@link UndoStack}
      */
+    /**
+     *
+     * Constructs an empty undo stack. The stack will initially be in the clean state.
+     * If parent is not a null the stack is automatically added to the group.
+     * @param subject for whom this stack was made
+     * @param group possible group for this {@link UndoStack}
+     */
     public UndoStack(@NotNull Serializable subject, UndoGroup group) {
         this.subject = subject;
         if(null != group) {
@@ -39,10 +45,8 @@ public class UndoStack implements Serializable{
 
     /**
      * Clears the command stack by deleting all commands on it, and returns the stack to the clean state.
-     * <p></p>
-     * Commands are not undone or redone; the state of the edited object remains  unchanged.
-     * <p></p>
-     * This function is usually used when the contents of the document are abandoned.
+     * <p>Commands are not undone or redone; the state of the edited object remains  unchanged.
+     * <p>This function is usually used when the contents of the document are abandoned.
      */
     public void clear() {
         if(cmdLst == null || cmdLst.isEmpty()) {
@@ -79,24 +83,19 @@ public class UndoStack implements Serializable{
     /**
      * Pushes cmd on the stack or merges it with the most recently executed command.
      * In either case, executes cmd by calling its redo() function.
-     * <p></p>
-     * If cmd's id is not -1, and if the id is the same as that of the
+     * <p>If cmd's id is not -1, and if the id is the same as that of the
      * most recently executed command, UndoStack will attempt to merge the two
      * commands by calling UndoCommand.mergeWith() on the most recently executed
      * command. If UndoCommand.mergeWith() returns true, cmd is deleted.
-     * <p>
-     * In all other cases cmd is simply pushed on the stack.
-     * <p>
-     * If commands were undone before cmd was pushed, the current command and
+     * <p>In all other cases cmd is simply pushed on the stack.
+     * <p>If commands were undone before cmd was pushed, the current command and
      * all commands above it are deleted. Hence cmd always ends up being the top-most on the stack.
-     * <p>
-     * Once a command is pushed, the stack takes ownership of it. There
+     * <p>Once a command is pushed, the stack takes ownership of it. There
      * are no getters to return the command, since modifying it after it has
      * been executed will almost always lead to corruption of the document's state.
      * @param cmd new command to execute.
-     * @throws Exception
      */
-    public void push(@NotNull UndoCommand cmd) throws Exception {
+    public void push(@NotNull UndoCommand cmd) {
 
         cmd.redo();
 
@@ -156,8 +155,7 @@ public class UndoStack implements Serializable{
 
     /**
      * Marks the stack as clean and emits cleanChanged() if the stack was not already clean.
-     * <p>
-     * Whenever the stack returns to this state through the use of undo/redo commands,
+     * <p>Whenever the stack returns to this state through the use of undo/redo commands,
      * it emits the signal cleanChanged(). This signal is also emitted when the stack leaves the clean state.
      */
     public void setClean() {
@@ -181,12 +179,10 @@ public class UndoStack implements Serializable{
 
     /**
      * Returns the clean index. This is the index at which setClean() was called.
-     * <p>
-     * A stack may not have a clean index. This happens if a document is saved, some commands are undone,
+     * <p>A stack may not have a clean index. This happens if a document is saved, some commands are undone,
      * then a new command is pushed. Since push() deletes all the undone commands before pushing
      * the new command, the stack can't return to the clean state again.
      * In this case, this function returns -1.
-     *
      * @return Clean index
      */
     public int getCleanIdx() {
@@ -196,8 +192,7 @@ public class UndoStack implements Serializable{
     /**
      * Undoes the command below the current command by calling UndoCommand.undo().
      * Decrements the current command index.
-     * <p>
-     * If the stack is empty, or if the bottom command on the stack has already been undone, this function does nothing.
+     * <p>If the stack is empty, or if the bottom command on the stack has already been undone, this function does nothing.
      */
     public void undo() {
         if (cmdLst == null || idx == 0) {
@@ -217,8 +212,7 @@ public class UndoStack implements Serializable{
 
     /**
      * Redoes the current command by calling UndoCommand.redo(). Increments the current command index.
-     * <p>
-     * If the stack is empty, or if the top command on the stack has already been redone, this function does nothing.
+     * <p>If the stack is empty, or if the top command on the stack has already been redone, this function does nothing.
      */
     public void redo() {
         if (cmdLst == null || idx == cmdLst.size()) {
@@ -254,8 +248,7 @@ public class UndoStack implements Serializable{
     /**
      * Repeatedly calls undo() or redo() until the current command index reaches idx.
      * This function can be used to roll the state of the document forwards of backwards.
-     * <p>
-     * indexChanged() is emitted only once.
+     * <p>indexChanged() is emitted only once.
      * @param idx Index to achieve.
      */
     public void setIndex(int idx) {
@@ -288,11 +281,8 @@ public class UndoStack implements Serializable{
 
     /**
      * Returns true if there is a command available for undo; otherwise returns false.
-     * <p>
-     * This function returns false if the stack is empty, or if the bottom command on the stack has already been undone.
-     * <p>
-     * Synonymous with index() == 0.
-     *
+     * <p>This function returns false if the stack is empty, or if the bottom command on the stack has already been undone.
+     * <p>Synonymous with index() == 0.
      * @return If there is a command available for undo.
      */
     public boolean canUndo() {
@@ -304,11 +294,8 @@ public class UndoStack implements Serializable{
 
     /**
      * Returns true if there is a command available for redo; otherwise returns false.
-     * <p>
-     * This function returns false if the stack is empty or if the top command on the stack has already been redone.
-     * <p>
-     * Synonymous with index() == count().
-     *
+     * <p>This function returns false if the stack is empty or if the top command on the stack has already been redone.
+     * <p>Synonymous with index() == count().
      * @return If there is a command available for redo.
      */
     public boolean canRedo() {
@@ -320,7 +307,6 @@ public class UndoStack implements Serializable{
 
     /**
      * Returns the text of the command which will be undone in the next call to undo().
-     *
      * @return The text of the command which will be undone in the next call to undo().
      */
     public String undoText() {
@@ -332,7 +318,6 @@ public class UndoStack implements Serializable{
 
     /**
      * Returns the text of the command which will be redone in the next call to redo().
-     *
      * @return The text of the command which will be redone in the next call to redo().
      */
     public String redoText() {
@@ -344,25 +329,21 @@ public class UndoStack implements Serializable{
 
     /**
      * Begins composition of a macro command with the given description.
-     * <br/>
-     * An empty command described by the specified \a text is pushed on the stack.
+     * <p>An empty command described by the specified \a text is pushed on the stack.
      * Any subsequent commands pushed on the stack will be appended to the empty command's children
      * until endMacro() is called.
-     * <br/>
-     * Calls to beginMacro() and endMacro() may be nested, but every call to beginMacro() must have a matching call
+     * <p>Calls to beginMacro() and endMacro() may be nested, but every call to beginMacro() must have a matching call
      * to endMacro().
-     * <br/>
-     * While a macro is composed, the stack is disabled. This means that:
+     * <p>While a macro is composed, the stack is disabled. This means that:
      * <ul>
      *  <li>indexChanged() and cleanChanged() are not emitted,</li>
      *  <li>canUndo() and canRedo() return false,
      *  <li>calling undo() or redo() has no effect,
      *  <li>the undo/redo actions are disabled
      * </ul>
-     * <p/>
-     * The stack becomes enabled and appropriate signals are emitted when endMacro() is called for the outermost macro.
+     * <p>The stack becomes enabled and appropriate signals are emitted when endMacro() is called for the outermost macro.
      *
-     * @param text
+     * @param text title for this macro
      */
     public void beginMacro(String text) {
 
@@ -400,8 +381,7 @@ public class UndoStack implements Serializable{
 
     /**
      * Ends composition of a macro command.
-     * <br/>
-     * If this is the outermost macro in a set nested macros, this function emits indexChanged()
+     * <p>If this is the outermost macro in a set nested macros, this function emits indexChanged()
      * once for the entire macro command.
      */
     public void endMacro() {
@@ -418,11 +398,10 @@ public class UndoStack implements Serializable{
 
     /**
      * Returns a reference to the command at idx.
-     * <p>
-     * Be aware to modify it because modifying a command, once it has been pushed onto the stack and executed,
+     * <p>Be aware to modify it because modifying a command, once it has been pushed onto the stack and executed,
      * almost always causes corruption of the state of the document, if the command is later undone or redone.
      *
-     * @param idx The index of command has been retrieved.
+     * @param idx the index of command has been retrieved.
      * @return Command or null.
      */
     public UndoCommand getCommand(int idx) {
@@ -448,8 +427,7 @@ public class UndoStack implements Serializable{
     /**
      * When the number of commands on a stack exceedes the stack's undoLimit, commands are deleted from the bottom
      * of the stack. The default value is 0, which means that there is no limit.
-     * <p>
-     * This property may only be set when the undo stack is empty, since setting it on a non-empty stack
+     * <p>This property may only be set when the undo stack is empty, since setting it on a non-empty stack
      * might delete the command at the current index. Calling setUndoLimit()on a non-empty stack prints a warning
      * and does nothing.
      *
@@ -487,8 +465,7 @@ public class UndoStack implements Serializable{
      * the one associated with the currently active document. If the stack belongs to a UndoGroup,
      * calls to UndoGroup.undo() or UndoGroup.redo() will be forwarded to this stack when it is active.
      * If the stack does not belong to a UndoGroup, making it active has no effect.
-     * <p>
-     * It is the programmer's responsibility to specify which stack is active by calling setActive(),
+     * <p>It is the programmer's responsibility to specify which stack is active by calling setActive(),
      * usually when the associated document window receives focus.
      *
      * @param active Setting this UndoStack active in its group if it exists.

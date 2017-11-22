@@ -18,14 +18,11 @@ public class UndoManager implements Serializable {
     private final Map<String, String> extras = new TreeMap<>();
 
     /**
-     * 1. Object -> byte[]
-     * 1.1. if(zip): byte[] -> byte[] zipped
-     * 2. byte[] -> Base64 string
-     *
-     * @param manager
-     * @param doZip
-     * @return
-     * @throws IOException
+     * Serializes manager to Base64 string.
+     * @param manager manager to serialize
+     * @param doZip flag for gzipping
+     * @return manager as base64 string
+     * @throws IOException when something goes wrong
      */
     public static String serialize(@NotNull UndoManager manager, boolean doZip) throws IOException {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -44,14 +41,11 @@ public class UndoManager implements Serializable {
     }
 
     /**
-     * 1. Base64 string -> byte[]
-     * 1.1. if(zip): byte[] -> byte[] unzipped
-     * 2. byte[] -> Object
-     *
-     * @param str
-     * @return
-     * @throws IOException
-     * @throws ClassNotFoundException
+     * Deserialize base64 string back to manager
+     * @param str base64 string
+     * @return manager
+     * @throws IOException when something goes wrong
+     * @throws ClassNotFoundException when something goes wrong
      */
     public static UndoManager deserialize(@NotNull String str) throws IOException, ClassNotFoundException {
 

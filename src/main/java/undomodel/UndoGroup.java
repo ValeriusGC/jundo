@@ -68,10 +68,8 @@ public class UndoGroup implements Serializable {
 
     /**
      * Sets the active stack of this group to stack.
-     * <p>
-     * If the stack is not a member of this group, this function does nothing.
+     * <p>If the stack is not a member of this group, this function does nothing.
      * Synonymous with calling UndoStack.setActive() on stack.
-     * <p>
      *
      * @param stack stack to make active or null
      */
@@ -84,8 +82,7 @@ public class UndoGroup implements Serializable {
 
     /**
      * Returns the active stack of this group.
-     * <p>
-     * If none of the stacks are active, or if the group is empty, this function returns null.
+     * <p>If none of the stacks are active, or if the group is empty, this function returns null.
      *
      * @return active stack or null.
      */
@@ -95,8 +92,7 @@ public class UndoGroup implements Serializable {
 
     /**
      * Calls UndoStack.undo() on the active stack.
-     * <p>
-     * If none of the stacks are active, or if the group is empty, this function  does nothing.
+     * <p>If none of the stacks are active, or if the group is empty, this function  does nothing.
      */
     public void undo() {
         if (active != null) {
@@ -106,8 +102,7 @@ public class UndoGroup implements Serializable {
 
     /**
      * Calls UndoStack.redo() on the active stack.
-     * <p>
-     * If none of the stacks are active, or if the group is empty, this function  does nothing.
+     * <p>If none of the stacks are active, or if the group is empty, this function  does nothing.
      */
     public void redo() {
         if (active != null) {
@@ -117,8 +112,7 @@ public class UndoGroup implements Serializable {
 
     /**
      * Returns the value of the active stack's UndoStack.canUndo().
-     * <p>
-     * If none of the stacks are active, or if the group is empty, this function returns false.
+     * <p>If none of the stacks are active, or if the group is empty, this function returns false.
      *
      * @return UndoStack.canUndo() for active stack or false.
      */
@@ -128,8 +122,7 @@ public class UndoGroup implements Serializable {
 
     /**
      * Returns the value of the active stack's UndoStack.canRedo().
-     * <p>
-     * If none of the stacks are active, or if the group is empty, this function returns false.
+     * <p>If none of the stacks are active, or if the group is empty, this function returns false.
      *
      * @return UndoStack.canRedo() for active stack or false.
      */
@@ -139,8 +132,7 @@ public class UndoGroup implements Serializable {
 
     /**
      * Returns the value of the active stack's UndoStack.undoText().
-     * <p></p>
-     * If none of the stacks are active, or if the group is empty, this function returns an empty string.
+     * <p>If none of the stacks are active, or if the group is empty, this function returns an empty string.
      *
      * @return the value of the active stack's UndoStack.undoText() or empty string.
      */
@@ -150,8 +142,7 @@ public class UndoGroup implements Serializable {
 
     /**
      * Returns the value of the active stack's UndoStack.redoText().
-     * <p></p>
-     * If none of the stacks are active, or if the group is empty, this function returns an empty string.
+     * <p>If none of the stacks are active, or if the group is empty, this function returns an empty string.
      *
      * @return the value of the active stack's UndoStack.redoText() or empty string.
      */
@@ -161,8 +152,7 @@ public class UndoGroup implements Serializable {
 
     /**
      * Returns the value of the active stack's UndoStack.isClean().
-     * <p></p>
-     * If none of the stacks are active, or if the group is empty, this function returns true.
+     * <p>If none of the stacks are active, or if the group is empty, this function returns true.
      *
      * @return the value of the active stack's UndoStack.isClean() or true.
      */

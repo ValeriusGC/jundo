@@ -16,30 +16,8 @@ public class UndoCommand implements Serializable {
 
     /**
      * Constructs an UndoCommand object with the given text.
-     *
-     *
-     *
-     *
-
-     // Technique for emulating macrocommand without macro ))
-
-     QUndoCommand *parent = new QUndoCommand(tr("Add robot"));
-
-     new AddShapeCommand(doc, Shape(Shape::Rectangle, Qt::green, QRect(115, 15, 81, 70)), parent);
-     new AddShapeCommand(doc, Shape(Shape::Rectangle, Qt::green, QRect(82, 89, 148, 188)), parent);
-     new AddShapeCommand(doc, Shape(Shape::Rectangle, Qt::green, QRect(76, 280, 80, 165)), parent);
-     new AddShapeCommand(doc, Shape(Shape::Rectangle, Qt::green, QRect(163, 280, 80, 164)), parent);
-     new AddShapeCommand(doc, Shape(Shape::Circle, Qt::blue, QRect(116, 25, 80, 50)), parent);
-     new AddShapeCommand(doc, Shape(Shape::Rectangle, Qt::green, QRect(232, 92, 80, 127)), parent);
-     new AddShapeCommand(doc, Shape(Shape::Rectangle, Qt::green, QRect(2, 92, 80, 125)), parent);
-
-     doc->undoStack()->push(parent);
-
-     // ~Technique for emulating macrocommand without macro ))
-
-     *
-     *
-     * @param text
+     * @param text title for command
+     * @param parent possible parent
      */
     public UndoCommand(String text, UndoCommand parent) {
         setText(text);
@@ -53,14 +31,11 @@ public class UndoCommand implements Serializable {
 
     /**
      * Returns the ID of this command.
-     * <p>
-     * A command ID is used in command compression. It must be an integer unique to this command's class,
+     * <p>A command ID is used in command compression. It must be an integer unique to this command's class,
      * or -1 if the command doesn't support compression.
-     * <p>
-     * If the command supports compression this function must be overridden in the derived class to return the correct ID.
+     * <p>If the command supports compression this function must be overridden in the derived class to return the correct ID.
      * The base implementation returns -1.
-     * <p>
-     * UndoStack.push() will only try to merge two commands if they have the same ID, and the ID is not -1.
+     * <p>UndoStack.push() will only try to merge two commands if they have the same ID, and the ID is not -1.
      *
      * @return Integer unique to this command's class or -1 if the command doesn't support compression.
      */
@@ -70,15 +45,11 @@ public class UndoCommand implements Serializable {
 
     /**
      * Attempts to merge this command with cmd. Returns true on success; otherwise returns false.
-     * <br/>
-     * If this function returns true, calling this command's redo() must have the same effect as redoing
+     * <p>If this function returns true, calling this command's redo() must have the same effect as redoing
      * both this command and cmd.
-     * <br/>
-     * Similarly, calling this command's undo() must have the same effect as undoing cmd and this command.
-     * <br/>
-     * UndoStack will only try to merge two commands if they have the same id, and the id is not -1.
-     * <br/>
-     * The default implementation returns false.
+     * <p>Similarly, calling this command's undo() must have the same effect as undoing cmd and this command.
+     * <p>UndoStack will only try to merge two commands if they have the same id, and the id is not -1.
+     * <p>The default implementation returns false.
      *
      * @param cmd Command to try merge with
      * @return True on success; otherwise returns false.
@@ -115,7 +86,7 @@ public class UndoCommand implements Serializable {
     /**
      * Returns a short text string describing what this command does.
      *
-     * @return
+     * @return title
      */
     public String getText() {
         return text;
@@ -123,10 +94,9 @@ public class UndoCommand implements Serializable {
 
     /**
      * Sets the command's text to be the \a text specified.
-     * <br/>
-     * The specified text should be a short user-readable string describing what this  command does.
+     * <p>The specified text should be a short user-readable string describing what this  command does.
      *
-     * @param text
+     * @param text title
      */
     public void setText(String text) {
         this.text = text;
