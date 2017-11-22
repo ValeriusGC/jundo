@@ -27,7 +27,7 @@ Besides serialization mechanism was added, so one can save all undo/redo chains 
 
 ```java
 // How serialization works - there and back
-UndoManager manager = new UndoManager(4, stack);
+UndoManager manager = new UndoManager("Object GUID", 4, stack);
 UndoManager mgrBack = UndoManager.deserialize(UndoManager.serialize(manager, true));
 UndoStack stackBack = mgrBack.getStack();
 Point ptBack = (Point)stackBack.getSubject();
