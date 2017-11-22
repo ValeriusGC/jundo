@@ -76,7 +76,7 @@ new AddShapeCommand(doc, ShapeRectangle, parent);
 doc.undoStack().push(parent);
 ```
 
-#### Makes command chain with macrocommands
+### Makes command chain with macrocommands
 
 ```java
 doc.undoStack().beginMacro("Add robot");
@@ -86,4 +86,43 @@ doc.undoStack().push(new AddShapeCommand(doc, ShapeRectangle, null));
 doc.undoStack().push(new AddShapeCommand(doc, ShapeRectangle, null));
 doc.undoStack().push(new AddShapeCommand(doc, ShapeRectangle, null));
 doc.undoStack().endMacro();
+```
+
+### Use versioning
+
+##### A: Imagine that some object and its stack are subjects to serialize
+```java
+NonTrivialClass ntc = new NonTrivialClass();
+UndoStack stack = new UndoStack(ntc, null);
+stack.setSubscriber(new UndoWatcher());
+for(int i = 0; i < 1000; ++i){
+    stack.push(new NonTrivialClass.AddCommand(NonTrivialClass.Item.Type.CIRCLE, ntc, null));
+}
+UndoManager manager = new UndoManager("My origin", 1, stack);
+String savedObject = UndoManager.serialize(manager, true);
+```
+
+##### B: Let's suggest that object has changed his structure after serialization
+```java
+static class NonTrivialClass_v2 extends NonTrivialClass {
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+       this.title = title;
+    }
+
+    private String title;
+}
+```
+##### C: Here is the way to get it back and update to the new version
+```java
+UndoManager managerBack = UndoManager.deserialize(savedObject);
+UndoStack stackBack = managerBack.getStack();
+NonTrivialClass ntcBack = (NonTrivialClass)stackBack.getSubject();
+// make all redo() till to the top
+stackBask.setIndex(stackBask.count);
+NonTrivialClass_v2 v2 = new NonTrivialClass_v2();
+v2.items.addAll(ntcBack.items);
 ```

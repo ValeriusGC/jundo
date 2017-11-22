@@ -100,6 +100,7 @@ public class TestUndoManager {
         // Illustrate versioning
         assertEquals(NonTrivialClass.class, ntcBack.getClass());
         NonTrivialClass_v2 v2 = new NonTrivialClass_v2();
+        stackBack.setIndex(stackBack.count());
         v2.items.addAll(ntcBack.items);
         assertEquals(v2.items, ntcBack.items);
 
