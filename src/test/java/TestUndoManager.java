@@ -8,6 +8,24 @@ import static org.junit.Assert.assertEquals;
 
 public class TestUndoManager {
 
+
+    /**
+     * Illustration for versioning.
+     */
+    static class NonTrivialClass_v2 extends NonTrivialClass {
+
+        public String getTitle() {
+            return title;
+        }
+
+        public void setTitle(String title) {
+            this.title = title;
+        }
+
+        private String title;
+
+    }
+
     @Test
     public void serialize() throws Exception {
 
@@ -39,6 +57,7 @@ public class TestUndoManager {
             managerBack = UndoManager.deserialize(data);
             // Here we can't compare managers themselves 'cause of stack's comparison principle it leads at last
             // ------- assertEquals(manager, managerBack);
+            assertEquals(manager.ID, managerBack.ID);
             assertEquals(manager.VERSION, managerBack.VERSION);
             assertEquals(manager.getExtras(), managerBack.getExtras());
             assertEquals(manager.getStack().getSubject(), managerBack.getStack().getSubject());
@@ -76,6 +95,13 @@ public class TestUndoManager {
             stackBack.undo();
         }
         assertEquals(0, ntcBack.items.size());
+
+        //============================================================================
+        // Illustrate versioning
+        assertEquals(NonTrivialClass.class, ntcBack.getClass());
+        NonTrivialClass_v2 v2 = new NonTrivialClass_v2();
+        v2.items.addAll(ntcBack.items);
+        assertEquals(v2.items, ntcBack.items);
 
     }
 
