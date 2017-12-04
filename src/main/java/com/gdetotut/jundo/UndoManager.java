@@ -41,26 +41,26 @@ public class UndoManager implements Serializable {
         }
 
         if (doZip) {
-            ByteArrayOutputStream z_baos = new ByteArrayOutputStream();
-            try (GZIPOutputStream gzip = new GZIPOutputStream(z_baos)) {
+            final ByteArrayOutputStream zippedBaos = new ByteArrayOutputStream();
+            try (GZIPOutputStream gzip = new GZIPOutputStream(zippedBaos)) {
                 gzip.write(baos.toByteArray());
             }
-            baos = z_baos;
+            baos = zippedBaos;
         }
         return Base64.getUrlEncoder().encodeToString(baos.toByteArray());
     }
 
     /**
      * Deserialize base64 string back to manager
-     * @param str base64 string
+     * @param base64 base64 string
      * @return manager
      * @throws IOException when something goes wrong
      * @throws ClassNotFoundException when something goes wrong
      */
-    public static UndoManager deserialize(@NotNull String str) throws IOException, ClassNotFoundException {
+    public static UndoManager deserialize(@NotNull String base64) throws IOException, ClassNotFoundException {
 
-        byte[] data = Base64.getUrlDecoder().decode(str);
-        boolean zipped = (data[0] == (byte) (GZIPInputStream.GZIP_MAGIC))
+        final byte[] data = Base64.getUrlDecoder().decode(base64);
+        final boolean zipped = (data[0] == (byte) (GZIPInputStream.GZIP_MAGIC))
                 && (data[1] == (byte) (GZIPInputStream.GZIP_MAGIC >> 8));
 
         try (ObjectInputStream ois = zipped
@@ -73,7 +73,7 @@ public class UndoManager implements Serializable {
     /**
      *  Makes object with specific parameters.
      * @param id unique identifier allowing recognize subject on the deserializing side.
-     * @param version version of subject for correct restoring in the posssible case of object migration.
+     * @param version version of subject for correct restoring in the possible case of object migration.
      * @param stack stack itself.
      */
     public UndoManager(String id, int version, @NotNull UndoStack stack) {
