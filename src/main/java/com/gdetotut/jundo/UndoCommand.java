@@ -58,8 +58,11 @@ public class UndoCommand implements Serializable {
         return false;
     }
 
+    /**
+     * @return if child commands exist returns their count otherwise returns zero.
+     */
     public int childCount() {
-        return childLst.size();
+        return childLst != null ? childLst.size() : 0;
     }
 
     public UndoCommand child(int idx) {
