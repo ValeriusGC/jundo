@@ -19,7 +19,7 @@ public class UndoCommand implements Serializable {
      * @param text title for command
      * @param parent possible parent
      */
-    public UndoCommand(String text, UndoCommand parent) {
+    public UndoCommand(@NotNull String text, UndoCommand parent) {
         setText(text);
         if(parent != null) {
             if(parent.childLst == null) {
@@ -73,17 +73,29 @@ public class UndoCommand implements Serializable {
     }
 
     /**
-     * Calls doRedo()  in derived classes.
+     * Calls {@link #doRedo} in derived classes.
      */
-    public void redo() {
-        doRedo();
+    public final void redo() {
+        if(null != childLst && childLst.size() > 0) {
+            for (UndoCommand cmd : childLst) {
+                cmd.redo();
+            }
+        }else {
+            doRedo();
+        }
     }
 
     /**
      * Calls doUndo()  in derived classes.
      */
-    public void undo() {
-        doUndo();
+    public final void undo() {
+        if(null != childLst && childLst.size() > 0) {
+            for (UndoCommand cmd : childLst) {
+                cmd.undo();
+            }
+        }else {
+            doUndo();
+        }
     }
 
     /**
@@ -91,6 +103,7 @@ public class UndoCommand implements Serializable {
      *
      * @return title
      */
+    @NotNull
     public String getText() {
         return text;
     }
@@ -101,20 +114,20 @@ public class UndoCommand implements Serializable {
      *
      * @param text title
      */
-    public void setText(String text) {
+    public void setText(@NotNull String text) {
         this.text = text;
     }
 
     /**
      * Applies a change to the document. This function must be implemented in the derived class.
-     * Calling UndoStack.push(), UndoStack.undo() or UndoStack.redo() from this function leads to  undefined behavior.
+     * <p>Calling UndoStack.push(), UndoStack.undo() or UndoStack.redo() from this function leads to  undefined behavior.
      */
     protected void doRedo() {
-        if(childLst != null) {
-            for (UndoCommand cmd : childLst) {
-                cmd.redo();
-            }
-        }
+//        if(childLst != null) {
+//            for (UndoCommand cmd : childLst) {
+//                cmd.redo();
+//            }
+//        }
     }
 
     /**

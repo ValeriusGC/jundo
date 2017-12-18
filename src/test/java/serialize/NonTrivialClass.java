@@ -1,6 +1,7 @@
 package serialize;
 
 import com.gdetotut.jundo.UndoCommand;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -60,7 +61,7 @@ public class NonTrivialClass implements Serializable {
         private final int initialPos;
 
         public AddCommand(Item.Type type, NonTrivialClass scene, UndoCommand parent) {
-            super(null, parent);
+            super("", parent);
             this.scene = scene;
             item = new Item(type);
             initialPos = this.scene.items.size() * 2;
@@ -102,7 +103,7 @@ public class NonTrivialClass implements Serializable {
         private final Item item;
 
         public DeleteCommand(NonTrivialClass scene, UndoCommand parent) {
-            super(null, parent);
+            super("", parent);
             this.scene = scene;
             this.item = scene.items.size() > 0 ? scene.items.get(0) : null;
             setText(ConstForTest.CMD_DEL + " at " + item.x);
@@ -148,7 +149,7 @@ public class NonTrivialClass implements Serializable {
         private int newPos;
 
         public MovedCommand(Item item, int oldPos, UndoCommand parent) {
-            super(null, parent);
+            super("", parent);
             this.item = item;
             this.oldPos = oldPos;
             this.newPos = item.x;
@@ -166,7 +167,7 @@ public class NonTrivialClass implements Serializable {
         }
 
         @Override
-        public boolean mergeWith(UndoCommand cmd) {
+        public boolean mergeWith(@NotNull UndoCommand cmd) {
             if(cmd instanceof MovedCommand){
                 Item item = ((MovedCommand) cmd).item;
                 if(item == this.item) {

@@ -11,7 +11,8 @@ import java.util.zip.GZIPOutputStream;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertThat;
+import static serialize.NonTrivialClass.Item.Type.CIRCLE;
+import static serialize.NonTrivialClass.Item.Type.RECT;
 
 public class TestUndoStack {
 
@@ -20,19 +21,19 @@ public class TestUndoStack {
     Serializable subj;
 
     @SuppressWarnings("unchecked")
-    public <V extends java.io.Serializable> void initSimple(Class<V> type, V[] array) throws Exception {
+    public <V extends Serializable> void initSimple(Class<V> type, V[] array) throws Exception {
         arr = array;
         subj = new SimpleClass<V>(type);
         stack = new UndoStack(subj, null);
         stack.setSubscriber(new UndoWatcher());
         for (V i : array) {
-            stack.push(new FunctionalCommand<>(null, ((SimpleClass<V>) subj)::getValue,
+            stack.push(new FunctionalCommand<>("", ((SimpleClass<V>) subj)::getValue,
                     ((SimpleClass<V>) subj)::setValue, i, null));
         }
     }
 
     @SuppressWarnings("unchecked")
-    public <V extends java.io.Serializable> void testSimple() throws IOException, ClassNotFoundException {
+    public <V extends Serializable> void testSimple() throws IOException, ClassNotFoundException {
 
         UndoManager manager = new UndoManager(null, 333, stack);
         UndoManager managerBack = UndoManager.deserialize(UndoManager.serialize(manager, false));
@@ -189,10 +190,10 @@ public class TestUndoStack {
         stack.setSubscriber(new UndoWatcher());
         group.setActive(stack);
 
-        stack.push(new NonTrivialClass.AddCommand(NonTrivialClass.Item.Type.CIRCLE, scene, null));
+        stack.push(new NonTrivialClass.AddCommand(CIRCLE, scene, null));
         assertEquals(1, stack.count());
         assertEquals(1, stack.getIdx());
-        stack.push(new NonTrivialClass.AddCommand(NonTrivialClass.Item.Type.CIRCLE, scene, null));
+        stack.push(new NonTrivialClass.AddCommand(CIRCLE, scene, null));
         assertEquals(2, stack.count());
         assertEquals(2, stack.getIdx());
         stack.clear();
@@ -357,13 +358,13 @@ public class TestUndoStack {
         assertEquals(0, ntc.items.size());
 
         {
-            stack.push(new NonTrivialClass.AddCommand(NonTrivialClass.Item.Type.CIRCLE, ntc, null));
+            stack.push(new NonTrivialClass.AddCommand(CIRCLE, ntc, null));
             assertEquals(1, stack.count());
             assertEquals(1, stack.getIdx());
             assertEquals(1, ntc.items.size());
 //            System.out.println(ntc);
 
-            stack.push(new NonTrivialClass.AddCommand(NonTrivialClass.Item.Type.RECT, ntc, null));
+            stack.push(new NonTrivialClass.AddCommand(RECT, ntc, null));
             assertEquals(2, stack.count());
             assertEquals(2, stack.getIdx());
             assertEquals(2, ntc.items.size());
@@ -407,7 +408,7 @@ public class TestUndoStack {
 
         {
 //            System.out.println("--- Add/Del ---");
-            stack.push(new NonTrivialClass.AddCommand(NonTrivialClass.Item.Type.CIRCLE, ntc, null));
+            stack.push(new NonTrivialClass.AddCommand(CIRCLE, ntc, null));
             assertEquals(1, stack.count());
             assertEquals(1, stack.getIdx());
             assertEquals(1, ntc.items.size());
@@ -526,7 +527,7 @@ public class TestUndoStack {
     }
 
     /**
-     * Test for macrocommands
+     * Test for macrocommands.
      */
     @Test
     public void macro() throws Exception {
@@ -534,8 +535,8 @@ public class TestUndoStack {
         NonTrivialClass subj = new NonTrivialClass();
         UndoStack stack = new UndoStack(subj, null);
 
-        stack.push(new NonTrivialClass.AddCommand(NonTrivialClass.Item.Type.CIRCLE, subj, null));
-        stack.push(new NonTrivialClass.AddCommand(NonTrivialClass.Item.Type.RECT, subj, null));
+        stack.push(new NonTrivialClass.AddCommand(CIRCLE, subj, null));
+        stack.push(new NonTrivialClass.AddCommand(RECT, subj, null));
         assertEquals(2, stack.count());
         assertEquals(0, stack.getCleanIdx());
         assertEquals(true, stack.canUndo());
@@ -549,12 +550,12 @@ public class TestUndoStack {
         assertEquals(3, stack.count());
         assertEquals(false, stack.canUndo());
         stack.push(new NonTrivialClass.MovedCommand(subj.items.get(0), 20, null));
-        stack.push(new NonTrivialClass.AddCommand(NonTrivialClass.Item.Type.RECT, subj, null));
-        stack.push(new NonTrivialClass.AddCommand(NonTrivialClass.Item.Type.RECT, subj, null));
-        stack.push(new NonTrivialClass.AddCommand(NonTrivialClass.Item.Type.RECT, subj, null));
-        stack.push(new NonTrivialClass.AddCommand(NonTrivialClass.Item.Type.RECT, subj, null));
-        stack.push(new NonTrivialClass.AddCommand(NonTrivialClass.Item.Type.RECT, subj, null));
-        stack.push(new NonTrivialClass.AddCommand(NonTrivialClass.Item.Type.RECT, subj, null));
+        stack.push(new NonTrivialClass.AddCommand(RECT, subj, null));
+        stack.push(new NonTrivialClass.AddCommand(RECT, subj, null));
+        stack.push(new NonTrivialClass.AddCommand(RECT, subj, null));
+        stack.push(new NonTrivialClass.AddCommand(RECT, subj, null));
+        stack.push(new NonTrivialClass.AddCommand(RECT, subj, null));
+        stack.push(new NonTrivialClass.AddCommand(RECT, subj, null));
         // Adding macrocommand not affects count
         assertEquals(3, stack.count());
 
@@ -608,6 +609,66 @@ public class TestUndoStack {
         assertEquals(3, manager.getStack().getIdx());
         assertEquals(8, ((NonTrivialClass)manager.getStack().getSubject()).items.size());
 
+    }
+
+    /**
+     * Test for command's chain
+     * <p>Makes command chain without using macrocommands.
+     */
+    @Test
+    public void chain() throws Exception {
+
+        // TODO Make the same in KUndo
+
+        {
+            // Independently
+            final int x = 10;
+            final int y = 20;
+            Point subj = new Point(x, y);
+            UndoCommand parentCmd = new UndoCommand("parent", null);
+            new FunctionalCommand<>("move 1", subj::getY, subj::setY, 50, parentCmd);
+            new FunctionalCommand<>("move 2", subj::getX, subj::setX, 35, parentCmd);
+            new FunctionalCommand<>("move 3", subj::getY, subj::setY, 55, parentCmd);
+            new FunctionalCommand<>("move 4", subj::getX, subj::setX, 39, parentCmd);
+            parentCmd.redo();
+            assertEquals(39, subj.getX());
+            assertEquals(55, subj.getY());
+
+            parentCmd.undo();
+            assertEquals(x, subj.getX());
+            assertEquals(y, subj.getY());
+        }
+
+        {
+            // In stack
+            final int x = 10;
+            final int y = 20;
+            Point subj = new Point(x, y);
+            UndoStack stack = new UndoStack(subj, null);
+            UndoCommand parentCmd = new UndoCommand("parent", null);
+            new FunctionalCommand<>("move 1", subj::getY, subj::setY, 50, parentCmd);
+            new FunctionalCommand<>("move 2", subj::getX, subj::setX, 35, parentCmd);
+            new FunctionalCommand<>("move 3", subj::getY, subj::setY, 55, parentCmd);
+            new FunctionalCommand<>("move 4", subj::getX, subj::setX, 39, parentCmd);
+            stack.push(parentCmd);
+            assertEquals(39, subj.getX());
+            assertEquals(55, subj.getY());
+
+            stack.undo();
+            assertEquals(x, subj.getX());
+            assertEquals(y, subj.getY());
+            stack.undo();
+            assertEquals(x, subj.getX());
+            assertEquals(y, subj.getY());
+
+
+            stack.redo();
+            assertEquals(39, subj.getX());
+            assertEquals(55, subj.getY());
+            stack.redo();
+            assertEquals(39, subj.getX());
+            assertEquals(55, subj.getY());
+        }
     }
 
 
