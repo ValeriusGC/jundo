@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * <b>Main characteristic of {@link UndoStack} is that two different stack should not share one subject.</b>
+ * <b>Main characteristic of {@link UndoStack} is that two different stacks should not share one subject.</b>
  * <p>Otherwise {@link UndoGroup} may not add them both, and there will be collision when undoing one subject
  *  via different stacks.
  */
@@ -21,7 +21,8 @@ public class UndoStack implements Serializable{
     private List<UndoCommand> cmdLst;
     private List<UndoCommand> macroStack;
     private int undoLimit;
-    private UndoEvents subscriber;
+    private transient Object context;
+    private transient UndoWatcher watcher;
 
     /**
      *
@@ -33,10 +34,10 @@ public class UndoStack implements Serializable{
      *
      * Constructs an empty undo stack. The stack will initially be in the clean state.
      * If parent is not a null the stack is automatically added to the group.
-     * @param subject for whom this stack was made
+     * @param subject for whom this stack was made. Can be null if no way to make it serializable.
      * @param group possible group for this {@link UndoStack}
      */
-    public UndoStack(@NotNull Serializable subject, UndoGroup group) {
+    public UndoStack(Serializable subject, UndoGroup group) {
         this.subject = subject;
         if(null != group) {
             group.add(this);
@@ -68,14 +69,14 @@ public class UndoStack implements Serializable{
         idx = 0;
         cleanIdx = 0;
 
-        if(null != subscriber){
-            subscriber.indexChanged(0);
-            subscriber.canUndoChanged(false);
-            subscriber.undoTextChanged("");
-            subscriber.canRedoChanged(false);
-            subscriber.redoTextChanged("");
+        if(null != watcher){
+            watcher.indexChanged(0);
+            watcher.canUndoChanged(false);
+            watcher.undoTextChanged("");
+            watcher.canRedoChanged(false);
+            watcher.redoTextChanged("");
             if(!wasClean){
-                subscriber.cleanChanged(true);
+                watcher.cleanChanged(true);
             }
         }
     }
@@ -97,7 +98,7 @@ public class UndoStack implements Serializable{
      */
     public void push(@NotNull UndoCommand cmd) {
 
-        cmd.redo();
+        cmd.redo(context);
 
         boolean macro = macroStack != null && !macroStack.isEmpty();
 
@@ -131,12 +132,12 @@ public class UndoStack implements Serializable{
                 && macro || idx != cleanIdx;
 
         if(canMerge && cur != null && cur.mergeWith(cmd)){
-            if(!macro && null != subscriber) {
-                subscriber.indexChanged(idx);
-                subscriber.canUndoChanged(canUndo());
-                subscriber.undoTextChanged(undoText());
-                subscriber.canRedoChanged(canRedo());
-                subscriber.redoTextChanged(redoText());
+            if(!macro && null != watcher) {
+                watcher.indexChanged(idx);
+                watcher.canUndoChanged(canUndo());
+                watcher.undoTextChanged(undoText());
+                watcher.canRedoChanged(canRedo());
+                watcher.redoTextChanged(redoText());
             }
         }else{
             if(macro) {
@@ -206,7 +207,7 @@ public class UndoStack implements Serializable{
 
         int idx = this.idx - 1;
 
-        cmdLst.get(idx).undo();
+        cmdLst.get(idx).undo(context);
         setIndex(idx, false);
     }
 
@@ -224,7 +225,7 @@ public class UndoStack implements Serializable{
             return;
         }
 
-        cmdLst.get(idx).redo();
+        cmdLst.get(idx).redo(context);
         setIndex(idx + 1, false);
     }
 
@@ -270,10 +271,10 @@ public class UndoStack implements Serializable{
 
         int i = this.idx;
         while (i < idx) {
-            cmdLst.get(i++).redo();
+            cmdLst.get(i++).redo(context);
         }
         while (i > idx){
-            cmdLst.get(--i).undo();
+            cmdLst.get(--i).undo(context);
         }
 
         setIndex(idx, false);
@@ -370,11 +371,11 @@ public class UndoStack implements Serializable{
         macroStack.add(cmd);
 
         if(macroStack.size() == 1) {
-            if(subscriber != null) {
-                subscriber.canUndoChanged(false);
-                subscriber.undoTextChanged("");
-                subscriber.canRedoChanged(false);
-                subscriber.redoTextChanged("");
+            if(watcher != null) {
+                watcher.canUndoChanged(false);
+                watcher.undoTextChanged("");
+                watcher.canRedoChanged(false);
+                watcher.redoTextChanged("");
             }
         }
     }
@@ -489,12 +490,26 @@ public class UndoStack implements Serializable{
         return subject;
     }
 
-    public UndoEvents getSubscriber() {
-        return subscriber;
+    public UndoWatcher getWatcher() {
+        return watcher;
     }
 
-    public void setSubscriber(UndoEvents subscriber) {
-        this.subscriber = subscriber;
+    public void setWatcher(UndoWatcher watcher) {
+        this.watcher = watcher;
+    }
+
+    /**
+     * Context is a specific run-time object for
+     * @param <Context>
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    public <Context> Context getContext() {
+        return (Context) context;
+    }
+
+    public <Context> void setContext(Context context) {
+        this.context = context;
     }
 
     @Override
@@ -533,12 +548,12 @@ public class UndoStack implements Serializable{
 
         if (this.idx != index) {
             this.idx = index;
-            if(null != subscriber){
-                subscriber.indexChanged(idx);
-                subscriber.canUndoChanged(canUndo());
-                subscriber.undoTextChanged(undoText());
-                subscriber.canRedoChanged(canRedo());
-                subscriber.redoTextChanged(redoText());
+            if(null != watcher){
+                watcher.indexChanged(idx);
+                watcher.canUndoChanged(canUndo());
+                watcher.undoTextChanged(undoText());
+                watcher.canRedoChanged(canRedo());
+                watcher.redoTextChanged(redoText());
             }
         }
 
@@ -547,8 +562,8 @@ public class UndoStack implements Serializable{
         }
 
         final boolean isClean = idx == cleanIdx;
-        if(isClean != wasClean && null != subscriber) {
-            subscriber.cleanChanged(isClean);
+        if(isClean != wasClean && null != watcher) {
+            watcher.cleanChanged(isClean);
         }
     }
 

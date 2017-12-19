@@ -75,26 +75,26 @@ public class UndoCommand implements Serializable {
     /**
      * Calls {@link #doRedo} in derived classes.
      */
-    public final void redo() {
+    public final <Context> void redo(final Context context) {
         if(null != childLst && childLst.size() > 0) {
             for (UndoCommand cmd : childLst) {
-                cmd.redo();
+                cmd.redo(context);
             }
         }else {
-            doRedo();
+            doRedo(context);
         }
     }
 
     /**
      * Calls doUndo()  in derived classes.
      */
-    public final void undo() {
+    public final <Context> void undo(final Context context) {
         if(null != childLst && childLst.size() > 0) {
             for (UndoCommand cmd : childLst) {
-                cmd.undo();
+                cmd.undo(context);
             }
         }else {
-            doUndo();
+            doUndo(context);
         }
     }
 
@@ -122,7 +122,7 @@ public class UndoCommand implements Serializable {
      * Applies a change to the document. This function must be implemented in the derived class.
      * <p>Calling UndoStack.push(), UndoStack.undo() or UndoStack.redo() from this function leads to  undefined behavior.
      */
-    protected void doRedo() {
+    protected <Context> void doRedo(final Context context) {
 //        if(childLst != null) {
 //            for (UndoCommand cmd : childLst) {
 //                cmd.redo();
@@ -135,10 +135,10 @@ public class UndoCommand implements Serializable {
      * as before redo() was called. This function must be implemented in the derived class.
      * Calling UndoStack.push(), UndoStack.undo() or UndoStack.redo() from this function leads to undefined behavior.
      */
-    protected void doUndo() {
+    protected <Context> void doUndo(final Context context) {
         if(childLst != null) {
             for (UndoCommand cmd : childLst) {
-                cmd.undo();
+                cmd.undo(context);
             }
         }
     }

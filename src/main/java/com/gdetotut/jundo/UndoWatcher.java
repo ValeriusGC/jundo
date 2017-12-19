@@ -4,7 +4,7 @@ package com.gdetotut.jundo;
  * Methods for subscribers.
  *
  */
-public interface UndoEvents {
+public interface UndoWatcher {
 
     default void indexChanged(int idx) {}
     default void cleanChanged(boolean clean) {}

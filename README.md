@@ -41,7 +41,7 @@ Point ptBack = (Point)stackBack.getSubject();
 - `UndoStack` is a list of UndoCommand objects. It contains all the commands executed on the document and can roll the document's state backwards or forwards by undoing or redoing them
 - `UndoGroup` is a group of undo stacks. It is useful when an application contains more than one undo stack, typically one for each opened document. UndoGroup provides a single pair of undo/redo slots for all the stacks in the group. It forwards undo and redo requests to the active stack, which is the stack associated with the document that is currently being edited by the user
 - `UndoManager` is a class to pass stacks to serialization and back. With such properties like `DATA_VER` and `extras` one can store information for correct deserialization
-- `UndoEvents` is an interface for subscriber implementation. It contains all events with default realization so subscriber can realize only required ones
+- `UndoEvents` is an interface for watcher implementation. It contains all events with default realization so watcher can realize only required ones
 
 In addition framework contains:
 

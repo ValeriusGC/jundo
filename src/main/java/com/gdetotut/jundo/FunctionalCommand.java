@@ -2,13 +2,14 @@ package com.gdetotut.jundo;
 
 import org.jetbrains.annotations.NotNull;
 
+import java.io.Serializable;
 import java.util.Objects;
 
 /**
  *
  * @param <V> generic type for this class.
  */
-public class FunctionalCommand<V extends java.io.Serializable> extends UndoCommand {
+public class FunctionalCommand<V extends Serializable> extends UndoCommand {
 
     private final Setter<V> setter;
     private final V oldValue;
@@ -22,11 +23,13 @@ public class FunctionalCommand<V extends java.io.Serializable> extends UndoComma
         this.newValue = newValue;
     }
 
-    public void doUndo() {
+    @Override
+    public <Context> void doUndo(final Context context) {
         setter.set(oldValue);
     }
 
-    public void doRedo() {
+    @Override
+    public <Context> void doRedo(final Context context) {
         setter.set(newValue);
     }
 

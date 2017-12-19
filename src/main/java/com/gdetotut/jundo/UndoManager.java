@@ -57,7 +57,7 @@ public class UndoManager implements Serializable {
      * @throws IOException when something goes wrong
      * @throws ClassNotFoundException when something goes wrong
      */
-    public static UndoManager deserialize(@NotNull String base64) throws IOException, ClassNotFoundException {
+    public static <Context> UndoManager deserialize(@NotNull String base64, Context context) throws IOException, ClassNotFoundException {
 
         final byte[] data = Base64.getUrlDecoder().decode(base64);
         final boolean zipped = (data[0] == (byte) (GZIPInputStream.GZIP_MAGIC))
@@ -66,7 +66,9 @@ public class UndoManager implements Serializable {
         try (ObjectInputStream ois = zipped
                 ? new ObjectInputStream(new GZIPInputStream(new ByteArrayInputStream(data)))
                 : new ObjectInputStream(new ByteArrayInputStream(data))) {
-            return (UndoManager) ois.readObject();
+            final UndoManager um = (UndoManager) ois.readObject();
+            um.getStack().setContext(context);
+            return um;
         }
     }
 

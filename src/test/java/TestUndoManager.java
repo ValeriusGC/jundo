@@ -1,5 +1,5 @@
 import org.junit.Test;
-import serialize.UndoWatcher;
+import serialize.SimpleUndoWatcher;
 import com.gdetotut.jundo.UndoManager;
 import serialize.NonTrivialClass;
 import com.gdetotut.jundo.UndoStack;
@@ -31,7 +31,7 @@ public class TestUndoManager {
 
         NonTrivialClass ntc = new NonTrivialClass();
         UndoStack stack = new UndoStack(ntc, null);
-        stack.setSubscriber(new UndoWatcher());
+        stack.setWatcher(new SimpleUndoWatcher());
         for(int i = 0; i < 1000; ++i){
             stack.push(new NonTrivialClass.AddCommand(NonTrivialClass.Item.Type.CIRCLE, ntc, null));
         }
@@ -54,7 +54,7 @@ public class TestUndoManager {
             UndoManager manager = new UndoManager(null,2, stack);
             String data = UndoManager.serialize(manager, false);
 //            System.out.println("1: " + data.length());
-            managerBack = UndoManager.deserialize(data);
+            managerBack = UndoManager.deserialize(data, null);
             // Here we can't compare managers themselves 'cause of stack's comparison principle it leads at last
             // ------- assertEquals(manager, managerBack);
             assertEquals(manager.ID, managerBack.ID);
@@ -69,7 +69,7 @@ public class TestUndoManager {
             UndoManager manager = new UndoManager(null,2, stack);
             String z_data = UndoManager.serialize(manager, true);
 //            System.out.println("zipped length : " + z_data.length());
-            managerBack = UndoManager.deserialize(z_data);
+            managerBack = UndoManager.deserialize(z_data, null);
             // Here we can't compare managers themselves 'cause of stack's comparison principle it leads at last
             // ------- assertEquals(manager, managerBack);
             assertEquals(manager.VERSION, managerBack.VERSION);
@@ -81,7 +81,7 @@ public class TestUndoManager {
 
         UndoStack stackBack = managerBack.getStack();
         NonTrivialClass ntcBack = (NonTrivialClass)stackBack.getSubject();
-        stackBack.setSubscriber(new UndoWatcher());
+        stackBack.setWatcher(new SimpleUndoWatcher());
         // Check out
         for(int i = 0; i < 1000; ++i) {
             stackBack.undo();
