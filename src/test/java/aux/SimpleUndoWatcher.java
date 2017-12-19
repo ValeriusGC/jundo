@@ -1,4 +1,4 @@
-package serialize;
+package aux;
 
 import com.gdetotut.jundo.UndoWatcher;
 

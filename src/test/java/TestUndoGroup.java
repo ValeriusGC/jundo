@@ -1,5 +1,5 @@
 import org.junit.Test;
-import serialize.SimpleClass;
+import aux.SimpleClass;
 import com.gdetotut.jundo.UndoGroup;
 import com.gdetotut.jundo.UndoStack;
 

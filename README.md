@@ -28,7 +28,7 @@ Besides serialization mechanism was added, so one can save all undo/redo chains 
 ```java
 // How serialization works - there and back
 UndoManager manager = new UndoManager("Object GUID", 4, stack);
-UndoManager mgrBack = UndoManager.deserialize(UndoManager.serialize(manager, true));
+UndoManager mgrBack = UndoManager.deserialize(UndoManager.aux(manager, true));
 UndoStack stackBack = mgrBack.getStack();
 Point ptBack = (Point)stackBack.getSubject();
 ```
@@ -90,7 +90,7 @@ doc.undoStack().endMacro();
 
 ### Use versioning
 
-##### A: Imagine that some object and its stack are subjects to serialize
+##### A: Imagine that some object and its stack are subjects to aux
 ```java
 NonTrivialClass ntc = new NonTrivialClass();
 UndoStack stack = new UndoStack(ntc, null);
@@ -99,7 +99,7 @@ for(int i = 0; i < 1000; ++i){
     stack.push(new NonTrivialClass.AddCommand(NonTrivialClass.Item.Type.CIRCLE, ntc, null));
 }
 UndoManager manager = new UndoManager("My origin", 1, stack);
-String savedObject = UndoManager.serialize(manager, true);
+String savedObject = UndoManager.aux(manager, true);
 ```
 
 ##### B: Let's suggest that object has changed his structure after serialization

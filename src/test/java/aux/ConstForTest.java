@@ -1,4 +1,4 @@
-package serialize;
+package aux;
 
 public interface ConstForTest {
 

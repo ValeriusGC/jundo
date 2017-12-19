@@ -1,8 +1,8 @@
 import com.gdetotut.jundo.*;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
-import serialize.*;
-import serialize.SimpleUndoWatcher;
+import aux.*;
+import aux.SimpleUndoWatcher;
 
 import java.io.*;
 import java.util.zip.GZIPInputStream;
@@ -10,8 +10,8 @@ import java.util.zip.GZIPOutputStream;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
-import static serialize.NonTrivialClass.Item.Type.CIRCLE;
-import static serialize.NonTrivialClass.Item.Type.RECT;
+import static aux.NonTrivialClass.Item.Type.CIRCLE;
+import static aux.NonTrivialClass.Item.Type.RECT;
 
 public class TestUndoStack implements Serializable {
 
