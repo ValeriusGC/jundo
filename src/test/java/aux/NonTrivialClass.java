@@ -69,12 +69,12 @@ public class NonTrivialClass implements Serializable {
         }
 
         @Override
-        protected <Context> void doUndo(Context context) {
+        protected void doUndo() {
             scene.items.remove(item);
         }
 
         @Override
-        protected <Context> void doRedo(Context context) {
+        protected void doRedo() {
             scene.items.add(item);
             item.x = initialPos;
         }
@@ -110,14 +110,14 @@ public class NonTrivialClass implements Serializable {
         }
 
         @Override
-        protected <Context> void doUndo(Context context) {
+        protected void doUndo() {
             if(item != null){
                 scene.items.add(item);
             }
         }
 
         @Override
-        protected <Context> void doRedo(Context context) {
+        protected void doRedo() {
             if(item != null) {
                 scene.items.remove(item);
             }
@@ -157,12 +157,12 @@ public class NonTrivialClass implements Serializable {
         }
 
         @Override
-        protected <Context> void doUndo(Context context) {
+        protected void doUndo() {
             item.x = oldPos;
         }
 
         @Override
-        protected <Context> void doRedo(Context context) {
+        protected void doRedo() {
             item.x = newPos;
         }
 

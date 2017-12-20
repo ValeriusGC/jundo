@@ -35,7 +35,7 @@ public class TestUndoStack implements Serializable {
     public <V extends Serializable> void testSimple() throws IOException, ClassNotFoundException {
 
         UndoManager manager = new UndoManager(null, 333, stack);
-        UndoManager managerBack = UndoManager.deserialize(UndoManager.serialize(manager, false), null);
+        UndoManager managerBack = UndoManager.deserialize(UndoManager.serialize(manager, false));
         UndoStack stackBack = managerBack.getStack();
         // Here we can not compare stacks themselves 'cause of stack's comparison principle
         assertEquals(stack.getSubject(), stackBack.getSubject());
@@ -76,7 +76,7 @@ public class TestUndoStack implements Serializable {
         assertEquals(0, stack.getIdx());
 
         UndoManager manager = new UndoManager(null, 4, stack);
-        manager = UndoManager.deserialize(UndoManager.serialize(manager, true), null);
+        manager = UndoManager.deserialize(UndoManager.serialize(manager, true));
 
         UndoStack stackBack = manager.getStack();
         Point ptBack = (Point) stackBack.getSubject();
@@ -383,7 +383,7 @@ public class TestUndoStack implements Serializable {
 //            System.out.println(ntc);
 
             UndoManager manager = new UndoManager(null, 333, stack);
-            UndoManager managerBack = UndoManager.deserialize(UndoManager.serialize(manager, false), null);
+            UndoManager managerBack = UndoManager.deserialize(UndoManager.serialize(manager, false));
             UndoStack stackBack = managerBack.getStack();
 //            assertEquals(stack, stackBack);
             NonTrivialClass objBack = (NonTrivialClass) stackBack.getSubject();
@@ -480,7 +480,7 @@ public class TestUndoStack implements Serializable {
 
             // Serialize
             UndoManager manager = new UndoManager(null, 333, stack);
-            UndoManager managerBack = UndoManager.deserialize(UndoManager.serialize(manager, false), null);
+            UndoManager managerBack = UndoManager.deserialize(UndoManager.serialize(manager, false));
             UndoStack stackBack = managerBack.getStack();
             NonTrivialClass objBack = (NonTrivialClass) stackBack.getSubject();
 
@@ -523,78 +523,6 @@ public class TestUndoStack implements Serializable {
 
         }
 
-
-    }
-
-    @Test
-    public void context() throws Exception {
-
-        // class Cmd
-        //
-        // Keep in mind that class of Command should be Serializable (and Superclass TestUndoStack too)
-        class Cmd extends UndoCommand {
-            int oldV, newV;
-
-            public Cmd(@NotNull String text, int v) {
-                super(text, null);
-                newV = v;
-            }
-
-            @Override
-            protected <Context> void doRedo(Context context) {
-                if (context != null && context instanceof MyContext) {
-                    MyContext ctx = (MyContext) context;
-                    oldV = ctx.getValue();
-                    ctx.setValue(newV);
-                }
-            }
-
-            @Override
-            protected <Context> void doUndo(Context context) {
-                if (context != null && context instanceof MyContext) {
-                    MyContext ctx = (MyContext) context;
-                    ctx.setValue(oldV);
-                }
-            }
-        }
-        //~class Cmd
-
-        // When making undo for non-serializable class
-        //
-        // Nonserializable class
-        MyContext ctx = new MyContext();
-        int start = ctx.getValue();
-
-        UndoStack stack = new UndoStack(null, null);
-        stack.setWatcher(new SimpleUndoWatcher());
-        stack.setContext(ctx);
-        stack.push(new Cmd("Change X to 10", 10));
-
-        assertEquals(10, ctx.getValue());
-        stack.push(new Cmd("Change X to 20", 20));
-        assertEquals(20, ctx.getValue());
-        stack.undo();
-        assertEquals(10, ctx.getValue());
-        stack.undo();
-        assertEquals(start, ctx.getValue());
-        stack.setIndex(stack.count());
-        assertEquals(20, ctx.getValue());
-
-
-        // Suppose that we are forced to save/restore UndoStack and process it again.
-        // We know MyContext state and want restore undo-chain.
-
-        UndoManager manager = new UndoManager(null, 4, stack);
-        UndoManager.serialize(manager, true);
-        manager = UndoManager.deserialize(UndoManager.serialize(manager, true), ctx);
-        UndoStack stackBack = manager.getStack();
-
-        stackBack.undo();
-        assertEquals(10, ctx.getValue());
-        stackBack.undo();
-        assertEquals(start, ctx.getValue());
-
-        // ~When making undo for non-serializable class
 
     }
 
@@ -662,7 +590,7 @@ public class TestUndoStack implements Serializable {
         UndoManager manager = new UndoManager(null, 2, stack);
         String z_data = UndoManager.serialize(manager, true);
 //        System.out.println("zipped length : " + z_data.length());
-        UndoManager managerBack = UndoManager.deserialize(z_data, null);
+        UndoManager managerBack = UndoManager.deserialize(z_data);
         assertEquals(manager.VERSION, managerBack.VERSION);
         assertEquals(manager.getExtras(), managerBack.getExtras());
         assertEquals(manager.getStack().getSubject(), managerBack.getStack().getSubject());
@@ -702,11 +630,11 @@ public class TestUndoStack implements Serializable {
             new FunctionalCommand<>("move 2", subj::getX, subj::setX, 35, parentCmd);
             new FunctionalCommand<>("move 3", subj::getY, subj::setY, 55, parentCmd);
             new FunctionalCommand<>("move 4", subj::getX, subj::setX, 39, parentCmd);
-            parentCmd.redo(null);
+            parentCmd.redo();
             assertEquals(39, subj.getX());
             assertEquals(55, subj.getY());
 
-            parentCmd.undo(null);
+            parentCmd.undo();
             assertEquals(x, subj.getX());
             assertEquals(y, subj.getY());
         }

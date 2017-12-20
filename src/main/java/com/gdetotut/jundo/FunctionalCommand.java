@@ -24,12 +24,12 @@ public class FunctionalCommand<V extends Serializable> extends UndoCommand {
     }
 
     @Override
-    public <Context> void doUndo(final Context context) {
+    public void doUndo() {
         setter.set(oldValue);
     }
 
     @Override
-    public <Context> void doRedo(final Context context) {
+    public void doRedo() {
         setter.set(newValue);
     }
 

@@ -28,14 +28,6 @@ public class UndoStack implements Serializable{
     private int undoLimit;
 
     /**
-     * Optional parameter to pass some additional context that may be associated with data.
-     * <p>The context is not serialized so it should be set manually after deserialization.
-     * <p>Unlike {@link #subject} the context not requires implementation of {@link Serializable} so it can
-     * play role of "the substitution" in some cases.
-     */
-    private transient Object context;
-
-    /**
      *
      */
     private transient UndoWatcher watcher;
@@ -46,7 +38,7 @@ public class UndoStack implements Serializable{
      * @param subject for whom this stack was made. Can be null if no way to make it serializable.
      * @param group possible group for this {@link UndoStack}
      */
-    public UndoStack(Serializable subject, UndoGroup group) {
+    public UndoStack(@NotNull Serializable subject, UndoGroup group) {
         this.subject = subject;
         if(null != group) {
             group.add(this);
@@ -107,7 +99,7 @@ public class UndoStack implements Serializable{
      */
     public void push(@NotNull UndoCommand cmd) {
 
-        cmd.redo(context);
+        cmd.redo();
 
         boolean macro = macroStack != null && !macroStack.isEmpty();
 
@@ -216,7 +208,7 @@ public class UndoStack implements Serializable{
 
         int idx = this.idx - 1;
 
-        cmdLst.get(idx).undo(context);
+        cmdLst.get(idx).undo();
         setIndex(idx, false);
     }
 
@@ -234,7 +226,7 @@ public class UndoStack implements Serializable{
             return;
         }
 
-        cmdLst.get(idx).redo(context);
+        cmdLst.get(idx).redo();
         setIndex(idx + 1, false);
     }
 
@@ -280,10 +272,10 @@ public class UndoStack implements Serializable{
 
         int i = this.idx;
         while (i < idx) {
-            cmdLst.get(i++).redo(context);
+            cmdLst.get(i++).redo();
         }
         while (i > idx){
-            cmdLst.get(--i).undo(context);
+            cmdLst.get(--i).undo();
         }
 
         setIndex(idx, false);
@@ -495,6 +487,7 @@ public class UndoStack implements Serializable{
      *
      * @return Object via calling descendants real object.
      */
+    @NotNull
     public Serializable getSubject() {
         return subject;
     }
@@ -505,20 +498,6 @@ public class UndoStack implements Serializable{
 
     public void setWatcher(UndoWatcher watcher) {
         this.watcher = watcher;
-    }
-
-    /**
-     * Context is a specific run-time object for
-     * @param <Context>
-     * @return
-     */
-    @SuppressWarnings("unchecked")
-    public <Context> Context getContext() {
-        return (Context) context;
-    }
-
-    public <Context> void setContext(Context context) {
-        this.context = context;
     }
 
     @Override

@@ -54,7 +54,7 @@ public class TestUndoManager {
             UndoManager manager = new UndoManager(null,2, stack);
             String data = UndoManager.serialize(manager, false);
 //            System.out.println("1: " + data.length());
-            managerBack = UndoManager.deserialize(data, null);
+            managerBack = UndoManager.deserialize(data);
             // Here we can't compare managers themselves 'cause of stack's comparison principle it leads at last
             // ------- assertEquals(manager, managerBack);
             assertEquals(manager.ID, managerBack.ID);
@@ -69,7 +69,7 @@ public class TestUndoManager {
             UndoManager manager = new UndoManager(null,2, stack);
             String z_data = UndoManager.serialize(manager, true);
 //            System.out.println("zipped length : " + z_data.length());
-            managerBack = UndoManager.deserialize(z_data, null);
+            managerBack = UndoManager.deserialize(z_data);
             // Here we can't compare managers themselves 'cause of stack's comparison principle it leads at last
             // ------- assertEquals(manager, managerBack);
             assertEquals(manager.VERSION, managerBack.VERSION);

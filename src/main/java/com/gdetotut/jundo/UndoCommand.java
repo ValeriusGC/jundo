@@ -74,29 +74,27 @@ public class UndoCommand implements Serializable {
 
     /**
      * Calls {@link #doRedo} in derived classes.
-     * @param context possible object for adjusting command.
      */
-    public final <Context> void redo(Context context) {
+    public final void redo() {
         if(null != childLst && childLst.size() > 0) {
             for (UndoCommand cmd : childLst) {
-                cmd.redo(context);
+                cmd.redo();
             }
         }else {
-            doRedo(context);
+            doRedo();
         }
     }
 
     /**
      * Calls {@link #doUndo}  in derived classes.
-     * @param context possible object for adjusting command.
      */
-    public final <Context> void undo(Context context) {
+    public final void undo() {
         if(null != childLst && childLst.size() > 0) {
             for (UndoCommand cmd : childLst) {
-                cmd.undo(context);
+                cmd.undo();
             }
         }else {
-            doUndo(context);
+            doUndo();
         }
     }
 
@@ -124,7 +122,7 @@ public class UndoCommand implements Serializable {
      * Applies a change to the document. This function must be implemented in the derived class.
      * <p>Calling UndoStack.push(), UndoStack.undo() or UndoStack.redo() from this function leads to  undefined behavior.
      */
-    protected <Context> void doRedo(Context context) {
+    protected void doRedo() {
 //        if(childLst != null) {
 //            for (UndoCommand cmd : childLst) {
 //                cmd.redo(context);
@@ -137,7 +135,7 @@ public class UndoCommand implements Serializable {
      * as before redo() was called. This function must be implemented in the derived class.
      * Calling UndoStack.push(), UndoStack.undo() or UndoStack.redo() from this function leads to undefined behavior.
      */
-    protected <Context> void doUndo(Context context) {
+    protected void doUndo() {
 //        if(childLst != null) {
 //            for (UndoCommand cmd : childLst) {
 //                cmd.undo(context);
