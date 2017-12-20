@@ -3,7 +3,6 @@ package com.gdetotut.jundo;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.*;
-import java.util.Base64;
 import java.util.Map;
 import java.util.Objects;
 import java.util.TreeMap;
@@ -47,7 +46,7 @@ public class UndoManager implements Serializable {
             }
             baos = zippedBaos;
         }
-        return Base64.getUrlEncoder().encodeToString(baos.toByteArray());
+        return Base64Copy.getUrlEncoder().encodeToString(baos.toByteArray());
     }
 
     /**
@@ -59,7 +58,7 @@ public class UndoManager implements Serializable {
      */
     public static <Context> UndoManager deserialize(@NotNull String base64, Context context) throws IOException, ClassNotFoundException {
 
-        final byte[] data = Base64.getUrlDecoder().decode(base64);
+        final byte[] data = Base64Copy.getUrlDecoder().decode(base64);
         final boolean zipped = (data[0] == (byte) (GZIPInputStream.GZIP_MAGIC))
                 && (data[1] == (byte) (GZIPInputStream.GZIP_MAGIC >> 8));
 

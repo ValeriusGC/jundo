@@ -58,4 +58,89 @@ doc.undoStack().push(new AddShapeCommand(doc, ShapeRectangle, parent));
 doc.undoStack().push(new AddShapeCommand(doc, ShapeRectangle, parent));
 doc.undoStack().endMacro();
 ```
+### UndoStack: Subject vs Context
+Свойство `UndoStack.subject` предназначено для сериализации объекта вместе с историей его изменения в виде списка `UndoCommand`. Это очень удобно, но не всегда реализуемо, так как требует соблюдения ряда условий.
 
+Во-первых, субъект должен имплементировать `Serializable`, такое требование у механизма нативной сериализации Java, на котором построена библиотека.
+
+Во-вторых, субъект должен быть адресно-независим от системы, так как в противном случае, восстановившись в потенциально новом адресном контексте, он окажется там "чужаком".
+
+Поясню на примере Android-приложения.
+
+Предположим, требуется сохранить состояние кнопки на активности.
+
+Сохранить саму кнопку мы не можем, так как `Button` не имеет маркера `Serializable`. Но это еще полбеды. После пересоздания активности, яастью которой кнопка является, наша восстановленная кнопка окажется врагом номер один для работы приложения, так как будет указывать на уже несуществующий адрес.
+
+Свойство `UndoStack.context` предназначено как раз для решения таких задач.
+
+Вот его реальная техника применения
+
+#### Команда
+Команда хранит не кнопку, а лишь идентификатор ее ресурса:
+
+```java
+class RadioCheckCmd extends UndoCommand {
+
+        int activeBtnRes;
+        int inactiveBtnRes;
+
+        public RadioCheckCmd(@NotNull String text, int activeBtnRes, int inactiveBtnRes, UndoCommand parent) {
+            super(text, parent);
+            this.activeBtnRes = activeBtnRes;
+            this.inactiveBtnRes = inactiveBtnRes;
+        }
+
+        ...
+
+```
+
+При создании команды передаются требуемые идентификаторы:
+
+```java
+rbMonth.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                undoStack.push(new MainUndo.RadioCheckCmd("Do monthly",
+                        R.id.radioMonthly, R.id.radioYearly, null));
+                setUndoState();
+            }
+        });
+```
+
+При десериализации в качестве контекста ожидается активность:
+
+```java
+UndoManager undoManager = UndoManager.deserialize(s, this);
+```
+
+В процессе undo/redo происходит правильная реализация команды:
+
+```java
+class RadioCheckCmd extends UndoCommand {
+...
+        @Override
+        protected <Context> void doRedo(Context context) {
+            if(context != null && context instanceof Activity) {
+                Activity a = (Activity)context;
+                RadioButton activeBtn = a.findViewById(activeBtnRes);
+                RadioButton inactiveBtn = a.findViewById(inactiveBtnRes);
+                activeBtn.setChecked(true);
+                inactiveBtn.setChecked(false);
+            }
+        }
+
+        @Override
+        protected <Context> void doUndo(Context context) {
+            if(context != null && context instanceof Activity) {
+                Activity a = (Activity)context;
+                RadioButton activeBtn = a.findViewById(activeBtnRes);
+                RadioButton inactiveBtn = a.findViewById(inactiveBtnRes);
+                inactiveBtn.setChecked(true);
+                activeBtn.setChecked(false);
+            }
+        }
+    }
+
+    ...
+
+```

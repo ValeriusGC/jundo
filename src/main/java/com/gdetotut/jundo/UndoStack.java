@@ -15,23 +15,32 @@ import java.util.Objects;
 public class UndoStack implements Serializable{
 
     UndoGroup group;
+
+    /**
+     * Keeps the subject for whom {@link #cmdLst} are behave.
+     * <p>Required parameter but can be null if it is impossible to serialize.
+     */
     private final Serializable subject;
     private int idx;
     private int cleanIdx;
     private List<UndoCommand> cmdLst;
     private List<UndoCommand> macroStack;
     private int undoLimit;
+
+    /**
+     * Optional parameter to pass some additional context that may be associated with data.
+     * <p>The context is not serialized so it should be set manually after deserialization.
+     * <p>Unlike {@link #subject} the context not requires implementation of {@link Serializable} so it can
+     * play role of "the substitution" in some cases.
+     */
     private transient Object context;
-    private transient UndoWatcher watcher;
 
     /**
      *
-     * Constructs an empty undo stack. The stack will initially be in the clean state.
-     * If parent is not a null the stack is automatically added to the group.
-     * @param group possible group for this {@link UndoStack}
      */
+    private transient UndoWatcher watcher;
+
     /**
-     *
      * Constructs an empty undo stack. The stack will initially be in the clean state.
      * If parent is not a null the stack is automatically added to the group.
      * @param subject for whom this stack was made. Can be null if no way to make it serializable.
