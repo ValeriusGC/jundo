@@ -54,33 +54,33 @@ public class TestUndoSerializer {
             UndoSerializer manager = new UndoSerializer(null,2, stack);
             String data = UndoSerializer.serialize(manager, false);
 //            System.out.println("1: " + data.length());
-            managerBack = UndoSerializer.deserialize(data, null);
+            managerBack = UndoSerializer.deserialize(data);
             // Here we can't compare managers themselves 'cause of stack's comparison principle it leads at last
             // ------- assertEquals(manager, managerBack);
             assertEquals(manager.ID, managerBack.ID);
             assertEquals(manager.VERSION, managerBack.VERSION);
             assertEquals(manager.getExtras(), managerBack.getExtras());
-            assertEquals(manager.getStack().getSubject(), managerBack.getStack().getSubject());
+            assertEquals(manager.getStack().getSubj(), managerBack.getStack().getSubj());
             //~
-            assertEquals(NonTrivialClass.class, manager.getStack().getSubject().getClass());
+            assertEquals(NonTrivialClass.class, manager.getStack().getSubj().getClass());
         }
         {
             // Make zipped serialization
             UndoSerializer manager = new UndoSerializer(null,2, stack);
             String z_data = UndoSerializer.serialize(manager, true);
 //            System.out.println("zipped length : " + z_data.length());
-            managerBack = UndoSerializer.deserialize(z_data, null);
+            managerBack = UndoSerializer.deserialize(z_data);
             // Here we can't compare managers themselves 'cause of stack's comparison principle it leads at last
             // ------- assertEquals(manager, managerBack);
             assertEquals(manager.VERSION, managerBack.VERSION);
             assertEquals(manager.getExtras(), managerBack.getExtras());
-            assertEquals(manager.getStack().getSubject(), managerBack.getStack().getSubject());
+            assertEquals(manager.getStack().getSubj(), managerBack.getStack().getSubj());
             //~
-            assertEquals(NonTrivialClass.class, manager.getStack().getSubject().getClass());
+            assertEquals(NonTrivialClass.class, manager.getStack().getSubj().getClass());
         }
 
         UndoStack stackBack = managerBack.getStack();
-        NonTrivialClass ntcBack = (NonTrivialClass)stackBack.getSubject();
+        NonTrivialClass ntcBack = (NonTrivialClass)stackBack.getSubj();
         stackBack.setWatcher(new SimpleUndoWatcher());
         // Check out
         for(int i = 0; i < 1000; ++i) {

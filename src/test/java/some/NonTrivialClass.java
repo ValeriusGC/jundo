@@ -65,16 +65,16 @@ public class NonTrivialClass implements Serializable {
             this.scene = scene;
             item = new Item(type);
             initialPos = this.scene.items.size() * 2;
-            setText(ConstForTest.CMD_ADD + " at " + initialPos);
+            setCaption(ConstForTest.CMD_ADD + " at " + initialPos);
         }
 
         @Override
-        protected <Context> void doUndo(Context context) {
+        protected void doUndo() {
             scene.items.remove(item);
         }
 
         @Override
-        protected <Context> void doRedo(Context context) {
+        protected void doRedo() {
             scene.items.add(item);
             item.x = initialPos;
         }
@@ -106,18 +106,18 @@ public class NonTrivialClass implements Serializable {
             super("", parent);
             this.scene = scene;
             this.item = scene.items.size() > 0 ? scene.items.get(0) : null;
-            setText(ConstForTest.CMD_DEL + " at " + item.x);
+            setCaption(ConstForTest.CMD_DEL + " at " + item.x);
         }
 
         @Override
-        protected <Context> void doUndo(Context context) {
+        protected void doUndo() {
             if(item != null){
                 scene.items.add(item);
             }
         }
 
         @Override
-        protected <Context> void doRedo(Context context) {
+        protected void doRedo() {
             if(item != null) {
                 scene.items.remove(item);
             }
@@ -153,16 +153,16 @@ public class NonTrivialClass implements Serializable {
             this.item = item;
             this.oldPos = oldPos;
             this.newPos = item.x;
-            setText(ConstForTest.CMD_MOV + " to " + item.x);
+            setCaption(ConstForTest.CMD_MOV + " to " + item.x);
         }
 
         @Override
-        protected <Context> void doUndo(Context context) {
+        protected void doUndo() {
             item.x = oldPos;
         }
 
         @Override
-        protected <Context> void doRedo(Context context) {
+        protected void doRedo() {
             item.x = newPos;
         }
 
@@ -172,7 +172,7 @@ public class NonTrivialClass implements Serializable {
                 Item item = ((MovedCommand) cmd).item;
                 if(item == this.item) {
                     newPos = item.x;
-                    setText(ConstForTest.CMD_MOV + " to " + item.x);
+                    setCaption(ConstForTest.CMD_MOV + " to " + item.x);
                     return true;
                 }
             }

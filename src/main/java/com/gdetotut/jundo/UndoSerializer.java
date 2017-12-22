@@ -3,6 +3,7 @@ package com.gdetotut.jundo;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.*;
+import java.util.Base64;
 import java.util.Map;
 import java.util.Objects;
 import java.util.TreeMap;
@@ -10,13 +11,13 @@ import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
 /**
- * The UndoSerializer class is responsible for correct serialization and deserialization of entire UndoStack.
- * <p>Stack encodes to Base64 using the <a href="#url">URL and Filename safe</a> type base64 encoding scheme.</p>
- * <p>UndoSerializer has a number of useful properties to restore stack correctly:</p>
+ * The UndoSerializer class is responsible for correct serialization and deserialization of entire {@link UndoStack}.
+ * <p>Stack encodes to Base64 using the <a href="#url">URL and Filename safe</a> type base64 encoding scheme.
+ * <p>UndoSerializer has a number of useful properties to restore stack correctly:
  * <ul>
- *     <li>ID alows to save an unique identifier of stack's subject</li>
+ *     <li>ID allows to save an unique identifier of stack's subject</li>
  *     <li>VERSION can be very useful when saved version and new version of object are not equal so migration needed.</li>
- *     <li>The map "extras" allows to save other extra parameters in the key-value form</li>
+ *     <li>The map "extras" allows to save other extra parameters in the 'key-value' form</li>
  * </ul>
  */
 public class UndoSerializer implements Serializable {
@@ -27,16 +28,16 @@ public class UndoSerializer implements Serializable {
     private final Map<String, String> extras = new TreeMap<>();
 
     /**
-     * Serializes manager to Base64 string.
-     * @param manager manager to serialize
-     * @param doZip flag for gzipping
-     * @return manager as base64 string
-     * @throws IOException when something goes wrong
+     * Serializes object to Base64 string.
+     * @param obj object to serialize.
+     * @param doZip flag for gzipping.
+     * @return Object as base64 string.
+     * @throws IOException when something goes wrong.
      */
-    public static String serialize(@NotNull UndoSerializer manager, boolean doZip) throws IOException {
+    public static String serialize(@NotNull UndoSerializer obj, boolean doZip) throws IOException {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         try (final ObjectOutputStream oos = new ObjectOutputStream(baos)) {
-            oos.writeObject(manager);
+            oos.writeObject(obj);
         }
 
         if (doZip) {
@@ -46,33 +47,31 @@ public class UndoSerializer implements Serializable {
             }
             baos = zippedBaos;
         }
-        return Base64Copy.getUrlEncoder().encodeToString(baos.toByteArray());
+        return Base64.getUrlEncoder().encodeToString(baos.toByteArray());
     }
 
     /**
-     * Deserialize base64 string back to manager
-     * @param base64 base64 string
-     * @return manager
-     * @throws IOException when something goes wrong
-     * @throws ClassNotFoundException when something goes wrong
+     * Deserializes base64 string back to object.
+     * @param base64 base64 string.
+     * @return Object.
+     * @throws IOException when something goes wrong.
+     * @throws ClassNotFoundException when something goes wrong.
      */
-    public static <Context> UndoSerializer deserialize(@NotNull String base64, Context context) throws IOException, ClassNotFoundException {
+    public static UndoSerializer deserialize(@NotNull String base64) throws IOException, ClassNotFoundException {
 
-        final byte[] data = Base64Copy.getUrlDecoder().decode(base64);
+        final byte[] data = Base64.getUrlDecoder().decode(base64);
         final boolean zipped = (data[0] == (byte) (GZIPInputStream.GZIP_MAGIC))
                 && (data[1] == (byte) (GZIPInputStream.GZIP_MAGIC >> 8));
 
         try (ObjectInputStream ois = zipped
                 ? new ObjectInputStream(new GZIPInputStream(new ByteArrayInputStream(data)))
                 : new ObjectInputStream(new ByteArrayInputStream(data))) {
-            final UndoSerializer um = (UndoSerializer) ois.readObject();
-            um.getStack().setContext(context);
-            return um;
+            return (UndoSerializer) ois.readObject();
         }
     }
 
     /**
-     *  Makes object with specific parameters.
+     * Makes object with specific parameters.
      * @param id unique identifier allowing recognize subject on the deserializing side.
      * @param version version of subject for correct restoring in the possible case of object migration.
      * @param stack stack itself.
@@ -84,14 +83,14 @@ public class UndoSerializer implements Serializable {
     }
 
     /**
-     * @return saved stack.
+     * @return Saved stack.
      */
     public UndoStack getStack() {
         return stack;
     }
 
     /**
-     * @return extra parameters in the form of key-value.
+     * @return Extra parameters in the 'key-value' form.
      */
     public Map<String, String> getExtras() {
         return extras;

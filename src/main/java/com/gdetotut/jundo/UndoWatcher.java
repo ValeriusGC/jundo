@@ -2,7 +2,6 @@ package com.gdetotut.jundo;
 
 /**
  * Methods for subscribers.
- *
  */
 public interface UndoWatcher {
 

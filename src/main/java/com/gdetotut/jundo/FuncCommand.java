@@ -6,8 +6,7 @@ import java.io.Serializable;
 import java.util.Objects;
 
 /**
- *
- * @param <V> generic type for this class.
+ * @param <V> generic type of value.
  */
 public class FuncCommand<V extends Serializable> extends UndoCommand {
 
@@ -15,8 +14,8 @@ public class FuncCommand<V extends Serializable> extends UndoCommand {
     private final V oldValue;
     private final V newValue;
 
-    public FuncCommand(String text, @NotNull Getter<V> getter, @NotNull Setter<V> setter, V newValue, UndoCommand parent)
-            throws Exception {
+    public FuncCommand(String text, @NotNull Getter<V> getter, @NotNull Setter<V> setter, V newValue,
+                       UndoCommand parent){
         super(text, parent);
         this.setter = setter;
         this.oldValue = getter.get();
@@ -24,12 +23,12 @@ public class FuncCommand<V extends Serializable> extends UndoCommand {
     }
 
     @Override
-    public <Context> void doUndo(final Context context) {
+    public void doUndo() {
         setter.set(oldValue);
     }
 
     @Override
-    public <Context> void doRedo(final Context context) {
+    public void doRedo() {
         setter.set(newValue);
     }
 

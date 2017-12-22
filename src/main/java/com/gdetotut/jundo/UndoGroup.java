@@ -7,18 +7,19 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * The UndoGroup class is a group of UndoStack objects.
+ * The UndoGroup class is a group of {@link UndoStack} objects.
  * <p>An application often has multiple undo stacks, one for each opened document. At the same time,
  * an application usually has one undo action and one redo action, which triggers undo or redo in the active document.</p>
- * <p>UndoGroup is a group of UndoStack objects, one of which may be active. It has an undo() and redo() methods,
- * which calls UndoStack::undo() and UndoStack::redo() for the active stack.</p>
- * <p>Stacks are added to a group with add() and removed with remove(). A stack is implicitly added to a group
- * when it is created with the group as its parent.</p>
+ * <p>UndoGroup is a group of {@link UndoStack} objects, one of which may be active.
+ * It has an {@link #undo} and {@link #redo} methods, which calls {@link UndoStack#undo} and {@link UndoStack#redo}
+ * for the active stack.
+ * <p>Stacks are added to a group with {@link #add} and removed with {@link #remove}.
+ * A stack is implicitly added to a group when it is created with the group as its parent.
  * <p><b>UndoGroup doesn't allow to add 2 stacks with the same subject (compares by address) because
- * it is logical violation.</b></p>
- * <p>It is the programmer's responsibility to specify which stack is active by calling UndoStack::setActive(),
- * usually when the associated document window receives focus. The active stack may also be set with setActiveStack(),
- * and is returned by getActive().</p>
+ * it is a logical violation.</b>
+ * <p>It is the programmer's responsibility to specify which stack is active by calling {@link UndoStack#setActive},
+ * usually when the associated document window receives focus. The active stack may also be set with {@link #setActive},
+ * and is returned by {@link #getActive}.
  */
 public class UndoGroup implements Serializable {
 
@@ -27,7 +28,7 @@ public class UndoGroup implements Serializable {
 
     /**
      * Use this method instead of destructor.
-     * Ensure all UndoStacks no longer refer to this group when it's time to do it.
+     * <p>Ensure all UndoStacks no longer refer to this group when it's time to do it.
      */
     public void clear() {
         for (UndoStack stack : stacks) {
@@ -38,8 +39,7 @@ public class UndoGroup implements Serializable {
 
     /**
      * Adds {@link UndoStack} to this group.
-     *
-     * @param stack stack to be added
+     * @param stack stack to be added.
      */
     public void add(@NotNull UndoStack stack) {
         if (stacks.contains(stack)) {
@@ -57,8 +57,7 @@ public class UndoGroup implements Serializable {
     /**
      * Removes stack from this group. If the stack was the active stack in the group,
      * the active stack becomes null.
-     *
-     * @param stack stack to be removed
+     * @param stack stack to be removed.
      */
     public void remove(@NotNull UndoStack stack) {
         if (!stacks.remove(stack)) {
@@ -73,8 +72,7 @@ public class UndoGroup implements Serializable {
 
     /**
      * Returns a list of stacks in this group.
-     *
-     * @return stack list.
+     * @return Stack list.
      */
     public List<UndoStack> getStacks() {
         return stacks;
@@ -83,9 +81,8 @@ public class UndoGroup implements Serializable {
     /**
      * Sets the active stack of this group to stack.
      * <p>If the stack is not a member of this group, this function does nothing.
-     * Synonymous with calling UndoStack.setActive() on stack.
-     *
-     * @param stack stack to make active or null
+     * Synonymous with calling {@link UndoStack#setActive} on stack.
+     * @param stack stack to make active or null.
      */
     public void setActive(UndoStack stack) {
         if (active == stack) {
@@ -97,7 +94,6 @@ public class UndoGroup implements Serializable {
     /**
      * Returns the active stack of this group.
      * <p>If none of the stacks are active, or if the group is empty, this function returns null.
-     *
      * @return active stack or null.
      */
     public UndoStack getActive() {
@@ -105,7 +101,7 @@ public class UndoGroup implements Serializable {
     }
 
     /**
-     * Calls UndoStack.undo() on the active stack.
+     * Calls {@link UndoStack#undo} on the active stack.
      * <p>If none of the stacks are active, or if the group is empty, this function  does nothing.
      */
     public void undo() {
@@ -115,7 +111,7 @@ public class UndoGroup implements Serializable {
     }
 
     /**
-     * Calls UndoStack.redo() on the active stack.
+     * Calls {@link UndoStack#redo} on the active stack.
      * <p>If none of the stacks are active, or if the group is empty, this function  does nothing.
      */
     public void redo() {
@@ -125,50 +121,40 @@ public class UndoGroup implements Serializable {
     }
 
     /**
-     * Returns the value of the active stack's UndoStack.canUndo().
+     * @return The value of the active stack's {@link UndoStack#canUndo}.
      * <p>If none of the stacks are active, or if the group is empty, this function returns false.
-     *
-     * @return UndoStack.canUndo() for active stack or false.
      */
     public boolean canUndo() {
         return active != null && active.canUndo();
     }
 
     /**
-     * Returns the value of the active stack's UndoStack.canRedo().
+     * @return The value of the active stack's {@link UndoStack#canRedo}.
      * <p>If none of the stacks are active, or if the group is empty, this function returns false.
-     *
-     * @return UndoStack.canRedo() for active stack or false.
      */
     public boolean canRedo() {
         return active != null && active.canRedo();
     }
 
     /**
-     * Returns the value of the active stack's UndoStack.undoText().
+     * @return The value of the active stack's {@link UndoStack#undoText}.
      * <p>If none of the stacks are active, or if the group is empty, this function returns an empty string.
-     *
-     * @return the value of the active stack's UndoStack.undoText() or empty string.
      */
     public String undoText() {
         return active != null ? active.undoText() : "";
     }
 
     /**
-     * Returns the value of the active stack's UndoStack.redoText().
+     * @return The value of the active stack's {@link UndoStack#redoText}.
      * <p>If none of the stacks are active, or if the group is empty, this function returns an empty string.
-     *
-     * @return the value of the active stack's UndoStack.redoText() or empty string.
      */
     public String redoText() {
         return active != null ? active.redoText() : "";
     }
 
     /**
-     * Returns the value of the active stack's UndoStack.isClean().
+     * @return The value of the active stack's {@link UndoStack#isClean}.
      * <p>If none of the stacks are active, or if the group is empty, this function returns true.
-     *
-     * @return the value of the active stack's UndoStack.isClean() or true.
      */
     public boolean isClean() {
         return active == null || active.isClean();
