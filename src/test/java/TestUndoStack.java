@@ -34,8 +34,8 @@ public class TestUndoStack implements Serializable {
     @SuppressWarnings("unchecked")
     public <V extends Serializable> void testSimple() throws IOException, ClassNotFoundException {
 
-        UndoManager manager = new UndoManager(null, 333, stack);
-        UndoManager managerBack = UndoManager.deserialize(UndoManager.serialize(manager, false), null);
+        UndoSerializer manager = new UndoSerializer(null, 333, stack);
+        UndoSerializer managerBack = UndoSerializer.deserialize(UndoSerializer.serialize(manager, false), null);
         UndoStack stackBack = managerBack.getStack();
         // Here we can not compare stacks themselves 'cause of stack's comparison principle
         assertEquals(stack.getSubject(), stackBack.getSubject());
@@ -75,8 +75,8 @@ public class TestUndoStack implements Serializable {
         assertEquals(-40, pt.getY());
         assertEquals(0, stack.getIdx());
 
-        UndoManager manager = new UndoManager(null, 4, stack);
-        manager = UndoManager.deserialize(UndoManager.serialize(manager, true), null);
+        UndoSerializer manager = new UndoSerializer(null, 4, stack);
+        manager = UndoSerializer.deserialize(UndoSerializer.serialize(manager, true), null);
 
         UndoStack stackBack = manager.getStack();
         Point ptBack = (Point) stackBack.getSubject();
@@ -382,8 +382,8 @@ public class TestUndoStack implements Serializable {
             assertEquals(0, ntc.items.size());
 //            System.out.println(ntc);
 
-            UndoManager manager = new UndoManager(null, 333, stack);
-            UndoManager managerBack = UndoManager.deserialize(UndoManager.serialize(manager, false), null);
+            UndoSerializer manager = new UndoSerializer(null, 333, stack);
+            UndoSerializer managerBack = UndoSerializer.deserialize(UndoSerializer.serialize(manager, false), null);
             UndoStack stackBack = managerBack.getStack();
 //            assertEquals(stack, stackBack);
             NonTrivialClass objBack = (NonTrivialClass) stackBack.getSubject();
@@ -479,8 +479,8 @@ public class TestUndoStack implements Serializable {
             assertEquals(1, ntc.items.size());
 
             // Serialize
-            UndoManager manager = new UndoManager(null, 333, stack);
-            UndoManager managerBack = UndoManager.deserialize(UndoManager.serialize(manager, false), null);
+            UndoSerializer manager = new UndoSerializer(null, 333, stack);
+            UndoSerializer managerBack = UndoSerializer.deserialize(UndoSerializer.serialize(manager, false), null);
             UndoStack stackBack = managerBack.getStack();
             NonTrivialClass objBack = (NonTrivialClass) stackBack.getSubject();
 
@@ -499,8 +499,8 @@ public class TestUndoStack implements Serializable {
 
         {
 
-            UndoManager manager = new UndoManager(null, 333, stack);
-            String str = UndoManager.serialize(manager, false);
+            UndoSerializer manager = new UndoSerializer(null, 333, stack);
+            String str = UndoSerializer.serialize(manager, false);
 
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             GZIPOutputStream gzip = new GZIPOutputStream(baos);
@@ -584,9 +584,9 @@ public class TestUndoStack implements Serializable {
         // Suppose that we are forced to save/restore UndoStack and process it again.
         // We know MyContext state and want restore undo-chain.
 
-        UndoManager manager = new UndoManager(null, 4, stack);
-        UndoManager.serialize(manager, true);
-        manager = UndoManager.deserialize(UndoManager.serialize(manager, true), ctx);
+        UndoSerializer manager = new UndoSerializer(null, 4, stack);
+        UndoSerializer.serialize(manager, true);
+        manager = UndoSerializer.deserialize(UndoSerializer.serialize(manager, true), ctx);
         UndoStack stackBack = manager.getStack();
 
         stackBack.undo();
@@ -659,10 +659,10 @@ public class TestUndoStack implements Serializable {
         assertEquals(3, stack.getIdx());
         assertEquals(8, subj.items.size());
 
-        UndoManager manager = new UndoManager(null, 2, stack);
-        String z_data = UndoManager.serialize(manager, true);
+        UndoSerializer manager = new UndoSerializer(null, 2, stack);
+        String z_data = UndoSerializer.serialize(manager, true);
 //        System.out.println("zipped length : " + z_data.length());
-        UndoManager managerBack = UndoManager.deserialize(z_data, null);
+        UndoSerializer managerBack = UndoSerializer.deserialize(z_data, null);
         assertEquals(manager.VERSION, managerBack.VERSION);
         assertEquals(manager.getExtras(), managerBack.getExtras());
         assertEquals(manager.getStack().getSubject(), managerBack.getStack().getSubject());

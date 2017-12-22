@@ -10,16 +10,16 @@ import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
 /**
- * The UndoManager class is responsible for correct serialization and deserialization of entire UndoStack.
+ * The UndoSerializer class is responsible for correct serialization and deserialization of entire UndoStack.
  * <p>Stack encodes to Base64 using the <a href="#url">URL and Filename safe</a> type base64 encoding scheme.</p>
- * <p>UndoManager has a number of useful properties to restore stack correctly:</p>
+ * <p>UndoSerializer has a number of useful properties to restore stack correctly:</p>
  * <ul>
  *     <li>ID alows to save an unique identifier of stack's subject</li>
  *     <li>VERSION can be very useful when saved version and new version of object are not equal so migration needed.</li>
  *     <li>The map "extras" allows to save other extra parameters in the key-value form</li>
  * </ul>
  */
-public class UndoManager implements Serializable {
+public class UndoSerializer implements Serializable {
 
     public final String ID;
     public final int VERSION;
@@ -33,7 +33,7 @@ public class UndoManager implements Serializable {
      * @return manager as base64 string
      * @throws IOException when something goes wrong
      */
-    public static String serialize(@NotNull UndoManager manager, boolean doZip) throws IOException {
+    public static String serialize(@NotNull UndoSerializer manager, boolean doZip) throws IOException {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         try (final ObjectOutputStream oos = new ObjectOutputStream(baos)) {
             oos.writeObject(manager);
@@ -56,7 +56,7 @@ public class UndoManager implements Serializable {
      * @throws IOException when something goes wrong
      * @throws ClassNotFoundException when something goes wrong
      */
-    public static <Context> UndoManager deserialize(@NotNull String base64, Context context) throws IOException, ClassNotFoundException {
+    public static <Context> UndoSerializer deserialize(@NotNull String base64, Context context) throws IOException, ClassNotFoundException {
 
         final byte[] data = Base64Copy.getUrlDecoder().decode(base64);
         final boolean zipped = (data[0] == (byte) (GZIPInputStream.GZIP_MAGIC))
@@ -65,7 +65,7 @@ public class UndoManager implements Serializable {
         try (ObjectInputStream ois = zipped
                 ? new ObjectInputStream(new GZIPInputStream(new ByteArrayInputStream(data)))
                 : new ObjectInputStream(new ByteArrayInputStream(data))) {
-            final UndoManager um = (UndoManager) ois.readObject();
+            final UndoSerializer um = (UndoSerializer) ois.readObject();
             um.getStack().setContext(context);
             return um;
         }
@@ -77,7 +77,7 @@ public class UndoManager implements Serializable {
      * @param version version of subject for correct restoring in the possible case of object migration.
      * @param stack stack itself.
      */
-    public UndoManager(String id, int version, @NotNull UndoStack stack) {
+    public UndoSerializer(String id, int version, @NotNull UndoStack stack) {
         this.ID = id;
         this.VERSION = version;
         this.stack = stack;
@@ -101,7 +101,7 @@ public class UndoManager implements Serializable {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        UndoManager that = (UndoManager) o;
+        UndoSerializer that = (UndoSerializer) o;
         return VERSION == that.VERSION &&
                 Objects.equals(ID, that.ID) &&
                 Objects.equals(getStack(), that.getStack()) &&
