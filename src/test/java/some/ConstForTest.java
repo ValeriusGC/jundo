@@ -1,4 +1,4 @@
-package aux;
+package some;
 
 public interface ConstForTest {
 

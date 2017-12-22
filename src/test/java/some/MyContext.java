@@ -1,4 +1,4 @@
-package aux;
+package some;
 
 /**
  * No serializable class

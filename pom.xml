@@ -10,7 +10,7 @@
     <packaging>jar</packaging>
 
     <name>JUndo</name>
-    <description>Java's Undo Framework to ease undo/redo operations and allow (de)aux undo-stack to string</description>
+    <description>Java's Undo Framework to ease undo/redo operations and allow (de)serialize undo-stack to string</description>
     <url>https://github.com/ValeriusGC/jundo</url>
 
     <licenses>

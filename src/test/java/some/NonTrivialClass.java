@@ -1,4 +1,4 @@
-package aux;
+package some;
 
 import com.gdetotut.jundo.UndoCommand;
 import org.jetbrains.annotations.NotNull;

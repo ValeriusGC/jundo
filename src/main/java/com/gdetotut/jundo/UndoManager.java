@@ -28,7 +28,7 @@ public class UndoManager implements Serializable {
 
     /**
      * Serializes manager to Base64 string.
-     * @param manager manager to aux
+     * @param manager manager to serialize
      * @param doZip flag for gzipping
      * @return manager as base64 string
      * @throws IOException when something goes wrong

@@ -1,7 +1,7 @@
 import org.junit.Test;
-import aux.SimpleUndoWatcher;
+import some.SimpleUndoWatcher;
 import com.gdetotut.jundo.UndoManager;
-import aux.NonTrivialClass;
+import some.NonTrivialClass;
 import com.gdetotut.jundo.UndoStack;
 
 import static org.junit.Assert.assertEquals;
