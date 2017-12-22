@@ -137,19 +137,19 @@ public class UndoGroup implements Serializable {
     }
 
     /**
-     * @return The value of the active stack's {@link UndoStack#undoText}.
+     * @return The value of the active stack's {@link UndoStack#undoCaption}.
      * <p>If none of the stacks are active, or if the group is empty, this function returns an empty string.
      */
-    public String undoText() {
-        return active != null ? active.undoText() : "";
+    public String undoCaption() {
+        return active != null ? active.undoCaption() : "";
     }
 
     /**
-     * @return The value of the active stack's {@link UndoStack#redoText}.
+     * @return The value of the active stack's {@link UndoStack#redoCaption}.
      * <p>If none of the stacks are active, or if the group is empty, this function returns an empty string.
      */
-    public String redoText() {
-        return active != null ? active.redoText() : "";
+    public String redoCaption() {
+        return active != null ? active.redoCaption() : "";
     }
 
     /**
