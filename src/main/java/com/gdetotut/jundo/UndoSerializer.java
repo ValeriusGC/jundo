@@ -58,7 +58,6 @@ public class UndoSerializer implements Serializable {
      * @throws ClassNotFoundException when something goes wrong.
      */
     public static UndoSerializer deserialize(@NotNull String base64) throws IOException, ClassNotFoundException {
-
         final byte[] data = Base64.getUrlDecoder().decode(base64);
         final boolean zipped = (data[0] == (byte) (GZIPInputStream.GZIP_MAGIC))
                 && (data[1] == (byte) (GZIPInputStream.GZIP_MAGIC >> 8));
