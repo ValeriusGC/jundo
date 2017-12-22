@@ -9,13 +9,13 @@ import java.util.Objects;
  *
  * @param <V> generic type for this class.
  */
-public class FunctionalCommand<V extends Serializable> extends UndoCommand {
+public class FuncCommand<V extends Serializable> extends UndoCommand {
 
     private final Setter<V> setter;
     private final V oldValue;
     private final V newValue;
 
-    public FunctionalCommand(String text, @NotNull Getter<V> getter, @NotNull Setter<V> setter, V newValue, UndoCommand parent)
+    public FuncCommand(String text, @NotNull Getter<V> getter, @NotNull Setter<V> setter, V newValue, UndoCommand parent)
             throws Exception {
         super(text, parent);
         this.setter = setter;
@@ -37,7 +37,7 @@ public class FunctionalCommand<V extends Serializable> extends UndoCommand {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        FunctionalCommand<?> that = (FunctionalCommand<?>) o;
+        FuncCommand<?> that = (FuncCommand<?>) o;
         return Objects.equals(oldValue, that.oldValue) &&
                 Objects.equals(newValue, that.newValue);
     }
@@ -49,7 +49,7 @@ public class FunctionalCommand<V extends Serializable> extends UndoCommand {
 
     @Override
     public String toString() {
-        return "FunctionalCommand{" +
+        return "FuncCommand{" +
                 "oldValue=" + oldValue +
                 ", newValue=" + newValue +
                 '}';

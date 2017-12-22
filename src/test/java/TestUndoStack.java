@@ -26,7 +26,7 @@ public class TestUndoStack implements Serializable {
         stack = new UndoStack(subj, null);
         stack.setWatcher(new SimpleUndoWatcher());
         for (V i : array) {
-            stack.push(new FunctionalCommand<>("", ((SimpleClass<V>) subj)::getValue,
+            stack.push(new FuncCommand<>("", ((SimpleClass<V>) subj)::getValue,
                     ((SimpleClass<V>) subj)::setValue, i, null));
         }
     }
@@ -56,7 +56,7 @@ public class TestUndoStack implements Serializable {
 
 
     /**
-     * Simply shows how elegant {@link FunctionalCommand} works
+     * Simply shows how elegant {@link FuncCommand} works
      */
     @Test
     public void testIntegerClass() throws Exception {
@@ -64,8 +64,8 @@ public class TestUndoStack implements Serializable {
         Point pt = new Point(-30, -40);
         UndoStack stack = new UndoStack(pt, null);
         UndoCommand undoCommand = new UndoCommand("Move point", null);
-        new FunctionalCommand<>("Change x", pt::getX, pt::setX, 10, undoCommand);
-        new FunctionalCommand<>("Change y", pt::getY, pt::setY, 20, undoCommand);
+        new FuncCommand<>("Change x", pt::getX, pt::setX, 10, undoCommand);
+        new FuncCommand<>("Change y", pt::getY, pt::setY, 20, undoCommand);
         stack.push(undoCommand);
         assertEquals(1, stack.count());
         assertEquals(10, pt.getX());
@@ -214,7 +214,7 @@ public class TestUndoStack implements Serializable {
         stack.setWatcher(new SimpleUndoWatcher());
         stack.setUndoLimit(5);
         for (int i = 0; i < 10; ++i) {
-            stack.push(new FunctionalCommand<>(String.valueOf(i), subj::getValue, subj::setValue, i, null));
+            stack.push(new FuncCommand<>(String.valueOf(i), subj::getValue, subj::setValue, i, null));
         }
         assertEquals(5, stack.count());
         stack.setIndex(0);
@@ -239,7 +239,7 @@ public class TestUndoStack implements Serializable {
         UndoStack stack = new UndoStack(subj, group);
         stack.setWatcher(new SimpleUndoWatcher());
         for (int i = 0; i < 10; ++i) {
-            stack.push(new FunctionalCommand<>(String.valueOf(i), subj::getValue, subj::setValue, i, null));
+            stack.push(new FuncCommand<>(String.valueOf(i), subj::getValue, subj::setValue, i, null));
         }
         assertEquals(10, stack.count());
         stack.setIndex(5);
@@ -259,7 +259,7 @@ public class TestUndoStack implements Serializable {
         // Now set limit, set clean, and go out of it
         stack.setUndoLimit(5);
         for (int i = 0; i < 5; ++i) {
-            stack.push(new FunctionalCommand<>(String.valueOf(i), subj::getValue, subj::setValue, i, null));
+            stack.push(new FuncCommand<>(String.valueOf(i), subj::getValue, subj::setValue, i, null));
         }
         assertEquals(5, stack.count());
         stack.setIndex(2);
@@ -267,7 +267,7 @@ public class TestUndoStack implements Serializable {
         assertEquals(2, stack.getCleanIdx());
         stack.setIndex(0);
         assertEquals(2, stack.getCleanIdx());
-        stack.push(new FunctionalCommand<>(String.valueOf(10), subj::getValue, subj::setValue, 10, null));
+        stack.push(new FuncCommand<>(String.valueOf(10), subj::getValue, subj::setValue, 10, null));
         assertEquals(-1, stack.getCleanIdx());
         assertEquals(false, stack.isClean());
     }
@@ -295,7 +295,7 @@ public class TestUndoStack implements Serializable {
         assertEquals(false, group.canRedo());
 
         for (int i = 0; i < 3; ++i) {
-            stack.push(new FunctionalCommand<>(String.valueOf(i), subj::getValue, subj::setValue, i, null));
+            stack.push(new FuncCommand<>(String.valueOf(i), subj::getValue, subj::setValue, i, null));
         }
         assertEquals(true, stack.canUndo());
         assertEquals(false, stack.canRedo());
@@ -698,10 +698,10 @@ public class TestUndoStack implements Serializable {
             final int y = 20;
             Point subj = new Point(x, y);
             UndoCommand parentCmd = new UndoCommand("parent", null);
-            new FunctionalCommand<>("move 1", subj::getY, subj::setY, 50, parentCmd);
-            new FunctionalCommand<>("move 2", subj::getX, subj::setX, 35, parentCmd);
-            new FunctionalCommand<>("move 3", subj::getY, subj::setY, 55, parentCmd);
-            new FunctionalCommand<>("move 4", subj::getX, subj::setX, 39, parentCmd);
+            new FuncCommand<>("move 1", subj::getY, subj::setY, 50, parentCmd);
+            new FuncCommand<>("move 2", subj::getX, subj::setX, 35, parentCmd);
+            new FuncCommand<>("move 3", subj::getY, subj::setY, 55, parentCmd);
+            new FuncCommand<>("move 4", subj::getX, subj::setX, 39, parentCmd);
             parentCmd.redo(null);
             assertEquals(39, subj.getX());
             assertEquals(55, subj.getY());
@@ -718,10 +718,10 @@ public class TestUndoStack implements Serializable {
             Point subj = new Point(x, y);
             UndoStack stack = new UndoStack(subj, null);
             UndoCommand parentCmd = new UndoCommand("parent", null);
-            new FunctionalCommand<>("move 1", subj::getY, subj::setY, 50, parentCmd);
-            new FunctionalCommand<>("move 2", subj::getX, subj::setX, 35, parentCmd);
-            new FunctionalCommand<>("move 3", subj::getY, subj::setY, 55, parentCmd);
-            new FunctionalCommand<>("move 4", subj::getX, subj::setX, 39, parentCmd);
+            new FuncCommand<>("move 1", subj::getY, subj::setY, 50, parentCmd);
+            new FuncCommand<>("move 2", subj::getX, subj::setX, 35, parentCmd);
+            new FuncCommand<>("move 3", subj::getY, subj::setY, 55, parentCmd);
+            new FuncCommand<>("move 4", subj::getX, subj::setX, 39, parentCmd);
             stack.push(parentCmd);
             assertEquals(39, subj.getX());
             assertEquals(55, subj.getY());
