@@ -11,6 +11,11 @@ import java.util.List;
  */
 public class UndoCommand implements Serializable {
 
+    // TODO: 25.12.17 Убрать все toString() перед продакшном
+
+    // TODO: 25.12.17 Покрытие тестами улучшить
+
+
     public static int NO_COMPRESSION_SUPPORT = -1;
     private String caption;
     List<UndoCommand> children;
@@ -21,6 +26,7 @@ public class UndoCommand implements Serializable {
      * @param parent command's parent. Used in the concept of 'command-chain'.  Optional.
      */
     public UndoCommand(String caption, UndoCommand parent) {
+
         setCaption(caption);
         if(null != parent) {
             if(null == parent.children) {
