@@ -25,7 +25,7 @@ public class UndoSerializer implements Serializable {
     public final String ID;
     public final int VERSION;
     private final UndoStack stack;
-    private final Map<String, String> extras = new TreeMap<>();
+    private final Map<String, Serializable> extras = new TreeMap<>();
 
     /**
      * Serializes object to Base64 string.
@@ -91,7 +91,7 @@ public class UndoSerializer implements Serializable {
     /**
      * @return Extra parameters in the 'key-value' form.
      */
-    public Map<String, String> getExtras() {
+    public Map<String, Serializable> getExtras() {
         return extras;
     }
 

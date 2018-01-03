@@ -1,4 +1,5 @@
 import com.gdetotut.jundo.UndoSerializer;
+import javafx.scene.shape.Circle;
 import org.junit.Test;
 import some.SimpleUndoWatcher;
 import some.NonTrivialClass;
