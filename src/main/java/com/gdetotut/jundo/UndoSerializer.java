@@ -15,15 +15,16 @@ import java.util.zip.GZIPOutputStream;
  * <p>Stack encodes to Base64 using the <a href="#url">URL and Filename safe</a> type base64 encoding scheme.
  * <p>UndoSerializer has a number of useful properties to restore stack correctly:
  * <ul>
- *     <li>ID allows to save an unique identifier of stack's subject</li>
- *     <li>VERSION can be very useful when saved version and new version of object are not equal so migration needed.</li>
+ *     <li>id allows to save an unique identifier of stack's subject</li>
+ *     <li>version can be very useful when saved version and new version of object are not equal so migration needed.</li>
  *     <li>The map "extras" allows to save other extra parameters in the 'key-value' form</li>
  * </ul>
  */
 public class UndoSerializer implements Serializable {
 
-    public final String ID;
-    public final int VERSION;
+    public final String id;
+    public final int version;
+    public final Class clazz;
     private final UndoStack stack;
     private final Map<String, Serializable> extras = new TreeMap<>();
 
@@ -76,8 +77,9 @@ public class UndoSerializer implements Serializable {
      * @param stack stack itself.
      */
     public UndoSerializer(String id, int version, @NotNull UndoStack stack) {
-        this.ID = id;
-        this.VERSION = version;
+        this.id = id;
+        this.version = version;
+        this.clazz = stack.getClass();
         this.stack = stack;
     }
 
@@ -100,14 +102,14 @@ public class UndoSerializer implements Serializable {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         UndoSerializer that = (UndoSerializer) o;
-        return VERSION == that.VERSION &&
-                Objects.equals(ID, that.ID) &&
+        return version == that.version &&
+                Objects.equals(id, that.id) &&
                 Objects.equals(getStack(), that.getStack()) &&
                 Objects.equals(getExtras(), that.getExtras());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(ID, VERSION, getStack(), getExtras());
+        return Objects.hash(id, version, getStack(), getExtras());
     }
 }

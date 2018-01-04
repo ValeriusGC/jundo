@@ -1,5 +1,4 @@
 import com.gdetotut.jundo.UndoSerializer;
-import javafx.scene.shape.Circle;
 import org.junit.Test;
 import some.SimpleUndoWatcher;
 import some.NonTrivialClass;
@@ -58,8 +57,8 @@ public class TestUndoSerializer {
             managerBack = UndoSerializer.deserialize(data);
             // Here we can't compare managers themselves 'cause of stack's comparison principle it leads at last
             // ------- assertEquals(manager, managerBack);
-            assertEquals(manager.ID, managerBack.ID);
-            assertEquals(manager.VERSION, managerBack.VERSION);
+            assertEquals(manager.id, managerBack.id);
+            assertEquals(manager.version, managerBack.version);
             assertEquals(manager.getExtras(), managerBack.getExtras());
             assertEquals(manager.getStack().getSubj(), managerBack.getStack().getSubj());
             //~
@@ -73,7 +72,7 @@ public class TestUndoSerializer {
             managerBack = UndoSerializer.deserialize(z_data);
             // Here we can't compare managers themselves 'cause of stack's comparison principle it leads at last
             // ------- assertEquals(manager, managerBack);
-            assertEquals(manager.VERSION, managerBack.VERSION);
+            assertEquals(manager.version, managerBack.version);
             assertEquals(manager.getExtras(), managerBack.getExtras());
             assertEquals(manager.getStack().getSubj(), managerBack.getStack().getSubj());
             //~

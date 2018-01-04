@@ -9,7 +9,7 @@ import java.util.List;
 /**
  * The UndoCommand class is the base class of all commands stored on an {@link UndoStack}.
  */
-public class UndoCommand implements Serializable {
+public class UndoCommand2 implements Serializable {
 
     // TODO: 25.12.17 Убрать все toString() перед продакшном
 
@@ -18,14 +18,17 @@ public class UndoCommand implements Serializable {
 
     public static int NO_COMPRESSION_SUPPORT = -1;
     private String caption;
-    List<UndoCommand> children;
+    List<UndoCommand2> children;
+    protected final UndoStack2 owner;
 
     /**
      * Constructs an UndoCommand object with the given caption.
      * @param caption a short string describing what this command does. Optional.
      * @param parent command's parent. Used in the concept of 'command-chain'.  Optional.
      */
-    public UndoCommand(String caption, UndoCommand parent) {
+    public UndoCommand2(UndoStack2 owner, String caption, UndoCommand2 parent) {
+
+        this.owner = owner;
 
         setCaption(caption);
         if(null != parent) {
@@ -67,7 +70,7 @@ public class UndoCommand implements Serializable {
      * @param cmd command to try merge with.
      * @return True on success; otherwise returns false.
      */
-    public boolean mergeWith(@NotNull UndoCommand cmd) {
+    public boolean mergeWith(@NotNull UndoCommand2 cmd) {
         return false;
     }
 
@@ -83,7 +86,7 @@ public class UndoCommand implements Serializable {
      * @param idx index of desired command.
      * @return Command if index is valid; otherwise null.
      */
-    public UndoCommand child(int idx) {
+    public UndoCommand2 child(int idx) {
         if(idx < 0 || idx >= childCount()) {
             return null;
         }
@@ -95,7 +98,7 @@ public class UndoCommand implements Serializable {
      */
     public final void redo() {
         if(null != children && children.size() > 0) {
-            for (UndoCommand cmd : children) {
+            for (UndoCommand2 cmd : children) {
                 cmd.redo();
             }
         }else {
@@ -108,7 +111,7 @@ public class UndoCommand implements Serializable {
      */
     public final void undo() {
         if(null != children && children.size() > 0) {
-            for (UndoCommand cmd : children) {
+            for (UndoCommand2 cmd : children) {
                 cmd.undo();
             }
         }else {
