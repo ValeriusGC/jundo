@@ -25,9 +25,9 @@ public final class RefCmd<V extends Serializable> extends UndoCommand {
      * @param newValue the value to set to.
      * @param parent command's parent. Used in the concept of 'command-chain'.  Optional.
      */
-    public RefCmd(String caption, @NotNull Getter<V> getter, @NotNull Setter<V> setter, V newValue,
+    public RefCmd(@NotNull UndoStack stack, String caption, @NotNull Getter<V> getter, @NotNull Setter<V> setter, V newValue,
                   UndoCommand parent){
-        super(caption, parent);
+        super(stack, caption, parent);
         this.setter = setter;
         this.oldValue = getter.get();
         this.newValue = newValue;

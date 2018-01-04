@@ -33,17 +33,17 @@ public class TestUndoSerializer {
         UndoStack stack = new UndoStack(ntc, null);
         stack.setWatcher(new SimpleUndoWatcher());
         for(int i = 0; i < 1000; ++i){
-            stack.push(new NonTrivialClass.AddCommand(NonTrivialClass.Item.Type.CIRCLE, ntc, null));
+            stack.push(new NonTrivialClass.AddCommand(stack, NonTrivialClass.Item.Type.CIRCLE, ntc, null));
         }
         assertEquals(1000, ntc.items.size());
         assertEquals(1000, stack.count());
         for(int i = 0; i < 1000; ++i){
-            stack.push(new NonTrivialClass.MovedCommand(ntc.items.get(i), 10, null));
+            stack.push(new NonTrivialClass.MovedCommand(stack, ntc.items.get(i), 10, null));
         }
         assertEquals(1000, ntc.items.size());
         assertEquals(2000, stack.count());
         for(int i = 0; i < 1000; ++i){
-            stack.push(new NonTrivialClass.DeleteCommand(ntc, null));
+            stack.push(new NonTrivialClass.DeleteCommand(stack, ntc, null));
         }
         assertEquals(0, ntc.items.size());
         assertEquals(3000, stack.count());
@@ -52,14 +52,14 @@ public class TestUndoSerializer {
         {
             // Make unzipped serialization
             UndoSerializer manager = new UndoSerializer(null,2, stack);
-            String data = UndoSerializer.serialize(manager, false);
+            String data = UndoSerializer.serialize(manager, false, null);
 //            System.out.println("1: " + data.length());
-            managerBack = UndoSerializer.deserialize(data);
+            managerBack = UndoSerializer.deserialize(data, null);
             // Here we can't compare managers themselves 'cause of stack's comparison principle it leads at last
             // ------- assertEquals(manager, managerBack);
-            assertEquals(manager.id, managerBack.id);
-            assertEquals(manager.version, managerBack.version);
-            assertEquals(manager.getExtras(), managerBack.getExtras());
+            assertEquals(manager.subjInfo.id, managerBack.subjInfo.id);
+            assertEquals(manager.subjInfo.version, managerBack.subjInfo.version);
+            assertEquals(manager.subjInfo.extras, managerBack.subjInfo.extras);
             assertEquals(manager.getStack().getSubj(), managerBack.getStack().getSubj());
             //~
             assertEquals(NonTrivialClass.class, manager.getStack().getSubj().getClass());
@@ -67,13 +67,13 @@ public class TestUndoSerializer {
         {
             // Make zipped serialization
             UndoSerializer manager = new UndoSerializer(null,2, stack);
-            String z_data = UndoSerializer.serialize(manager, true);
+            String z_data = UndoSerializer.serialize(manager, true, null);
 //            System.out.println("zipped length : " + z_data.length());
-            managerBack = UndoSerializer.deserialize(z_data);
+            managerBack = UndoSerializer.deserialize(z_data, null);
             // Here we can't compare managers themselves 'cause of stack's comparison principle it leads at last
             // ------- assertEquals(manager, managerBack);
-            assertEquals(manager.version, managerBack.version);
-            assertEquals(manager.getExtras(), managerBack.getExtras());
+            assertEquals(manager.subjInfo.version, managerBack.subjInfo.version);
+            assertEquals(manager.subjInfo.extras, managerBack.subjInfo.extras);
             assertEquals(manager.getStack().getSubj(), managerBack.getStack().getSubj());
             //~
             assertEquals(NonTrivialClass.class, manager.getStack().getSubj().getClass());

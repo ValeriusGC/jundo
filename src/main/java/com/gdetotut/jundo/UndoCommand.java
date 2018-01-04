@@ -19,13 +19,16 @@ public class UndoCommand implements Serializable {
     public static int NO_COMPRESSION_SUPPORT = -1;
     private String caption;
     List<UndoCommand> children;
+    protected final UndoStack owner;
 
     /**
      * Constructs an UndoCommand object with the given caption.
      * @param caption a short string describing what this command does. Optional.
      * @param parent command's parent. Used in the concept of 'command-chain'.  Optional.
      */
-    public UndoCommand(String caption, UndoCommand parent) {
+    public UndoCommand(@NotNull UndoStack owner, String caption, UndoCommand parent) {
+
+        this.owner = owner;
 
         setCaption(caption);
         if(null != parent) {
@@ -147,10 +150,4 @@ public class UndoCommand implements Serializable {
      */
     protected void doUndo() { }
 
-    @Override
-    public String toString() {
-        return "UndoCommand{" +
-                "caption='" + caption + '\'' +
-                '}';
-    }
 }

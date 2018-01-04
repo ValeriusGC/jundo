@@ -3,9 +3,8 @@ package com.gdetotut.jundo;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
+import java.util.function.BiFunction;
 
 /**
  * <b>Main characteristic of {@link UndoStack} is that two different stacks should not share one subject.</b>
@@ -20,7 +19,7 @@ public class UndoStack implements Serializable{
      * Keeps the subject for whom {@link #commands} are behave.
      * <p>Required parameter.
      */
-    private final @NotNull Serializable subj;
+    private transient Object subj;
     private int idx;
     private int cleanIdx;
     private List<UndoCommand> commands;
@@ -28,17 +27,26 @@ public class UndoStack implements Serializable{
     private int undoLimit;
     private transient UndoWatcher watcher;
 
+    private transient Map<String, Object> localContexts;
+
     /**
      * Constructs an empty undo stack. The stack will initially be in the clean state.
      * If group is not a null the stack is automatically added to the group.
      * @param subj for whom this stack was made. Can be null if no way to make it serializable.
      * @param group possible group for this {@link UndoStack}.
      */
-    public UndoStack(@NotNull Serializable subj, UndoGroup group) {
+    public UndoStack(@NotNull Object subj, UndoGroup group) {
         this.subj = subj;
         if(null != group) {
             group.add(this);
         }
+    }
+
+    public Map<String, Object> getLocalContexts() {
+        if(localContexts == null) {
+            localContexts = new HashMap<>();
+        }
+        return localContexts;
     }
 
     /**
@@ -343,7 +351,7 @@ public class UndoStack implements Serializable{
      */
     public void beginMacro(String caption) {
 
-        final UndoCommand cmd = new UndoCommand(caption, null);
+        final UndoCommand cmd = new UndoCommand(this, caption, null);
 
         if(macroStack == null) {
             macroStack = new ArrayList<>();
@@ -477,8 +485,15 @@ public class UndoStack implements Serializable{
     /**
      * @return Subject via calling descendants real object.
      */
-    public Serializable getSubj() {
+    @NotNull
+    public Object getSubj() {
         return subj;
+    }
+
+    public void setSubj(@NotNull Object value) {
+        if(subj == null) {
+            subj = value;
+        }
     }
 
     /**

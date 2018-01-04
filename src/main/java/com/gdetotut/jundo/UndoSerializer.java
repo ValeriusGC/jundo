@@ -22,11 +22,57 @@ import java.util.zip.GZIPOutputStream;
  */
 public class UndoSerializer implements Serializable {
 
-    public final String id;
-    public final int version;
-    public final Class clazz;
-    private final UndoStack stack;
-    private final Map<String, Serializable> extras = new TreeMap<>();
+    // TODO: 04.01.18 Требует перевода!
+    /**
+     *   В случае объекта который не имеет маркера {@link Serializable}
+     */
+    public interface OnSerializeSubj {
+        String toStr(@NotNull Object subj);
+    }
+
+    public interface OnDeserializeSubj {
+        Object toSubj(@NotNull String subjAsString);
+    }
+
+
+    public static class SubjInfo implements Serializable{
+        public final String id;
+        public final int version;
+        public final Class clazz;
+        public final Map<String, Serializable> extras = new TreeMap<>();
+
+        public SubjInfo(String id, int version, Class clazz) {
+            this.id = id;
+            this.version = version;
+            this.clazz = clazz;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            SubjInfo subjInfo = (SubjInfo) o;
+            return version == subjInfo.version &&
+                    Objects.equals(id, subjInfo.id) &&
+                    Objects.equals(clazz, subjInfo.clazz) &&
+                    Objects.equals(extras, subjInfo.extras);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(id, version, clazz, extras);
+        }
+    }
+
+    private static class InnerStruct implements Serializable{
+        UndoStack stack;
+        Serializable subj;
+        SubjInfo subjInfo;
+    }
+
+    private transient UndoStack stack;
+
+    public final SubjInfo subjInfo;
 
     /**
      * Serializes object to Base64 string.
@@ -35,10 +81,28 @@ public class UndoSerializer implements Serializable {
      * @return Object as base64 string.
      * @throws IOException when something goes wrong.
      */
-    public static String serialize(@NotNull UndoSerializer obj, boolean doZip) throws IOException {
+    public static String serialize(@NotNull UndoSerializer obj, boolean doZip,
+                                   OnSerializeSubj onSerializeSubj) throws IOException {
+
+        InnerStruct innerStruct = new InnerStruct();
+        innerStruct.stack = obj.stack;
+        Object subj = innerStruct.stack.getSubj();
+        if(!(subj instanceof Serializable)) {
+            if(onSerializeSubj == null) {
+                throw new IOException("need Serializable");
+            }else {
+               innerStruct.subj = onSerializeSubj.toStr(subj);
+            }
+        }else {
+            innerStruct.subj = (Serializable) subj;
+        }
+        innerStruct.subjInfo = obj.subjInfo;
+
+        //innerStruct.stack.localContexts.clear();
+
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         try (final ObjectOutputStream oos = new ObjectOutputStream(baos)) {
-            oos.writeObject(obj);
+            oos.writeObject(innerStruct);
         }
 
         if (doZip) {
@@ -58,7 +122,8 @@ public class UndoSerializer implements Serializable {
      * @throws IOException when something goes wrong.
      * @throws ClassNotFoundException when something goes wrong.
      */
-    public static UndoSerializer deserialize(@NotNull String base64) throws IOException, ClassNotFoundException {
+    public static UndoSerializer deserialize(@NotNull String base64,
+                                              OnDeserializeSubj onDeserializeSubj) throws IOException, ClassNotFoundException {
         final byte[] data = Base64.getUrlDecoder().decode(base64);
         final boolean zipped = (data[0] == (byte) (GZIPInputStream.GZIP_MAGIC))
                 && (data[1] == (byte) (GZIPInputStream.GZIP_MAGIC >> 8));
@@ -66,7 +131,18 @@ public class UndoSerializer implements Serializable {
         try (ObjectInputStream ois = zipped
                 ? new ObjectInputStream(new GZIPInputStream(new ByteArrayInputStream(data)))
                 : new ObjectInputStream(new ByteArrayInputStream(data))) {
-            return (UndoSerializer) ois.readObject();
+
+            InnerStruct struct = (InnerStruct)ois.readObject();
+            SubjInfo subjInfo = struct.subjInfo;
+            UndoStack stack = struct.stack;
+            if(struct.subj.getClass() == subjInfo.clazz){
+                stack.setSubj(struct.subj);
+            } else if(struct.subj instanceof String && onDeserializeSubj != null) {
+                Object subj = onDeserializeSubj.toSubj((String) struct.subj);
+                stack.setSubj(subj);
+            }
+            UndoSerializer obj = new UndoSerializer(subjInfo.id, subjInfo.version, stack);
+            return obj;
         }
     }
 
@@ -77,9 +153,7 @@ public class UndoSerializer implements Serializable {
      * @param stack stack itself.
      */
     public UndoSerializer(String id, int version, @NotNull UndoStack stack) {
-        this.id = id;
-        this.version = version;
-        this.clazz = stack.getClass();
+        subjInfo = new SubjInfo(id, version, stack.getSubj().getClass());
         this.stack = stack;
     }
 
@@ -90,26 +164,17 @@ public class UndoSerializer implements Serializable {
         return stack;
     }
 
-    /**
-     * @return Extra parameters in the 'key-value' form.
-     */
-    public Map<String, Serializable> getExtras() {
-        return extras;
-    }
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         UndoSerializer that = (UndoSerializer) o;
-        return version == that.version &&
-                Objects.equals(id, that.id) &&
-                Objects.equals(getStack(), that.getStack()) &&
-                Objects.equals(getExtras(), that.getExtras());
+        return Objects.equals(stack, that.stack) &&
+                Objects.equals(subjInfo, that.subjInfo);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, version, getStack(), getExtras());
+        return Objects.hash(stack, subjInfo);
     }
 }
