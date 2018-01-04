@@ -12,6 +12,9 @@ import java.util.*;
 
 import static org.junit.Assert.assertEquals;
 
+/**
+ * We must make it serializable because some inner classes are subject to serialize.
+ */
 public class TestUndoSerializer2 implements Serializable{
 
     @Test
@@ -42,21 +45,21 @@ public class TestUndoSerializer2 implements Serializable{
                 super(owner, "", parent);
                 oldV = circle.getRadius();
                 this.newV = newV;
-                if(!owner.contexts.containsKey("circle")) {
-                    owner.contexts.put("circle", circle);
+                if(!owner.getLocalContexts().containsKey("circle")) {
+                    owner.getLocalContexts().put("circle", circle);
                 }
             }
 
             @Override
             protected void doRedo() {
-//                Circle c = (Circle)owner.contexts.get("circle");
+//                Circle c = (Circle)owner.localContexts.get("circle");
                 Circle c = (Circle)owner.getSubj();
                 c.setRadius(newV);
             }
 
             @Override
             protected void doUndo() {
-//                Circle c = (Circle)owner.contexts.get("circle");
+//                Circle c = (Circle)owner.localContexts.get("circle");
                 Circle c = (Circle)owner.getSubj();
                 c.setRadius(oldV);
             }
@@ -64,7 +67,7 @@ public class TestUndoSerializer2 implements Serializable{
 
         Circle circle = new Circle(20.0, Color.RED);
         UndoStack2 stack = new UndoStack2(circle, null);
-        stack.contexts.put("circle", circle);
+        stack.getLocalContexts().put("circle", circle);
         stack.setWatcher(new SimpleUndoWatcher());
         for(int i = 0; i < 1000; ++i){
             stack.push(new CircleRadiusUndoCmd(stack, circle, i*2.0, null));
@@ -89,7 +92,7 @@ public class TestUndoSerializer2 implements Serializable{
         assertEquals(circle.getFill(), circle1.getFill());
 
         UndoStack2 stack2 = managerBack.getStack();
-        stack2.contexts.put("circle", circle1);
+        stack2.getLocalContexts().put("circle", circle1);
         assertEquals(1000, stack2.count());
         assertEquals(0, Double.compare(20.0, circle1.getRadius()));
 
@@ -99,16 +102,36 @@ public class TestUndoSerializer2 implements Serializable{
     }
 
 
+    /**
+     * Tests complex non-serializable class as subject for UndoStack2
+     * @throws Exception
+     */
     @Test
     public void testComplexSubj() throws Exception {
 
-        // Non serializable
+        // Non-serializable subject
         class Canvas {
             final static int CT_Circle = 1;
             final static int CT_Rect = 2;
             List<Shape> shapes = new ArrayList<>();
+
         }
 
+        // Context #1
+        class LocalContext {
+            final String ADD = "cmd_add";
+            final String REMOVE = "cmd_remove";
+            final String RESIZE = "cmd_resize";
+        }
+
+        // Context #2
+        class LocalContext1 {
+            final String ADD = "cmd_add1";
+            final String REMOVE = "cmd_remove1";
+            final String RESIZE = "cmd_resize1";
+        }
+
+        // Makes Shapes for Canvas and converts String <--> Canvas
         class Factory {
 
             Shape make(int type) {
@@ -156,12 +179,17 @@ public class TestUndoSerializer2 implements Serializable{
 
         }
 
-        class CanvasCmd implements Serializable{
+        // Controller of Canvas undo commands.
+        class CanvasCmdCtrl implements Serializable{
+
+            // Adds Shape to Canvas
             class Add extends UndoCommand2 {
                 int type;
                 public Add(@NotNull UndoStack2 owner, int type, UndoCommand2 parent) {
-                    super(owner, "add", parent);
+                    super(owner, "", parent);
                     this.type = type;
+                    LocalContext ctx = (LocalContext)owner.getLocalContexts().get("resources");
+                    setCaption(ctx.ADD);
                 }
 
                 @Override
@@ -176,12 +204,16 @@ public class TestUndoSerializer2 implements Serializable{
                 }
             }
 
+            // Removes Shape from Canvas
             class Remove extends UndoCommand2 {
                 int type;
                 public Remove(@NotNull UndoStack2 owner, UndoCommand2 parent) {
-                    super(owner, "remove", parent);
+                    super(owner, "", parent);
                     List<Shape> shapes = ((Canvas)owner.getSubj()).shapes;
                     this.type = shapes.get(shapes.size()-1) instanceof Circle ? Canvas.CT_Circle : Canvas.CT_Rect;
+
+                    LocalContext ctx = (LocalContext)owner.getLocalContexts().get("resources");
+                    setCaption(ctx.REMOVE);
                 }
 
                 @Override
@@ -193,6 +225,48 @@ public class TestUndoSerializer2 implements Serializable{
                 @Override
                 protected void doUndo() {
                     ((Canvas)owner.getSubj()).shapes.add(new Factory().make(type));
+                }
+            }
+
+            //
+            class Resize extends UndoCommand2 {
+                int idx;
+                double oldV;
+                double newV;
+                public Resize(UndoStack2 owner, UndoCommand2 parent, int idx, double newValue) {
+                    super(owner, "", parent);
+                    this.idx = idx;
+                    this.newV = newValue;
+
+                    LocalContext ctx = (LocalContext)owner.getLocalContexts().get("resources");
+                    setCaption(ctx.RESIZE);
+
+                }
+
+                @Override
+                protected void doRedo() {
+                    List<Shape> shapes = ((Canvas)owner.getSubj()).shapes;
+                    Shape shape = shapes.get(idx);
+                    if(shape instanceof Circle) {
+                        oldV = ((Circle)shape).getRadius();
+                        ((Circle)shape).setRadius(newV);
+                    }else{
+                        oldV = ((Rectangle)shape).getWidth();
+                        ((Rectangle)shape).setWidth(newV);
+                        ((Rectangle)shape).setHeight(newV);
+                    }
+                }
+
+                @Override
+                protected void doUndo() {
+                    List<Shape> shapes = ((Canvas)owner.getSubj()).shapes;
+                    Shape shape = shapes.get(idx);
+                    if(shape instanceof Circle) {
+                        ((Circle)shape).setRadius(oldV);
+                    }else{
+                        ((Rectangle)shape).setWidth(oldV);
+                        ((Rectangle)shape).setHeight(oldV);
+                    }
                 }
             }
 
@@ -200,37 +274,99 @@ public class TestUndoSerializer2 implements Serializable{
 
         /////////////////////////////
 
+        // First only add/remove
         Canvas canvas = new Canvas();
         UndoStack2 stack = new UndoStack2(canvas, null);
-        stack.push(new CanvasCmd().new Add(stack, Canvas.CT_Circle, null));
-        stack.push(new CanvasCmd().new Add(stack, Canvas.CT_Rect, null));
-        assertEquals(2, canvas.shapes.size());
+        stack.getLocalContexts().put("resources", new LocalContext());
+        stack.push(new CanvasCmdCtrl().new Add(stack, Canvas.CT_Circle, null));
+        stack.push(new CanvasCmdCtrl().new Add(stack, Canvas.CT_Rect, null));
+        stack.push(new CanvasCmdCtrl().new Add(stack, Canvas.CT_Circle, null));
+        stack.push(new CanvasCmdCtrl().new Add(stack, Canvas.CT_Rect, null));
+        assertEquals(4, canvas.shapes.size());
         assertEquals(Circle.class, canvas.shapes.get(0).getClass());
         assertEquals(Rectangle.class, canvas.shapes.get(1).getClass());
         stack.undo();
         stack.undo();
+        stack.undo();
+        stack.undo();
         assertEquals(0, canvas.shapes.size());
         stack.setIndex(100);
-        assertEquals(2, stack.getIdx());
+        assertEquals(4, stack.getIdx());
+        assertEquals(4, canvas.shapes.size());
+
+        // Remove last one and return back
+        stack.push(new CanvasCmdCtrl().new Remove(stack, null));
+        assertEquals(3, canvas.shapes.size());
+
+        stack.undo();
+        assertEquals(4, canvas.shapes.size());
+        assertEquals(5, stack.count());
+
+        assertEquals(new LocalContext().ADD, stack.getCommand(0).getCaption());
+        assertEquals(new LocalContext().ADD, stack.getCommand(1).getCaption());
+        assertEquals(new LocalContext().ADD, stack.getCommand(2).getCaption());
+        assertEquals(new LocalContext().ADD, stack.getCommand(3).getCaption());
+        assertEquals(new LocalContext().REMOVE, stack.getCommand(4).getCaption());
+
+        // undo two and add new one. Should start new branch
+        stack.undo();
+        stack.undo();
         assertEquals(2, canvas.shapes.size());
+        stack.push(new CanvasCmdCtrl().new Add(stack, Canvas.CT_Rect, null));
+        assertEquals(3, stack.count());
 
-        // Serialization
-        UndoSerializer2 manager = new UndoSerializer2(null,2, stack);
-        String data = UndoSerializer2.serialize(manager, false, subj -> new Factory().toStr((Canvas)subj));
-        UndoSerializer2 manager1 = UndoSerializer2.deserialize(data, subjAsString -> new Factory().toSubj(subjAsString));
-        assertEquals(manager.info, manager1.info);
 
-        assertEquals(Canvas.class, manager1.getStack().getSubj().getClass());
-        Canvas canvas1 = (Canvas) manager1.getStack().getSubj();
-        assertEquals(2, canvas1.shapes.size());
 
-        UndoStack2 stack1 = manager1.getStack();
-        stack1.undo();
-        stack1.undo();
-        assertEquals(0, canvas1.shapes.size());
-        stack1.setIndex(100);
-        assertEquals(2, stack1.getIdx());
-        assertEquals(2, canvas1.shapes.size());
+        // Serialization after add/remove
+        {
+            UndoSerializer2 manager = new UndoSerializer2(null,2, stack);
+            String data = UndoSerializer2.serialize(manager, false, subj -> new Factory().toStr((Canvas)subj));
+            UndoSerializer2 manager1 = UndoSerializer2.deserialize(data, subjAsString -> new Factory().toSubj(subjAsString));
+            assertEquals(manager.info, manager1.info);
+
+            assertEquals(Canvas.class, manager1.getStack().getSubj().getClass());
+            Canvas canvas1 = (Canvas) manager1.getStack().getSubj();
+            assertEquals(3, canvas1.shapes.size());
+
+            UndoStack2 stack1 = manager1.getStack();
+            // Here we adds new resources
+            stack1.getLocalContexts().put("resources", new LocalContext1());
+            stack1.undo();
+            stack1.undo();
+            assertEquals(1, canvas1.shapes.size());
+            stack1.setIndex(100);
+            assertEquals(3, stack1.getIdx());
+            assertEquals(3, canvas1.shapes.size());
+            assertEquals(3, stack1.count());
+
+            UndoCommand2 cmd = stack.getCommand(0);
+            assertEquals(new LocalContext().ADD, cmd.getCaption());
+        }
+
+        // Now change
+        Rectangle rect = (Rectangle) canvas.shapes.get(1);
+        assertEquals(0, Double.compare(10.0, rect.getWidth()));
+        stack.push(new CanvasCmdCtrl().new Resize(stack, null, 1, 50.0));
+        assertEquals(0, Double.compare(50.0, rect.getWidth()));
+        stack.undo();
+        assertEquals(0, Double.compare(10.0, rect.getWidth()));
+        stack.redo();
+        assertEquals(3, canvas.shapes.size());
+        {
+            UndoSerializer2 manager = new UndoSerializer2(null,2, stack);
+            String data = UndoSerializer2.serialize(manager, false, subj -> new Factory().toStr((Canvas)subj));
+            UndoSerializer2 manager1 = UndoSerializer2.deserialize(data, subjAsString -> new Factory().toSubj(subjAsString));
+            assertEquals(manager.info, manager1.info);
+            assertEquals(Canvas.class, manager1.getStack().getSubj().getClass());
+            Canvas canvas1 = (Canvas) manager1.getStack().getSubj();
+            assertEquals(3, canvas1.shapes.size());
+
+            Rectangle rect1 = (Rectangle) canvas1.shapes.get(1);
+            assertEquals(0, Double.compare(50.0, rect1.getWidth()));
+        }
+
+        // Tests contexts
+
 
     }
 

@@ -97,7 +97,8 @@ public class UndoSerializer2 implements Serializable {
             innerStruct.subj = (Serializable) subj;
         }
         innerStruct.info = obj.info;
-        innerStruct.stack.contexts.clear();
+
+        //innerStruct.stack.localContexts.clear();
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         try (final ObjectOutputStream oos = new ObjectOutputStream(baos)) {

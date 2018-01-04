@@ -27,7 +27,7 @@ public class UndoStack2 implements Serializable{
     private int undoLimit;
     private transient UndoWatcher watcher;
 
-    public Map<String, Object> contexts = new HashMap<>();
+    private transient Map<String, Object> localContexts;
 
     /**
      * Constructs an empty undo stack. The stack will initially be in the clean state.
@@ -40,6 +40,13 @@ public class UndoStack2 implements Serializable{
         if(null != group) {
             group.add(this);
         }
+    }
+
+    public Map<String, Object> getLocalContexts() {
+        if(localContexts == null) {
+            localContexts = new HashMap<>();
+        }
+        return localContexts;
     }
 
     /**
