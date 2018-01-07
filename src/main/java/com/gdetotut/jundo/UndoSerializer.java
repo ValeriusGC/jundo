@@ -31,9 +31,8 @@ public class UndoSerializer implements Serializable {
     }
 
     public interface OnDeserializeSubj {
-        Object toSubj(@NotNull String subjAsString);
+        Object toSubj(@NotNull String subjAsString, @NotNull SubjInfo subjInfo);
     }
-
 
     public static class SubjInfo implements Serializable{
         public final String id;
@@ -138,7 +137,7 @@ public class UndoSerializer implements Serializable {
             if(struct.subj.getClass() == subjInfo.clazz){
                 stack.setSubj(struct.subj);
             } else if(struct.subj instanceof String && onDeserializeSubj != null) {
-                Object subj = onDeserializeSubj.toSubj((String) struct.subj);
+                Object subj = onDeserializeSubj.toSubj((String) struct.subj, subjInfo);
                 stack.setSubj(subj);
             }
             UndoSerializer obj = new UndoSerializer(subjInfo.id, subjInfo.version, stack);

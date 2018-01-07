@@ -4,7 +4,6 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.Serializable;
 import java.util.*;
-import java.util.function.BiFunction;
 
 /**
  * <b>Main characteristic of {@link UndoStack} is that two different stacks should not share one subject.</b>
@@ -28,6 +27,13 @@ public class UndoStack implements Serializable{
     private transient UndoWatcher watcher;
 
     private transient Map<String, Object> localContexts;
+
+    // TODO: 07.01.18 Перевод!!!!!
+    /**
+     * Суспендер нужен для приостановки добавления команд в момент выполнения undo/redo.
+     * В некоторых случаях только это может избавить от добавления "паразитных команд".
+     */
+    private boolean suspend = false;
 
     /**
      * Constructs an empty undo stack. The stack will initially be in the clean state.
@@ -89,7 +95,7 @@ public class UndoStack implements Serializable{
     /**
      * Pushes cmd on the stack or merges it with the most recently executed command.
      * In either case, executes cmd by calling its {@link UndoCommand#redo} function.
-     * <p>If cmd's id is not {@link UndoCommand#NO_COMPRESSION_SUPPORT}, and if the id is the same
+     * <p>If cmd's id is not {@link UndoCommand#NO_MERGING}, and if the id is the same
      * as that of the most recently executed command, UndoStack will attempt to merge the two
      * commands by calling {@link UndoCommand#mergeWith} on the most recently executed
      * command. If {@link UndoCommand#mergeWith} returns true, cmd is deleted.
@@ -102,6 +108,10 @@ public class UndoStack implements Serializable{
      * @param cmd new command to execute.
      */
     public void push(@NotNull UndoCommand cmd) {
+
+        if(suspend) {
+            return;
+        }
 
         cmd.redo();
 
@@ -210,10 +220,15 @@ public class UndoStack implements Serializable{
             return;
         }
 
-        int idx = this.idx - 1;
+        try{
+            suspend = true;
+            int idx = this.idx - 1;
+            commands.get(idx).undo();
+            setIndex(idx, false);
+        }finally {
+            suspend = false;
+        }
 
-        commands.get(idx).undo();
-        setIndex(idx, false);
     }
 
     /**
@@ -231,8 +246,13 @@ public class UndoStack implements Serializable{
             return;
         }
 
-        commands.get(idx).redo();
-        setIndex(idx + 1, false);
+        try{
+            suspend = true;
+            commands.get(idx).redo();
+            setIndex(idx + 1, false);
+        }finally {
+            suspend = false;
+        }
     }
 
     /**

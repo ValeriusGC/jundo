@@ -16,7 +16,7 @@ public class UndoCommand implements Serializable {
     // TODO: 25.12.17 Покрытие тестами улучшить
 
 
-    public static int NO_COMPRESSION_SUPPORT = -1;
+    public static int NO_MERGING = -1;
     private String caption;
     List<UndoCommand> children;
     protected final UndoStack owner;
@@ -42,19 +42,19 @@ public class UndoCommand implements Serializable {
     /**
      * Returns the id of this command.
      * <p>A command id is used in the "command compression" concept. It must be an integer value
-     * unique to this command's class, or {@link #NO_COMPRESSION_SUPPORT} if the command
+     * unique to this command's class, or {@link #NO_MERGING} if the command
      * doesn't support compression.
      * <p>If the command supports compression this function must be overridden in the derived class
      * to return the correct id.
-     * The base implementation returns {@link #NO_COMPRESSION_SUPPORT}.
+     * The base implementation returns {@link #NO_MERGING}.
      * <p>{@link UndoStack#push} will only try to merge two commands if they have the same id,
-     * and the id is not {@link #NO_COMPRESSION_SUPPORT}.
+     * and the id is not {@link #NO_MERGING}.
      *
-     * @return Integer unique value to this command's class or {@link #NO_COMPRESSION_SUPPORT}
+     * @return Integer unique value to this command's class or {@link #NO_MERGING}
      * if the command doesn't support compression.
      */
     public int id() {
-        return NO_COMPRESSION_SUPPORT;
+        return NO_MERGING;
     }
 
     /**
@@ -64,7 +64,7 @@ public class UndoCommand implements Serializable {
      * <p>Similarly, calling this command's {@link #undo()} must have the same effect
      * as undoing cmd and this command.
      * <p>UndoStack will only try to merge two commands if they have the same {@link #id}, and the id
-     * is not {@link #NO_COMPRESSION_SUPPORT}.
+     * is not {@link #NO_MERGING}.
      * <p>The default implementation returns false.
      *
      * @param cmd command to try merge with.

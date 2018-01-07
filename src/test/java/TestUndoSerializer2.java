@@ -1,4 +1,5 @@
 import com.gdetotut.jundo.*;
+import javafx.scene.control.ColorPicker;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Rectangle;
@@ -68,6 +69,7 @@ public class TestUndoSerializer2 implements Serializable{
         Circle circle = new Circle(20.0, Color.RED);
         UndoStack stack = new UndoStack(circle, null);
         stack.getLocalContexts().put("circle", circle);
+        stack.getLocalContexts().put("color_picker", new Color(1.0,1.0, 1.0, 1.0));
         stack.setWatcher(new SimpleUndoWatcher());
         for(int i = 0; i < 1000; ++i){
             stack.push(new CircleRadiusUndoCmd(stack, circle, i*2.0, null));
@@ -84,7 +86,7 @@ public class TestUndoSerializer2 implements Serializable{
         // Make unzipped serialization
         UndoSerializer manager = new UndoSerializer(null,2, stack);
         String data = UndoSerializer.serialize(manager, false, subj -> new Util().circleToString((Circle)subj));
-        managerBack = UndoSerializer.deserialize(data, subjAsString -> new Util().stringToCircle(subjAsString));
+        managerBack = UndoSerializer.deserialize(data, (subjAsString, subjInfo) -> new Util().stringToCircle(subjAsString));
         assertEquals(manager.subjInfo, managerBack.subjInfo);
         assertEquals(Circle.class, managerBack.getStack().getSubj().getClass());
         Circle circle1 = (Circle) managerBack.getStack().getSubj();
@@ -321,7 +323,7 @@ public class TestUndoSerializer2 implements Serializable{
         {
             UndoSerializer manager = new UndoSerializer(null,2, stack);
             String data = UndoSerializer.serialize(manager, false, subj -> new Factory().toStr((Canvas)subj));
-            UndoSerializer manager1 = UndoSerializer.deserialize(data, subjAsString -> new Factory().toSubj(subjAsString));
+            UndoSerializer manager1 = UndoSerializer.deserialize(data, (subjAsString, subjInfo) -> new Factory().toSubj(subjAsString));
             assertEquals(manager.subjInfo, manager1.subjInfo);
 
             assertEquals(Canvas.class, manager1.getStack().getSubj().getClass());
@@ -355,7 +357,7 @@ public class TestUndoSerializer2 implements Serializable{
         {
             UndoSerializer manager = new UndoSerializer(null,2, stack);
             String data = UndoSerializer.serialize(manager, false, subj -> new Factory().toStr((Canvas)subj));
-            UndoSerializer manager1 = UndoSerializer.deserialize(data, subjAsString -> new Factory().toSubj(subjAsString));
+            UndoSerializer manager1 = UndoSerializer.deserialize(data, (subjAsString, subjInfo) -> new Factory().toSubj(subjAsString));
             assertEquals(manager.subjInfo, manager1.subjInfo);
             assertEquals(Canvas.class, manager1.getStack().getSubj().getClass());
             Canvas canvas1 = (Canvas) manager1.getStack().getSubj();
