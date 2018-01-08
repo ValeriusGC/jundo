@@ -1,6 +1,7 @@
 package com.gdetotut.jundo;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.*;
 import java.util.Base64;
@@ -30,8 +31,9 @@ public class UndoSerializer implements Serializable {
         String toStr(@NotNull Object subj);
     }
 
+
     public interface OnDeserializeSubj {
-        Object toSubj(@NotNull String subjAsString, @NotNull SubjInfo subjInfo);
+        @Nullable Object toSubj(@NotNull String subjAsString, @NotNull SubjInfo subjInfo);
     }
 
     public static class SubjInfo implements Serializable{
@@ -171,6 +173,12 @@ public class UndoSerializer implements Serializable {
         return stack;
     }
 
+    // TODO: 08.01.18 Перевод!
+    /**
+     * It is necessary to make sure that restored subject has expected type.
+     * <p>For this sake
+     * @return Flag whether the restored subject has the type as as expected.
+     */
     public boolean asExpected() {
         return expected;
     }

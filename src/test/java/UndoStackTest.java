@@ -12,7 +12,7 @@ import static org.junit.Assert.assertNotEquals;
 import static some.NonTrivialClass.Item.Type.CIRCLE;
 import static some.NonTrivialClass.Item.Type.RECT;
 
-public class TestUndoStack implements Serializable {
+public class UndoStackTest implements Serializable {
 
     UndoStack stack;
     Object[] arr;
@@ -533,7 +533,7 @@ public class TestUndoStack implements Serializable {
 //
 //        // class Cmd
 //        //
-//        // Keep in mind that class of Command should be Serializable (and Superclass TestUndoStack too)
+//        // Keep in mind that class of Command should be Serializable (and Superclass UndoStackTest too)
 //        class Cmd extends UndoCommand {
 //            int oldV, newV;
 //

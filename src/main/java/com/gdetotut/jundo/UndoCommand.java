@@ -6,6 +6,8 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
+// TODO: 08.01.18 Правильные аннотации (javax.annotation?) https://habrahabr.ru/post/204518/ 
+
 /**
  * The UndoCommand class is the base class of all commands stored on an {@link UndoStack}.
  */

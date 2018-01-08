@@ -5,7 +5,7 @@ import com.gdetotut.jundo.UndoStack;
 
 import static org.junit.Assert.assertEquals;
 
-public class TestUndoGroup {
+public class UndoGroupTest {
 
     /**
      * Group should not contain two or more stacks with one object.

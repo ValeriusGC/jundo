@@ -6,7 +6,7 @@ import com.gdetotut.jundo.UndoStack;
 
 import static org.junit.Assert.assertEquals;
 
-public class TestUndoSerializer {
+public class UndoSerializerTest {
 
 
     /**

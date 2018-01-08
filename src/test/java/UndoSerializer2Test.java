@@ -16,7 +16,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * We must make it serializable because some inner classes are subject to serialize.
  */
-public class TestUndoSerializer2 implements Serializable{
+public class UndoSerializer2Test implements Serializable{
 
     @Test
     public void serialize() throws Exception {
@@ -367,8 +367,14 @@ public class TestUndoSerializer2 implements Serializable{
             assertEquals(0, Double.compare(50.0, rect1.getWidth()));
         }
 
-        // Tests contexts
+    }
 
+    // TODO: 08.01.18 Перевод!
+    /**
+     * Тестируем, что метод
+     */
+    @Test
+    public void testOnDeserialize() {
 
     }
 
