@@ -73,7 +73,7 @@ public class UndoSerializer implements Serializable {
 
     public final SubjInfo subjInfo;
 
-    private boolean isExpected = true;
+    private boolean expected = true;
 
     /**
      * Serializes object to Base64 string.
@@ -148,7 +148,7 @@ public class UndoSerializer implements Serializable {
                 stack.setSubj(subj);
             }
             UndoSerializer obj = new UndoSerializer(subjInfo.id, subjInfo.version, stack);
-            obj.isExpected = isExp;
+            obj.expected = isExp;
             return obj;
         }
     }
@@ -171,8 +171,8 @@ public class UndoSerializer implements Serializable {
         return stack;
     }
 
-    public boolean isExpected() {
-        return isExpected;
+    public boolean asExpected() {
+        return expected;
     }
 
     @Override
