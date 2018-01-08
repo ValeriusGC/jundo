@@ -73,6 +73,8 @@ public class UndoSerializer implements Serializable {
 
     public final SubjInfo subjInfo;
 
+    private boolean isExpected = true;
+
     /**
      * Serializes object to Base64 string.
      * @param obj object to serialize.
@@ -131,6 +133,7 @@ public class UndoSerializer implements Serializable {
                 ? new ObjectInputStream(new GZIPInputStream(new ByteArrayInputStream(data)))
                 : new ObjectInputStream(new ByteArrayInputStream(data))) {
 
+            boolean isExp = true;
             InnerStruct struct = (InnerStruct)ois.readObject();
             SubjInfo subjInfo = struct.subjInfo;
             UndoStack stack = struct.stack;
@@ -138,9 +141,14 @@ public class UndoSerializer implements Serializable {
                 stack.setSubj(struct.subj);
             } else if(struct.subj instanceof String && onDeserializeSubj != null) {
                 Object subj = onDeserializeSubj.toSubj((String) struct.subj, subjInfo);
+                if(subj == null) {
+                    isExp = false;
+                    subj = new Object();
+                }
                 stack.setSubj(subj);
             }
             UndoSerializer obj = new UndoSerializer(subjInfo.id, subjInfo.version, stack);
+            obj.isExpected = isExp;
             return obj;
         }
     }
@@ -161,6 +169,10 @@ public class UndoSerializer implements Serializable {
      */
     public UndoStack getStack() {
         return stack;
+    }
+
+    public boolean isExpected() {
+        return isExpected;
     }
 
     @Override
