@@ -1,8 +1,5 @@
 package com.gdetotut.jundo;
 
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
 import java.io.*;
 import java.util.Base64;
 import java.util.Map;
@@ -25,15 +22,27 @@ public class UndoSerializer implements Serializable {
 
     // TODO: 04.01.18 Требует перевода!
     /**
-     *   В случае объекта который не имеет маркера {@link Serializable}
+     *   В случае объекта который не имеет маркера {@link Serializable}.
      */
     public interface OnSerializeSubj {
-        String toStr(@NotNull Object subj);
+        /**
+         * @param subj Required (should not be null).
+         * @return
+         */
+        String toStr(Object subj);
     }
 
-
+    /**
+     *
+     */
     public interface OnDeserializeSubj {
-        @Nullable Object toSubj(@NotNull String subjAsString, @NotNull SubjInfo subjInfo);
+        /**
+         *
+         * @param subjAsString Required (should not be null).
+         * @param subjInfo Required (should not be null).
+         * @return
+         */
+        Object toSubj(String subjAsString, SubjInfo subjInfo);
     }
 
     public static class SubjInfo implements Serializable{
@@ -79,79 +88,88 @@ public class UndoSerializer implements Serializable {
 
     /**
      * Serializes object to Base64 string.
-     * @param obj object to serialize.
+     * @param obj object to serialize. Required (should not be null).
      * @param doZip flag for gzipping.
+     * @param onSerializeSubj delegate for manual converting non-serializable {@link UndoStack#subj} to String. Can bu null.
      * @return Object as base64 string.
      * @throws IOException when something goes wrong.
      */
-    public static String serialize(@NotNull UndoSerializer obj, boolean doZip,
+    public static String serialize(UndoSerializer obj, boolean doZip,
                                    OnSerializeSubj onSerializeSubj) throws IOException {
-
-        InnerStruct innerStruct = new InnerStruct();
-        innerStruct.stack = obj.stack;
-        Object subj = innerStruct.stack.getSubj();
-        if(!(subj instanceof Serializable)) {
-            if(onSerializeSubj == null) {
-                throw new IOException("need Serializable");
-            }else {
-               innerStruct.subj = onSerializeSubj.toStr(subj);
+        if (obj == null) {
+            throw new NullPointerException("obj");
+        } else {
+            InnerStruct innerStruct = new InnerStruct();
+            innerStruct.stack = obj.stack;
+            Object subj = innerStruct.stack.getSubj();
+            if (!(subj instanceof Serializable)) {
+                if (onSerializeSubj == null) {
+                    throw new IOException("need Serializable");
+                } else {
+                    innerStruct.subj = onSerializeSubj.toStr(subj);
+                }
+            } else {
+                innerStruct.subj = (Serializable) subj;
             }
-        }else {
-            innerStruct.subj = (Serializable) subj;
-        }
-        innerStruct.subjInfo = obj.subjInfo;
+            innerStruct.subjInfo = obj.subjInfo;
 
-        //innerStruct.stack.localContexts.clear();
-
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        try (final ObjectOutputStream oos = new ObjectOutputStream(baos)) {
-            oos.writeObject(innerStruct);
-        }
-
-        if (doZip) {
-            final ByteArrayOutputStream zippedBaos = new ByteArrayOutputStream();
-            try (GZIPOutputStream gzip = new GZIPOutputStream(zippedBaos)) {
-                gzip.write(baos.toByteArray());
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            try (final ObjectOutputStream oos = new ObjectOutputStream(baos)) {
+                oos.writeObject(innerStruct);
             }
-            baos = zippedBaos;
+
+            if (doZip) {
+                final ByteArrayOutputStream zippedBaos = new ByteArrayOutputStream();
+                try (GZIPOutputStream gzip = new GZIPOutputStream(zippedBaos)) {
+                    gzip.write(baos.toByteArray());
+                }
+                baos = zippedBaos;
+            }
+            return Base64.getUrlEncoder().encodeToString(baos.toByteArray());
         }
-        return Base64.getUrlEncoder().encodeToString(baos.toByteArray());
     }
 
     /**
      * Deserializes base64 string back to object.
      * @param base64 base64 string.
+     * @param onDeserializeSubj delegate for manual restoring non-serializable {@link UndoStack#subj}
+     *                          from String. Can bu null.
      * @return Object.
      * @throws IOException when something goes wrong.
      * @throws ClassNotFoundException when something goes wrong.
      */
-    public static UndoSerializer deserialize(@NotNull String base64,
-                                              OnDeserializeSubj onDeserializeSubj) throws IOException, ClassNotFoundException {
-        final byte[] data = Base64.getUrlDecoder().decode(base64);
-        final boolean zipped = (data[0] == (byte) (GZIPInputStream.GZIP_MAGIC))
-                && (data[1] == (byte) (GZIPInputStream.GZIP_MAGIC >> 8));
+    public static UndoSerializer deserialize(String base64, OnDeserializeSubj onDeserializeSubj)
+            throws IOException, ClassNotFoundException {
+        if (base64 == null) {
+            throw new NullPointerException("base64");
+        } else {
 
-        try (ObjectInputStream ois = zipped
-                ? new ObjectInputStream(new GZIPInputStream(new ByteArrayInputStream(data)))
-                : new ObjectInputStream(new ByteArrayInputStream(data))) {
+            final byte[] data = Base64.getUrlDecoder().decode(base64);
+            final boolean zipped = (data[0] == (byte) (GZIPInputStream.GZIP_MAGIC))
+                    && (data[1] == (byte) (GZIPInputStream.GZIP_MAGIC >> 8));
 
-            boolean isExp = true;
-            InnerStruct struct = (InnerStruct)ois.readObject();
-            SubjInfo subjInfo = struct.subjInfo;
-            UndoStack stack = struct.stack;
-            if(struct.subj.getClass() == subjInfo.clazz){
-                stack.setSubj(struct.subj);
-            } else if(struct.subj instanceof String && onDeserializeSubj != null) {
-                Object subj = onDeserializeSubj.toSubj((String) struct.subj, subjInfo);
-                if(subj == null) {
-                    isExp = false;
-                    subj = new Object();
+            try (ObjectInputStream ois = zipped
+                    ? new ObjectInputStream(new GZIPInputStream(new ByteArrayInputStream(data)))
+                    : new ObjectInputStream(new ByteArrayInputStream(data))) {
+
+                boolean isExp = true;
+                InnerStruct struct = (InnerStruct) ois.readObject();
+                SubjInfo subjInfo = struct.subjInfo;
+                UndoStack stack = struct.stack;
+                if (struct.subj.getClass() == subjInfo.clazz) {
+                    stack.setSubj(struct.subj);
+                } else if (struct.subj instanceof String && onDeserializeSubj != null) {
+                    Object subj = onDeserializeSubj.toSubj((String) struct.subj, subjInfo);
+                    if (subj == null) {
+                        isExp = false;
+                        subj = new Object();
+                    }
+                    stack.setSubj(subj);
                 }
-                stack.setSubj(subj);
+                UndoSerializer obj = new UndoSerializer(subjInfo.id, subjInfo.version, stack);
+                obj.expected = isExp;
+                return obj;
             }
-            UndoSerializer obj = new UndoSerializer(subjInfo.id, subjInfo.version, stack);
-            obj.expected = isExp;
-            return obj;
         }
     }
 
@@ -159,11 +177,15 @@ public class UndoSerializer implements Serializable {
      * Makes object with specific parameters.
      * @param id unique identifier allowing recognize subject on the deserializing side.
      * @param version version of subject for correct restoring in the possible case of object migration.
-     * @param stack stack itself.
+     * @param stack stack itself. Required.
      */
-    public UndoSerializer(String id, int version, @NotNull UndoStack stack) {
-        subjInfo = new SubjInfo(id, version, stack.getSubj().getClass());
-        this.stack = stack;
+    public UndoSerializer(String id, int version, UndoStack stack) {
+        if (stack == null) {
+            throw new NullPointerException("stack");
+        } else {
+            this.subjInfo = new UndoSerializer.SubjInfo(id, version, stack.getSubj().getClass());
+            this.stack = stack;
+        }
     }
 
     /**

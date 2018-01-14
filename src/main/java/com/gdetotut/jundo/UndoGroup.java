@@ -1,7 +1,5 @@
 package com.gdetotut.jundo;
 
-import org.jetbrains.annotations.NotNull;
-
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
@@ -39,35 +37,36 @@ public class UndoGroup implements Serializable {
 
     /**
      * Adds {@link UndoStack} to this group.
-     * @param stack stack to be added.
+     * @param stack stack to be added. Required (should not be null).
      */
-    public void add(@NotNull UndoStack stack) {
-        if (stacks.contains(stack)) {
-            return;
-        }
+    public void add(UndoStack stack) {
+        if (stack == null) {
+            throw new NullPointerException("stack");
+        } else if (!this.stacks.contains(stack)) {
+            this.stacks.add(stack);
+            if (null != stack.group) {
+                stack.group.remove(stack);
+            }
 
-        stacks.add(stack);
-        if (null != stack.group) {
-            stack.group.remove(stack);
+            stack.group = this;
         }
-        stack.group = this;
-
     }
 
     /**
      * Removes stack from this group. If the stack was the active stack in the group,
      * the active stack becomes null.
-     * @param stack stack to be removed.
+     * @param stack stack to be removed. Required (should not be null).
      */
-    public void remove(@NotNull UndoStack stack) {
-        if (!stacks.remove(stack)) {
-            return;
-        }
+    public void remove(UndoStack stack) {
+        if (stack == null) {
+            throw new NullPointerException("stack");
+        } else if (this.stacks.remove(stack)) {
+            if (stack == this.active) {
+                this.setActive((UndoStack)null);
+            }
 
-        if (stack == active) {
-            setActive(null);
+            stack.group = null;
         }
-        stack.group = null;
     }
 
     /**

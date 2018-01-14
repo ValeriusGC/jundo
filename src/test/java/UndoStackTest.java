@@ -537,7 +537,7 @@ public class UndoStackTest implements Serializable {
 //        class Cmd extends UndoCommand {
 //            int oldV, newV;
 //
-//            public Cmd(@NotNull String caption, int v) {
+//            public Cmd(@NonNull String caption, int v) {
 //                super(caption, null);
 //                newV = v;
 //            }

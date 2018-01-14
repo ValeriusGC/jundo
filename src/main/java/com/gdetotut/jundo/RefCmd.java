@@ -1,7 +1,5 @@
 package com.gdetotut.jundo;
 
-import org.jetbrains.annotations.NotNull;
-
 import java.io.Serializable;
 import java.util.Objects;
 
@@ -17,20 +15,29 @@ public final class RefCmd<V extends Serializable> extends UndoCommand {
 
     /**
      * Constructs object.
+     * @param stack required.
      * @param caption caption for the command.
      * @param getter a reference to getter-method for this value. Getter shouldn't has parameters
-     *               and should return value of the V type.
+     *               and should return value of the V type. Required.
      * @param setter a reference to setter-method for this value. Getter should has parameter
-     *               of the V type and shouldn't return value.
+     *               of the V type and shouldn't return value. Required.
      * @param newValue the value to set to.
      * @param parent command's parent. Used in the concept of 'command-chain'.  Optional.
      */
-    public RefCmd(@NotNull UndoStack stack, String caption, @NotNull Getter<V> getter, @NotNull Setter<V> setter, V newValue,
+    public RefCmd(UndoStack stack, String caption, Getter<V> getter, Setter<V> setter, V newValue,
                   UndoCommand parent){
         super(stack, caption, parent);
-        this.setter = setter;
-        this.oldValue = getter.get();
-        this.newValue = newValue;
+        if (stack == null) {
+            throw new NullPointerException("stack");
+        } else if (getter == null) {
+            throw new NullPointerException("getter");
+        } else if (setter == null) {
+            throw new NullPointerException("setter");
+        } else {
+            this.setter = setter;
+            this.oldValue = getter.get();
+            this.newValue = newValue;
+        }
     }
 
     @Override
@@ -57,11 +64,4 @@ public final class RefCmd<V extends Serializable> extends UndoCommand {
         return Objects.hash(oldValue, newValue);
     }
 
-    @Override
-    public String toString() {
-        return "RefCmd{" +
-                "oldValue=" + oldValue +
-                ", newValue=" + newValue +
-                '}';
-    }
 }

@@ -4,7 +4,6 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.shape.Shape;
-import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 import some.SimpleUndoWatcher;
 
@@ -22,14 +21,14 @@ public class UndoSerializer2Test implements Serializable{
     public void serialize() throws Exception {
 
         class Util {
-            private String circleToString(@NotNull Circle circle) {
+            private String circleToString(Circle circle) {
                 ArrayList<String> param = new ArrayList<>();
                 param.add(String.valueOf(circle.getRadius()));
                 param.add(String.valueOf(circle.getFill()));
                 return String.join(",", param);
             }
 
-            private Object stringToCircle(@NotNull String str) {
+            private Object stringToCircle(String str) {
                 List<String> items = Arrays.asList(str.split("\\s*,\\s*"));
                 Circle c = new Circle(Double.valueOf(items.get(0)), Color.valueOf(items.get(1)));
                 return c;
@@ -42,7 +41,7 @@ public class UndoSerializer2Test implements Serializable{
             Double oldV;
             Double newV;
 
-            public CircleRadiusUndoCmd(@NotNull UndoStack owner, @NotNull Circle circle, Double newV, UndoCommand parent) {
+            public CircleRadiusUndoCmd(UndoStack owner, Circle circle, Double newV, UndoCommand parent) {
                 super(owner, "", parent);
                 oldV = circle.getRadius();
                 this.newV = newV;
@@ -146,7 +145,7 @@ public class UndoSerializer2Test implements Serializable{
                 }
             }
 
-            private String toStr(@NotNull Canvas canvas) {
+            private String toStr(Canvas canvas) {
                 ArrayList<String> param = new ArrayList<>();
                 for (Shape shape:
                      canvas.shapes) {
@@ -161,7 +160,7 @@ public class UndoSerializer2Test implements Serializable{
                 return String.join(",", param);
             }
 
-            private Object toSubj(@NotNull String str) {
+            private Object toSubj(String str) {
                 Canvas canvas = new Canvas();
                 List<String> items = Arrays.asList(str.split("\\s*,\\s*"));
                 int i = 0;
@@ -187,7 +186,7 @@ public class UndoSerializer2Test implements Serializable{
             // Adds Shape to Canvas
             class Add extends UndoCommand {
                 int type;
-                public Add(@NotNull UndoStack owner, int type, UndoCommand parent) {
+                public Add(UndoStack owner, int type, UndoCommand parent) {
                     super(owner, "", parent);
                     this.type = type;
                     LocalContext ctx = (LocalContext)owner.getLocalContexts().get("resources");
@@ -209,7 +208,7 @@ public class UndoSerializer2Test implements Serializable{
             // Removes Shape from Canvas
             class Remove extends UndoCommand {
                 int type;
-                public Remove(@NotNull UndoStack owner, UndoCommand parent) {
+                public Remove(UndoStack owner, UndoCommand parent) {
                     super(owner, "", parent);
                     List<Shape> shapes = ((Canvas)owner.getSubj()).shapes;
                     this.type = shapes.get(shapes.size()-1) instanceof Circle ? Canvas.CT_Circle : Canvas.CT_Rect;

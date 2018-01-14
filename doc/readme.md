@@ -84,7 +84,7 @@ class RadioCheckCmd extends UndoCommand {
         int activeBtnRes;
         int inactiveBtnRes;
 
-        public RadioCheckCmd(@NotNull String text, int activeBtnRes, int inactiveBtnRes, UndoCommand parent) {
+        public RadioCheckCmd(@NonNull String text, int activeBtnRes, int inactiveBtnRes, UndoCommand parent) {
             super(text, parent);
             this.activeBtnRes = activeBtnRes;
             this.inactiveBtnRes = inactiveBtnRes;

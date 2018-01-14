@@ -1,7 +1,5 @@
 package com.gdetotut.jundo;
 
-import org.jetbrains.annotations.NotNull;
-
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
@@ -25,27 +23,29 @@ public class UndoCommand implements Serializable {
 
     /**
      * Constructs an UndoCommand object with the given caption.
+     * @param owner the stack that owns this command. required (should not be null).
      * @param caption a short string describing what this command does. Optional.
      * @param parent command's parent. Used in the concept of 'command-chain'.  Optional.
      */
-    public UndoCommand(@NotNull UndoStack owner, String caption, UndoCommand parent) {
-
-        this.owner = owner;
-
-        setCaption(caption);
-        if(null != parent) {
-            if(null == parent.children) {
-                parent.children = new ArrayList<>();
+    public UndoCommand(UndoStack owner, String caption, UndoCommand parent) {
+        if (owner == null) {
+            throw new NullPointerException("owner");
+        } else {
+            this.owner = owner;
+            setCaption(caption);
+            if (null != parent) {
+                if (null == parent.children) {
+                    parent.children = new ArrayList<>();
+                }
+                parent.children.add(this);
             }
-            parent.children.add(this);
         }
     }
 
     /**
      * Returns the id of this command.
      * <p>A command id is used in the "command compression" concept. It must be an integer value
-     * unique to this command's class, or {@link #NO_MERGING} if the command
-     * doesn't support compression.
+     * unique to this command's class, or {@link #NO_MERGING} if the command doesn't support compression.
      * <p>If the command supports compression this function must be overridden in the derived class
      * to return the correct id.
      * The base implementation returns {@link #NO_MERGING}.
@@ -69,11 +69,15 @@ public class UndoCommand implements Serializable {
      * is not {@link #NO_MERGING}.
      * <p>The default implementation returns false.
      *
-     * @param cmd command to try merge with.
+     * @param cmd command to try merge with. Required (should not be null).
      * @return True on success; otherwise returns false.
      */
-    public boolean mergeWith(@NotNull UndoCommand cmd) {
-        return false;
+    public boolean mergeWith(UndoCommand cmd) {
+        if (cmd == null) {
+            throw new NullPointerException("cmd");
+        } else {
+            return false;
+        }
     }
 
     /**
@@ -131,7 +135,7 @@ public class UndoCommand implements Serializable {
     /**
      * Sets the command's caption.
      * <p>Specified caption should be a short user-readable string describing what this  command does.
-     * @param caption a short caption string describing what this command does.
+     * @param caption a short caption string describing what this command does. Can be null.
      */
     public final void setCaption(String caption) {
         this.caption = caption;

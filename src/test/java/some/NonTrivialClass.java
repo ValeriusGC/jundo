@@ -2,7 +2,6 @@ package some;
 
 import com.gdetotut.jundo.UndoCommand;
 import com.gdetotut.jundo.UndoStack;
-import org.jetbrains.annotations.NotNull;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -61,7 +60,7 @@ public class NonTrivialClass implements Serializable {
         private final Item item;
         private final int initialPos;
 
-        public AddCommand(@NotNull UndoStack owner, Item.Type type, NonTrivialClass scene, UndoCommand parent) {
+        public AddCommand(UndoStack owner, Item.Type type, NonTrivialClass scene, UndoCommand parent) {
             super(owner, "", parent);
             this.scene = scene;
             item = new Item(type);
@@ -103,7 +102,7 @@ public class NonTrivialClass implements Serializable {
         private final NonTrivialClass scene;
         private final Item item;
 
-        public DeleteCommand(@NotNull UndoStack owner, NonTrivialClass scene, UndoCommand parent) {
+        public DeleteCommand(UndoStack owner, NonTrivialClass scene, UndoCommand parent) {
             super(owner, "", parent);
             this.scene = scene;
             this.item = scene.items.size() > 0 ? scene.items.get(0) : null;
@@ -149,7 +148,7 @@ public class NonTrivialClass implements Serializable {
         private final int oldPos;
         private int newPos;
 
-        public MovedCommand(@NotNull UndoStack owner, Item item, int oldPos, UndoCommand parent) {
+        public MovedCommand(UndoStack owner, Item item, int oldPos, UndoCommand parent) {
             super(owner, "", parent);
             this.item = item;
             this.oldPos = oldPos;
@@ -168,7 +167,7 @@ public class NonTrivialClass implements Serializable {
         }
 
         @Override
-        public boolean mergeWith(@NotNull UndoCommand cmd) {
+        public boolean mergeWith(UndoCommand cmd) {
             if(cmd instanceof MovedCommand){
                 Item item = ((MovedCommand) cmd).item;
                 if(item == this.item) {
