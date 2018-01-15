@@ -15,10 +15,18 @@ public class UndoCommand implements Serializable {
 
     // TODO: 25.12.17 Покрытие тестами улучшить
 
-
     public static int NO_MERGING = -1;
+
+    /**
+     * Command's caption
+     */
     private String caption;
+
+    /**
+     * Possible list of child commands for
+     */
     List<UndoCommand> children;
+
     protected final UndoStack owner;
 
     /**

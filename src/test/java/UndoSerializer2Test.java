@@ -367,14 +367,4 @@ public class UndoSerializer2Test implements Serializable{
         }
 
     }
-
-    // TODO: 08.01.18 Перевод!
-    /**
-     * Тестируем, что метод
-     */
-    @Test
-    public void testOnDeserialize() {
-
-    }
-
 }

@@ -18,8 +18,11 @@ public class UndoStackTest implements Serializable {
     Object[] arr;
     Serializable subj;
 
+    /**
+     * Helper function.
+     */
     @SuppressWarnings("unchecked")
-    public <V extends Serializable> void initSimple(Class<V> type, V[] array) throws Exception {
+    public <V extends Serializable> void initSimple(Class<V> type, V[] array) {
         arr = array;
         subj = new SimpleClass<V>(type);
         stack = new UndoStack(subj, null);
@@ -30,6 +33,9 @@ public class UndoStackTest implements Serializable {
         }
     }
 
+    /**
+     * Helper function.
+     */
     @SuppressWarnings("unchecked")
     public <V extends Serializable> void testSimple() throws IOException, ClassNotFoundException {
 
@@ -64,30 +70,33 @@ public class UndoStackTest implements Serializable {
 
         Point pt = new Point(-30, -40);
         UndoStack stack = new UndoStack(pt, null);
-        UndoCommand undoCommand = new UndoCommand(stack, "Move point", null);
-        new RefCmd<>(stack, "Change x", pt::getX, pt::setX, 10, undoCommand);
-        new RefCmd<>(stack, "Change y", pt::getY, pt::setY, 20, undoCommand);
-        stack.push(undoCommand);
-        assertEquals(1, stack.count());
+//        UndoCommand undoCommand = new UndoCommand(stack, "Move point", null);
+//        new RefCmd<>(stack, "Change x", pt::getX, pt::setX, 10, undoCommand);
+//        new RefCmd<>(stack, "Change y", pt::getY, pt::setY, 20, undoCommand);
+        stack.push(new RefCmd<>(stack, "Change x", pt::getX, pt::setX, 10, null));
+        stack.push(new RefCmd<>(stack, "Change y", pt::getY, pt::setY, 20, null));
+        assertEquals(2, stack.count());
         assertEquals(10, pt.getX());
         assertEquals(20, pt.getY());
+        // One step back
         stack.undo();
-        assertEquals(-30, pt.getX());
+        assertEquals(10, pt.getX());
         assertEquals(-40, pt.getY());
-        assertEquals(0, stack.getIdx());
+        assertEquals(1, stack.getIdx());
 
         UndoSerializer manager = new UndoSerializer(null, 4, stack);
         manager = UndoSerializer.deserialize(UndoSerializer.serialize(manager, true, null), null);
         UndoStack stackBack = manager.getStack();
         Point ptBack = (Point) stackBack.getSubj();
         assertEquals(pt, ptBack);
-        assertEquals(-30, ptBack.getX());
+        assertEquals(10, ptBack.getX());
         assertEquals(-40, ptBack.getY());
-        assertEquals(1, stackBack.count());
-        assertEquals(0, stackBack.getIdx());
+        assertEquals(2, stackBack.count());
+        assertEquals(1, stackBack.getIdx());
 
+        // One step forward
         stackBack.redo();
-        // ))
+        // Just testing robust )
         stackBack.redo();
         stackBack.redo();
         assertEquals(10, ptBack.getX());
@@ -660,6 +669,90 @@ public class UndoStackTest implements Serializable {
             assertEquals(55, subj.getY());
         }
     }
+
+    /**
+     * Test for macrocommands.
+     * <p>The macro should behave like one command.
+     */
+    @Test
+    public void macro() throws Exception {
+
+        NonTrivialClass subj = new NonTrivialClass();
+        UndoStack stack = new UndoStack(subj, null);
+
+        stack.push(new NonTrivialClass.AddCommand(stack, NonTrivialClass.Item.Type.CIRCLE, subj, null));
+        stack.push(new NonTrivialClass.AddCommand(stack, NonTrivialClass.Item.Type.RECT, subj, null));
+        assertEquals(2, stack.count());
+        assertEquals(0, stack.getCleanIdx());
+        assertEquals(true, stack.canUndo());
+        assertEquals(false, stack.canRedo());
+        stack.undo();
+        assertEquals(true, stack.canRedo());
+        stack.redo();
+
+        // Adding macrocommand not affects count of simple commands exclude moment of beginning
+        stack.beginMacro("Moving");
+        assertEquals(3, stack.count());
+        assertEquals(false, stack.canUndo());
+        stack.push(new NonTrivialClass.MovedCommand(stack, subj.items.get(0), 20, null));
+        stack.push(new NonTrivialClass.AddCommand(stack, NonTrivialClass.Item.Type.RECT, subj, null));
+        stack.push(new NonTrivialClass.AddCommand(stack, NonTrivialClass.Item.Type.RECT, subj, null));
+        stack.push(new NonTrivialClass.AddCommand(stack, NonTrivialClass.Item.Type.RECT, subj, null));
+        stack.push(new NonTrivialClass.AddCommand(stack, NonTrivialClass.Item.Type.RECT, subj, null));
+        stack.push(new NonTrivialClass.AddCommand(stack, NonTrivialClass.Item.Type.RECT, subj, null));
+        stack.push(new NonTrivialClass.AddCommand(stack, NonTrivialClass.Item.Type.RECT, subj, null));
+        // Adding macrocommand not affects count
+        assertEquals(3, stack.count());
+
+        // Should has no effect inside macro process
+        stack.setClean();
+        assertEquals(0, stack.getCleanIdx());
+        assertEquals(3, stack.count());
+        assertEquals(2, stack.getIdx());
+        stack.undo();
+        assertEquals(2, stack.getIdx());
+        stack.redo();
+        assertEquals(2, stack.getIdx());
+        stack.setIndex(0);
+        assertEquals(2, stack.getIdx());
+
+        // Finish macro
+        stack.endMacro();
+        assertEquals(3, stack.getIdx());
+
+        // 2 simple and 1 macro
+        assertEquals(3, stack.count());
+        assertEquals(8, subj.items.size());
+
+        // Undo macro
+        stack.undo();
+        assertEquals(2, stack.getIdx());
+        assertEquals(2, subj.items.size());
+
+        // Undo macro
+        stack.redo();
+        assertEquals(3, stack.getIdx());
+        assertEquals(8, subj.items.size());
+
+        UndoSerializer manager = new UndoSerializer("NonTrivialClass", 2, stack);
+        String z_data = UndoSerializer.serialize(manager, true, null);
+        System.out.println("zipped length : " + z_data.length());
+        UndoSerializer managerBack = UndoSerializer.deserialize(z_data, null);
+        assertEquals(3, manager.getStack().getIdx());
+        assertEquals(8, ((NonTrivialClass) manager.getStack().getSubj()).items.size());
+
+        // After deserialization
+        // Undo macro
+        manager.getStack().undo();
+        assertEquals(2, manager.getStack().getIdx());
+        assertEquals(2, ((NonTrivialClass) manager.getStack().getSubj()).items.size());
+
+        // Undo macro
+        manager.getStack().redo();
+        assertEquals(3, manager.getStack().getIdx());
+        assertEquals(8, ((NonTrivialClass) manager.getStack().getSubj()).items.size());
+
+    }    
 
 
 }

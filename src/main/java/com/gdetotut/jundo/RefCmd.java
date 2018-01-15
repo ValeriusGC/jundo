@@ -5,6 +5,7 @@ import java.util.Objects;
 
 /**
  * Simple command with access via getter/setter references.
+ *
  * @param <V> the type of the referenced value.
  */
 public final class RefCmd<V extends Serializable> extends UndoCommand {
@@ -15,21 +16,20 @@ public final class RefCmd<V extends Serializable> extends UndoCommand {
 
     /**
      * Constructs object.
-     * @param stack required.
-     * @param caption caption for the command.
-     * @param getter a reference to getter-method for this value. Getter shouldn't has parameters
-     *               and should return value of the V type. Required.
-     * @param setter a reference to setter-method for this value. Getter should has parameter
-     *               of the V type and shouldn't return value. Required.
+     *
+     * @param stack    required.
+     * @param caption  caption for the command.
+     * @param getter   a reference to getter-method for this value. Getter shouldn't has parameters
+     *                 and should return value of the V type. Required.
+     * @param setter   a reference to setter-method for this value. Getter should has parameter
+     *                 of the V type and shouldn't return value. Required.
      * @param newValue the value to set to.
-     * @param parent command's parent. Used in the concept of 'command-chain'.  Optional.
+     * @param parent   command's parent. Used in the concept of 'command-chain'.  Optional.
      */
     public RefCmd(UndoStack stack, String caption, Getter<V> getter, Setter<V> setter, V newValue,
-                  UndoCommand parent){
+                  UndoCommand parent) {
         super(stack, caption, parent);
-        if (stack == null) {
-            throw new NullPointerException("stack");
-        } else if (getter == null) {
+        if (getter == null) {
             throw new NullPointerException("getter");
         } else if (setter == null) {
             throw new NullPointerException("setter");

@@ -175,7 +175,8 @@ public class UndoSerializer implements Serializable {
 
     /**
      * Makes object with specific parameters.
-     * @param id unique identifier allowing recognize subject on the deserializing side.
+     * @param id unique identifier allowing recognize subject on the deserialization side.
+     *           Can be fully qualified class name for example, or some GUID, etc. Can be null withal.
      * @param version version of subject for correct restoring in the possible case of object migration.
      * @param stack stack itself. Required.
      */
