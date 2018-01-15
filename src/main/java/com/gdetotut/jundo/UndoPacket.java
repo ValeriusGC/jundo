@@ -8,7 +8,7 @@ import java.util.TreeMap;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
-public class UndoPacke {
+public class UndoPacket {
 
     /**
      * Для ручного управления упаковкой, например в случае, если субъект не имплементирует {@link java.io.Serializable}
@@ -21,9 +21,13 @@ public class UndoPacke {
      * Для ручного управления распаковкой, например в случае, если субъект не имплементирует {@link java.io.Serializable}
      */
     public interface OnRestore {
-        Object handle(String packet, SubjInfo subjInfo);
+        Object handle(Serializable processedSubj, SubjInfo subjInfo);
     }
 
+    /**
+     * Вспомогательный класс данных.
+     * Используется для хранения
+     */
     public static class SubjInfo implements Serializable {
         public final String id;
         public final int version;
@@ -41,13 +45,13 @@ public class UndoPacke {
         /**
          * Первоначально 8 байт (Long.BYTES in Java 1.8) но мало ли что )))
          */
-        private static final int HEADER_SIZE = 20;
-        private static final char HEADER_FILLER = '_';
+        private static final int HEADER_SIZE = 40;
+        private static final char HEADER_FILLER = 'Z';
 
         private final UndoStack stack;
         private final String id;
         private final int version;
-        private final Map<String, Serializable> extras = new TreeMap<>();
+        private Map<String, Serializable> extras = null;
         private boolean zipped = false;
         private OnStore onStore = null;
 
@@ -64,18 +68,23 @@ public class UndoPacke {
             if(null == key) {
                 throw new NullPointerException("key");
             }
+            if(null == extras) {
+                extras = new TreeMap<>();
+            }
             extras.put(key, value);
             return this;
         }
 
         public Builder zipped(boolean value) {
-            this.zipped = zipped;
+            this.zipped = value;
             return this;
         }
 
-        public UndoPacke build() {
-            return new UndoPacke();
+        public Builder onStore(OnStore onStore) {
+            this.onStore = onStore;
+            return this;
         }
+
 
         /**
          * <ul>
@@ -96,10 +105,12 @@ public class UndoPacke {
             //  иначе назначаем напрямую
             if(null != onStore) {
                 data.subj = onStore.handle(stack.getSubj());
+                data.subjHandled = true;
             }else if(!(stack.getSubj() instanceof Serializable)){
                 throw new Exception("UndoStack's subject not serializable");
             }else {
                 data.subj = (Serializable) stack.getSubj();
+                data.subjHandled = false;
             }
             //~
 
@@ -108,11 +119,10 @@ public class UndoPacke {
             SubjInfo subjInfo = new SubjInfo(id, version, extras);
             String subjInfoPart = toBase64(subjInfo);
 
-            String headerLenAsStr = new String(longToBytes(subjInfoPart.length()));
-            char[] chars = new char[HEADER_SIZE - headerLenAsStr.length()];
-            Arrays.fill(chars, HEADER_FILLER);
-            headerLenAsStr = headerLenAsStr + new String(chars);
-
+            char[] ca = String.valueOf(subjInfoPart.length()).toCharArray();
+            char[] caAddon = new char[HEADER_SIZE - ca.length];
+            Arrays.fill(caAddon, HEADER_FILLER);
+            String headerLenAsStr = new String(ca) + new String(caAddon);
             String res = headerLenAsStr + subjInfoPart + dataPart;
             return res;
         }
@@ -133,15 +143,6 @@ public class UndoPacke {
             return Base64.getUrlEncoder().encodeToString(baos.toByteArray());
         }
 
-        private static byte[] longToBytes(long l) {
-            byte[] result = new byte[Long.BYTES];
-            for (int i = Long.BYTES - 1; i >= 0; i--) {
-                result[i] = (byte)(l & 0xFF);
-                l >>= 8;
-            }
-            return result;
-        }
-
     }
 
     //----------------------------------------------------------------------------------------------------
@@ -152,7 +153,17 @@ public class UndoPacke {
     private static class Data implements Serializable {
         UndoStack stack;
         Serializable subj;
+        // True if subj handled via handler; otherwise false.
+        boolean subjHandled;
     }
+
+    //-------------------------------------------------------------------------------------------------
+
+    public final boolean isExpected;
+
+    public final UndoStack stack;
+
+    //-------------------------------------------------------------------------------------------------
 
     public static Builder builder(UndoStack stack, String id, int version) {
         return new Builder(stack, id, version);
@@ -173,14 +184,12 @@ public class UndoPacke {
         if(candidate.length() < Builder.HEADER_SIZE) {
             throw new Exception("too small size");
         }
+
         String lenPart = candidate.substring(0, Builder.HEADER_SIZE);
         lenPart = lenPart.substring(0, lenPart.indexOf(Builder.HEADER_FILLER));
-        long len = bytesToLong(lenPart.getBytes());
-
+        long len = Long.valueOf(lenPart);
         String subjInfoCandidate = candidate.substring(Builder.HEADER_SIZE, (int)(Builder.HEADER_SIZE + len));
-
         Object obj = fromBase64(subjInfoCandidate);
-
         return (SubjInfo)obj;
     }
 
@@ -190,11 +199,46 @@ public class UndoPacke {
      * @return
      * @throws Exception
      */
-    public static UndoPacke restore(String candidate) throws Exception {
+    public static UndoPacket restore(String candidate, OnRestore handler) throws Exception {
         if(null == candidate) {
             throw new NullPointerException("candidate");
+        } else {
+
+            String lenPart = candidate.substring(0, Builder.HEADER_SIZE);
+            lenPart = lenPart.substring(0, lenPart.indexOf(Builder.HEADER_FILLER));
+            long len = Long.valueOf(lenPart);
+            String dataCandidate = candidate.substring((int)(Builder.HEADER_SIZE + len));
+
+            final byte[] arr = Base64.getUrlDecoder().decode(dataCandidate);
+            final boolean zipped = (arr[0] == (byte) (GZIPInputStream.GZIP_MAGIC))
+                    && (arr[1] == (byte) (GZIPInputStream.GZIP_MAGIC >> 8));
+
+            try (ObjectInputStream ois = zipped
+                    ? new ObjectInputStream(new GZIPInputStream(new ByteArrayInputStream(arr)))
+                    : new ObjectInputStream(new ByteArrayInputStream(arr))) {
+
+                boolean isExp = true;
+                Data data = (Data) ois.readObject();
+                UndoStack stack = data.stack;
+                Object subj = data.subj;
+
+                // Если хендлер назначен, надо его использовать
+                if(null != handler) {
+                    SubjInfo subjInfo = peek(candidate);
+                    subj = handler.handle(data.subj, subjInfo);
+                }else if(data.subjHandled) {
+                    throw new Exception("need subject handler");
+                }
+
+                if(null == subj) {
+                    isExp = false;
+                    subj = new Object();
+                }
+                stack.setSubj(subj);
+                UndoPacket packet = new UndoPacket(stack, isExp);
+                return packet;
+            }
         }
-        throw new Exception("NRY");
     }
 
     private static Object fromBase64(String candidate) throws IOException, ClassNotFoundException {
@@ -217,13 +261,9 @@ public class UndoPacke {
 
     }
 
-    private static long bytesToLong(byte[] b) {
-        long result = 0;
-        for (int i = 0; i < Long.BYTES; i++) {
-            result <<= 8;
-            result |= (b[i] & 0xFF);
-        }
-        return result;
+    private UndoPacket(UndoStack stack, boolean isExpected) {
+        this.stack = stack;
+        this.isExpected = isExpected;
     }
 
 }
