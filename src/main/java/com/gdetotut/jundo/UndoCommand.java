@@ -27,7 +27,7 @@ public class UndoCommand implements Serializable {
      */
     List<UndoCommand> children;
 
-    protected final UndoStack owner;
+    protected UndoStack owner;
 
     /**
      * Constructs an UndoCommand object with the given caption.

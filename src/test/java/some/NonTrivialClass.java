@@ -57,25 +57,33 @@ public class NonTrivialClass implements Serializable {
     public static class AddCommand extends UndoCommand {
 
         private final NonTrivialClass scene;
-        private final Item item;
-        private final int initialPos;
+        private final Item.Type type;
+        private Item item = null;
+        private int initialPos = 0;
 
         public AddCommand(UndoStack owner, Item.Type type, NonTrivialClass scene, UndoCommand parent) {
             super(owner, "", parent);
             this.scene = scene;
-            item = new Item(type);
-            initialPos = this.scene.items.size() * 2;
+            this.type = type;
             setCaption(ConstForTest.CMD_ADD + " at " + initialPos);
         }
 
         @Override
         protected void doUndo() {
-            scene.items.remove(item);
+            NonTrivialClass scn = (NonTrivialClass)owner.getLocalContexts().get("scene");
+            scn.items.remove(item);
         }
 
         @Override
         protected void doRedo() {
-            scene.items.add(item);
+
+            NonTrivialClass scn = (NonTrivialClass)owner.getLocalContexts().get("scene");
+
+            if(null == item) {
+                item = new Item(type);
+                initialPos = scn.items.size() * 2;
+            }
+            scn.items.add(item);
             item.x = initialPos;
         }
 

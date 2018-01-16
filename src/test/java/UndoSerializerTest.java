@@ -29,24 +29,26 @@ public class UndoSerializerTest {
     @Test
     public void serialize() throws Exception {
 
+        int count = 20;
+
         NonTrivialClass ntc = new NonTrivialClass();
         UndoStack stack = new UndoStack(ntc, null);
         stack.setWatcher(new SimpleUndoWatcher());
-        for(int i = 0; i < 1000; ++i){
+        for(int i = 0; i < count; ++i){
             stack.push(new NonTrivialClass.AddCommand(stack, NonTrivialClass.Item.Type.CIRCLE, ntc, null));
         }
-        assertEquals(1000, ntc.items.size());
-        assertEquals(1000, stack.count());
-        for(int i = 0; i < 1000; ++i){
+        assertEquals(count, ntc.items.size());
+        assertEquals(count, stack.count());
+        for(int i = 0; i < count; ++i){
             stack.push(new NonTrivialClass.MovedCommand(stack, ntc.items.get(i), 10, null));
         }
-        assertEquals(1000, ntc.items.size());
-        assertEquals(2000, stack.count());
-        for(int i = 0; i < 1000; ++i){
+        assertEquals(count, ntc.items.size());
+        assertEquals(count * 2, stack.count());
+        for(int i = 0; i < count; ++i){
             stack.push(new NonTrivialClass.DeleteCommand(stack, ntc, null));
         }
         assertEquals(0, ntc.items.size());
-        assertEquals(3000, stack.count());
+        assertEquals(count * 3, stack.count());
 
         UndoSerializer managerBack = null;
         {
@@ -83,15 +85,15 @@ public class UndoSerializerTest {
         NonTrivialClass ntcBack = (NonTrivialClass)stackBack.getSubj();
         stackBack.setWatcher(new SimpleUndoWatcher());
         // Check out
-        for(int i = 0; i < 1000; ++i) {
+        for(int i = 0; i < count; ++i) {
             stackBack.undo();
         }
-        assertEquals(1000, ntcBack.items.size());
-        for(int i = 0; i < 1000; ++i) {
+        assertEquals(count, ntcBack.items.size());
+        for(int i = 0; i < count; ++i) {
             stackBack.undo();
         }
-        assertEquals(1000, ntcBack.items.size());
-        for(int i = 0; i < 1000; ++i) {
+        assertEquals(count, ntcBack.items.size());
+        for(int i = 0; i < count; ++i) {
             stackBack.undo();
         }
         assertEquals(0, ntcBack.items.size());

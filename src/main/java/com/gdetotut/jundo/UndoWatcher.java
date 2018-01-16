@@ -11,5 +11,6 @@ public interface UndoWatcher {
     default void canRedoChanged(boolean canRedo) {}
     default void undoTextChanged(String undoText) {}
     default void redoTextChanged(String redoText) {}
+    default void macroChanged(boolean on) {}
 
 }

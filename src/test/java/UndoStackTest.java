@@ -1,4 +1,5 @@
 import com.gdetotut.jundo.*;
+import com.sun.xml.internal.bind.v2.TODO;
 import org.junit.Test;
 import some.*;
 import some.SimpleUndoWatcher;
@@ -708,13 +709,13 @@ public class UndoStackTest implements Serializable {
         stack.setClean();
         assertEquals(0, stack.getCleanIdx());
         assertEquals(3, stack.count());
-        assertEquals(2, stack.getIdx());
+        assertEquals(3, stack.getIdx());
         stack.undo();
-        assertEquals(2, stack.getIdx());
+        assertEquals(3, stack.getIdx());
         stack.redo();
-        assertEquals(2, stack.getIdx());
+        assertEquals(3, stack.getIdx());
         stack.setIndex(0);
-        assertEquals(2, stack.getIdx());
+        assertEquals(3, stack.getIdx());
 
         // Finish macro
         stack.endMacro();
@@ -766,29 +767,27 @@ public class UndoStackTest implements Serializable {
     public void testRealMacros() throws IOException, ClassNotFoundException {
 
         NonTrivialClass subj = new NonTrivialClass();
+        // TODO: 16.01.18 Довольно странно добавлять субъектом и контекстом один объект
+        UndoStack stack = new UndoStack(subj, null);
+        stack.getLocalContexts().put("scene", subj);
 
-        UndoStack mainStack = new UndoStack(subj, null);
-        mainStack.push(new NonTrivialClass.AddCommand(mainStack, NonTrivialClass.Item.Type.CIRCLE, subj, null));
-        mainStack.push(new NonTrivialClass.AddCommand(mainStack, NonTrivialClass.Item.Type.RECT, subj, null));
+        stack.push(new NonTrivialClass.AddCommand(stack, NonTrivialClass.Item.Type.CIRCLE, subj, null));
+        stack.push(new NonTrivialClass.AddCommand(stack, NonTrivialClass.Item.Type.RECT, subj, null));
         assertEquals(2, subj.items.size());
 
-        UndoStack macroStack1 = new UndoStack(subj, null);
-        macroStack1.beginMacro("add Circle");
-        macroStack1.push(new NonTrivialClass.AddCommand(mainStack, NonTrivialClass.Item.Type.CIRCLE, subj, null));
-        macroStack1.endMacro();
+        stack.beginMacro("add Circle");
+        stack.push(new NonTrivialClass.AddCommand(stack, NonTrivialClass.Item.Type.CIRCLE, subj, null));
+        stack.endMacro();
         assertEquals(3, subj.items.size());
 
-        UndoStack macroStack2 = new UndoStack(subj, null);
-        macroStack2.beginMacro("add Rect");
-        macroStack2.push(new NonTrivialClass.AddCommand(mainStack, NonTrivialClass.Item.Type.RECT, subj, null));
-        macroStack2.endMacro();
+        stack.beginMacro("add Rect");
+        stack.push(new NonTrivialClass.AddCommand(stack, NonTrivialClass.Item.Type.RECT, subj, null));
+        stack.endMacro();
         assertEquals(4, subj.items.size());
 
-        // apply macro
-        UndoCommand cmd = macroStack1.cloneCommand(0);
-        mainStack.push(cmd);
+        UndoCommand macro = stack.clone(stack.getMacros().get(0));
+        stack.push(macro);
         assertEquals(5, subj.items.size());
-
 
     }
 

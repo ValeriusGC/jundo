@@ -65,20 +65,22 @@ public class UndoSerializer2Test implements Serializable{
             }
         }
 
+        int count = 101;
+
         Circle circle = new Circle(20.0, Color.RED);
         UndoStack stack = new UndoStack(circle, null);
         stack.getLocalContexts().put("circle", circle);
         stack.getLocalContexts().put("color_picker", new Color(1.0,1.0, 1.0, 1.0));
         stack.setWatcher(new SimpleUndoWatcher());
-        for(int i = 0; i < 1000; ++i){
+        for(int i = 0; i < count; ++i){
             stack.push(new CircleRadiusUndoCmd(stack, circle, i*2.0, null));
         }
-        assertEquals(1000, stack.count());
-        assertEquals(0, Double.compare(1998.0, circle.getRadius()));
+        assertEquals(count, stack.count());
+        assertEquals(0, Double.compare(200.0, circle.getRadius()));
 
         while (stack.canUndo())
             stack.undo();
-        assertEquals(1000, stack.count());
+        assertEquals(count, stack.count());
         assertEquals(0, Double.compare(20.0, circle.getRadius()));
 
         UndoSerializer managerBack = null;
@@ -94,12 +96,12 @@ public class UndoSerializer2Test implements Serializable{
 
         UndoStack stack2 = managerBack.getStack();
         stack2.getLocalContexts().put("circle", circle1);
-        assertEquals(1000, stack2.count());
+        assertEquals(count, stack2.count());
         assertEquals(0, Double.compare(20.0, circle1.getRadius()));
 
         while (stack2.canRedo())
             stack2.redo();
-        assertEquals(0, Double.compare(1998.0, circle1.getRadius()));
+        assertEquals(0, Double.compare(200.0, circle1.getRadius()));
     }
 
 
