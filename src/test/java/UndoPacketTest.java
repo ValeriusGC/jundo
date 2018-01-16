@@ -12,6 +12,7 @@ import some.Point;
 import java.io.Serializable;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 
 public class UndoPacketTest {
 
@@ -74,7 +75,13 @@ public class UndoPacketTest {
 
         // Раз стек ожидаемого типа, можно смело распаковывать остальное
         UndoPacket packet = UndoPacket.restore(packAsString, null);
-        assertEquals(stack, packet.stack);
+        // Это логично - стек, воссозданный заново ничего общего не имеет с текущим по адресному пространству
+        assertNotEquals(stack, packet.stack);
+        // Зато это должно быть одинаково
+        assertEquals(stack.getIdx(), packet.stack.getIdx());
+        assertEquals(stack.getCleanIdx(), packet.stack.getCleanIdx());
+        assertEquals(stack.getUndoLimit(), packet.stack.getUndoLimit());
+
         // We shoul understand that after deserialization it is new instance of subj.
         Point pt1 = (Point) packet.stack.getSubj();
         assertEquals(pt, pt1);

@@ -752,7 +752,46 @@ public class UndoStackTest implements Serializable {
         assertEquals(3, manager.getStack().getIdx());
         assertEquals(8, ((NonTrivialClass) manager.getStack().getSubj()).items.size());
 
-    }    
+    }
+
+    /**
+     * Real macros is standalone macro-command that may be applied to our subject and added to our stack.
+     *
+     * TODO Перевод
+     *
+     * Другими словами это reusable набор команд.
+     *
+     */
+    @Test
+    public void testRealMacros() throws IOException, ClassNotFoundException {
+
+        NonTrivialClass subj = new NonTrivialClass();
+
+        UndoStack mainStack = new UndoStack(subj, null);
+        mainStack.push(new NonTrivialClass.AddCommand(mainStack, NonTrivialClass.Item.Type.CIRCLE, subj, null));
+        mainStack.push(new NonTrivialClass.AddCommand(mainStack, NonTrivialClass.Item.Type.RECT, subj, null));
+        assertEquals(2, subj.items.size());
+
+        UndoStack macroStack1 = new UndoStack(subj, null);
+        macroStack1.beginMacro("add Circle");
+        macroStack1.push(new NonTrivialClass.AddCommand(mainStack, NonTrivialClass.Item.Type.CIRCLE, subj, null));
+        macroStack1.endMacro();
+        assertEquals(3, subj.items.size());
+
+        UndoStack macroStack2 = new UndoStack(subj, null);
+        macroStack2.beginMacro("add Rect");
+        macroStack2.push(new NonTrivialClass.AddCommand(mainStack, NonTrivialClass.Item.Type.RECT, subj, null));
+        macroStack2.endMacro();
+        assertEquals(4, subj.items.size());
+
+        // apply macro
+        UndoCommand cmd = macroStack1.cloneCommand(0);
+        mainStack.push(cmd);
+        assertEquals(5, subj.items.size());
+
+
+    }
+
 
 
 }

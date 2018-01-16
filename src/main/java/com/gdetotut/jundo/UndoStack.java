@@ -1,6 +1,6 @@
 package com.gdetotut.jundo;
 
-import java.io.Serializable;
+import java.io.*;
 import java.util.*;
 
 /**
@@ -380,6 +380,10 @@ public class UndoStack implements Serializable{
 
         if(macroStack.isEmpty()) {
 
+            if(null == commands) {
+                commands = new ArrayList<>();
+            }
+
             while (idx < commands.size()) {
                 commands.remove(commands.size() - 1);
             }
@@ -401,6 +405,23 @@ public class UndoStack implements Serializable{
                 watcher.canRedoChanged(false);
                 watcher.redoTextChanged("");
             }
+        }
+    }
+
+    public UndoCommand cloneCommand(int idx) throws IOException, ClassNotFoundException {
+        if(commands == null || idx < 0 || idx >= commands.size()) {
+            return null;
+        }
+
+        UndoCommand cmd = commands.get(idx);
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        try (final ObjectOutputStream oos = new ObjectOutputStream(baos)) {
+            oos.writeObject(cmd);
+        }
+
+        try (ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(baos.toByteArray()))) {
+            UndoCommand cmdClone = (UndoCommand)ois.readObject();
+            return cmdClone;
         }
     }
 
@@ -536,18 +557,28 @@ public class UndoStack implements Serializable{
         this.watcher = watcher;
     }
 
+    /**
+     * We use <b>getSubj() == stack.getSubj()</b> instead of <b>Objects.equals(getSubj(), stack.getSubj())</b>
+     * because semantic of <b>2 stack differs when they have different addresses in memory.</b>
+     */
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         UndoStack stack = (UndoStack) o;
-        return idx == stack.idx
-                && subj.equals(stack.subj);
+
+        return getIdx() == stack.getIdx() &&
+                getCleanIdx() == stack.getCleanIdx() &&
+                getUndoLimit() == stack.getUndoLimit() &&
+                suspend == stack.suspend &&
+                getSubj() == stack.getSubj() &&
+                Objects.equals(commands, stack.commands) &&
+                Objects.equals(macroStack, stack.macroStack);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(idx, subj, commands);
+        return Objects.hash(getSubj());
     }
 
     /**
