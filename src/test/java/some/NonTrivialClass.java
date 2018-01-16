@@ -70,20 +70,16 @@ public class NonTrivialClass implements Serializable {
 
         @Override
         protected void doUndo() {
-            NonTrivialClass scn = (NonTrivialClass)owner.getLocalContexts().get("scene");
-            scn.items.remove(item);
+            scene.items.remove(item);
         }
 
         @Override
         protected void doRedo() {
-
-            NonTrivialClass scn = (NonTrivialClass)owner.getLocalContexts().get("scene");
-
             if(null == item) {
                 item = new Item(type);
-                initialPos = scn.items.size() * 2;
+                initialPos = scene.items.size() * 2;
             }
-            scn.items.add(item);
+            scene.items.add(item);
             item.x = initialPos;
         }
 

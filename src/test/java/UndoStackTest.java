@@ -766,31 +766,71 @@ public class UndoStackTest implements Serializable {
     @Test
     public void testRealMacros() throws IOException, ClassNotFoundException {
 
-        NonTrivialClass subj = new NonTrivialClass();
-        // TODO: 16.01.18 Довольно странно добавлять субъектом и контекстом один объект
+        TextSample subj = new TextSample();
         UndoStack stack = new UndoStack(subj, null);
-        stack.getLocalContexts().put("scene", subj);
+        stack.getLocalContexts().put(TextSampleCommands.TEXT_CTX_KEY, subj);
 
-        stack.push(new NonTrivialClass.AddCommand(stack, NonTrivialClass.Item.Type.CIRCLE, subj, null));
-        stack.push(new NonTrivialClass.AddCommand(stack, NonTrivialClass.Item.Type.RECT, subj, null));
-        assertEquals(2, subj.items.size());
+        String s = "start: ";
+        stack.push(new TextSampleCommands.AddLine(stack, "new line", null));
+        stack.push(new TextSampleCommands.AddString(stack, "new string", s, null));
+        TextSample testText = new TextSample();
+        testText.addLine();
+        testText.add(s);
+        assertEquals(subj, testText);
+        System.out.println(subj.print());
+        assertEquals(2, stack.count());
 
-        stack.beginMacro("add Circle");
-        stack.push(new NonTrivialClass.AddCommand(stack, NonTrivialClass.Item.Type.CIRCLE, subj, null));
+        stack.undo();
+        testText.remove(s);
+        assertEquals(subj, testText);
+        System.out.println(subj.print());
+
+        stack.undo();
+        testText.removeLine();
+        assertEquals(subj, testText);
+        System.out.println(subj.print());
+
+        stack.redo();
+        stack.redo();
+        testText.addLine();
+        testText.add(s);
+        assertEquals(subj, testText);
+        System.out.println(subj.print());
+
+        stack.beginMacro("macro 1");
+        stack.push(new TextSampleCommands.AddString(stack, "new string", "Hello", null));
+        stack.push(new TextSampleCommands.AddString(stack, "new string", ", ", null));
+        stack.push(new TextSampleCommands.AddString(stack, "new string", "world!", null));
         stack.endMacro();
-        assertEquals(3, subj.items.size());
+        s = "Hello, world!";
+        testText.add(s);
+        assertEquals(subj, testText);
+        System.out.println(subj.print());
 
-        stack.beginMacro("add Rect");
-        stack.push(new NonTrivialClass.AddCommand(stack, NonTrivialClass.Item.Type.RECT, subj, null));
-        stack.endMacro();
-        assertEquals(4, subj.items.size());
+        stack.undo();
+        testText.remove(s);
+        assertEquals(subj, testText);
+        System.out.println(subj.print());
 
+        stack.redo();
+        testText.add(s);
+        assertEquals(subj, testText);
+        System.out.println(subj.print());
+
+        // Теперь используем макрос
+        stack.push(new TextSampleCommands.AddLine(stack, "new line", null));
+        testText.addLine();
+        assertEquals(subj, testText);
         UndoCommand macro = stack.clone(stack.getMacros().get(0));
         stack.push(macro);
-        assertEquals(5, subj.items.size());
-
+        testText.add(s);
+        assertEquals(subj, testText);
+        System.out.println(subj.print());
+        //
+        stack.undo();
+        testText.remove(s);
+        assertEquals(subj, testText);
+        System.out.println(subj.print());
     }
-
-
 
 }
