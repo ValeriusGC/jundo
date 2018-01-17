@@ -5,8 +5,6 @@ import com.gdetotut.jundo.UndoCommand;
 import com.gdetotut.jundo.UndoStack;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Implements {@link Serializable} because of UndoCommands requirement.

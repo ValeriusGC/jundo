@@ -1,5 +1,6 @@
-import com.gdetotut.jundo.*;
-import javafx.scene.control.ColorPicker;
+import com.gdetotut.jundo.UndoCommand;
+import com.gdetotut.jundo.UndoSerializer;
+import com.gdetotut.jundo.UndoStack;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Rectangle;
@@ -8,7 +9,9 @@ import org.junit.Test;
 import some.SimpleUndoWatcher;
 
 import java.io.Serializable;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 
