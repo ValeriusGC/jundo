@@ -22,14 +22,14 @@ public class UndoPacket {
      * Для ручного управления распаковкой, например в случае, если субъект не имплементирует {@link java.io.Serializable}
      */
     public interface OnRestore {
+
         /**
-         *
          * @param processedSubj Не обязательно это ручная строка. Возможно, обработчик вызван для чистого субъекта.
          *                      ПОэтому это не String, a {@link Serializable}
          * @param subjInfo
          * @return
          */
-        Object handle(Serializable processedSubj, SubjInfo subjInfo);
+        Object handle(Serializable processedSubj, SubjInfo subjInfo) throws Exception;
     }
 
     public interface OnPrepareStack {
@@ -68,7 +68,7 @@ public class UndoPacket {
         private OnStore onStore = null;
 
         public Builder(UndoStack stack, String id, int version) {
-            if(null == stack) {
+            if (null == stack) {
                 throw new NullPointerException("stack");
             }
             this.stack = stack;
@@ -77,10 +77,10 @@ public class UndoPacket {
         }
 
         public Builder extra(String key, Serializable value) {
-            if(null == key) {
+            if (null == key) {
                 throw new NullPointerException("key");
             }
-            if(null == extras) {
+            if (null == extras) {
                 extras = new TreeMap<>();
             }
             extras.put(key, value);
@@ -100,11 +100,12 @@ public class UndoPacket {
 
         /**
          * <ul>
-         *     <li>{@link SubjInfo} size zeroed up to 8 bytes: 8 bytes</li>
-         *     <li>{@link SubjInfo} itself</li>
-         *     <li>{@link Data} </li>
+         * <li>{@link SubjInfo} size zeroed up to 8 bytes: 8 bytes</li>
+         * <li>{@link SubjInfo} itself</li>
+         * <li>{@link Data} </li>
          * </ul>
          * Таким образом можно будет распаковать отдельно сперва {@link SubjInfo} для {@link #peek}
+         *
          * @return
          */
         public String store() throws Exception {
@@ -115,12 +116,12 @@ public class UndoPacket {
             // Обработчик есть: обрабатываем в строку
             //  иначе если не сериализуется ошибка
             //  иначе назначаем напрямую
-            if(null != onStore) {
+            if (null != onStore) {
                 data.subj = onStore.handle(stack.getSubj());
                 data.subjHandled = true;
-            }else if(!(stack.getSubj() instanceof Serializable)){
+            } else if (!(stack.getSubj() instanceof Serializable)) {
                 throw new Exception("UndoStack's subject not serializable");
-            }else {
+            } else {
                 data.subj = (Serializable) stack.getSubj();
                 data.subjHandled = false;
             }
@@ -212,10 +213,10 @@ public class UndoPacket {
         private final boolean allow;
 
         Peeker(String candidate, SubjInfo subjInfo, boolean allow) throws Exception {
-            if(null == candidate) {
+            if (null == candidate) {
                 throw new Exception("candidate");
             }
-            if(null == subjInfo) {
+            if (null == subjInfo) {
                 throw new Exception("subjInfo");
             }
 
@@ -224,12 +225,12 @@ public class UndoPacket {
             this.allow = allow;
         }
 
-        public UndoPacket get(OnRestore handler) throws Exception {
+        public UndoPacket restore(OnRestore handler) throws Exception {
 
             String lenPart = candidate.substring(0, Builder.HEADER_SIZE);
             lenPart = lenPart.substring(0, lenPart.indexOf(Builder.HEADER_FILLER));
             long len = Long.valueOf(lenPart);
-            String dataCandidate = candidate.substring((int)(Builder.HEADER_SIZE + len));
+            String dataCandidate = candidate.substring((int) (Builder.HEADER_SIZE + len));
 
             final byte[] arr = Base64.getUrlDecoder().decode(dataCandidate);
             final boolean zipped = (arr[0] == (byte) (GZIPInputStream.GZIP_MAGIC))
@@ -245,13 +246,13 @@ public class UndoPacket {
                 Object subj = data.subj;
 
                 // Если хендлер назначен, надо его использовать
-                if(null != handler) {
+                if (null != handler) {
                     subj = handler.handle(data.subj, subjInfo);
-                }else if(data.subjHandled) {
+                } else if (data.subjHandled) {
                     throw new Exception("need subject handler");
                 }
 
-                if(null == subj) {
+                if (null == subj) {
                     isExp = false;
                     subj = new Object();
                 }
@@ -322,16 +323,16 @@ public class UndoPacket {
 //    }
 
     public static Peeker peek(String candidate, Predicate<SubjInfo> predicate) throws Exception {
-        if(null == candidate) {
+        if (null == candidate) {
             throw new NullPointerException("candidate");
         }
-        if(candidate.length() < Builder.HEADER_SIZE) {
+        if (candidate.length() < Builder.HEADER_SIZE) {
             throw new Exception("too small size");
         }
         String lenPart = candidate.substring(0, Builder.HEADER_SIZE);
         lenPart = lenPart.substring(0, lenPart.indexOf(Builder.HEADER_FILLER));
         long len = Long.valueOf(lenPart);
-        String subjInfoCandidate = candidate.substring(Builder.HEADER_SIZE, (int)(Builder.HEADER_SIZE + len));
+        String subjInfoCandidate = candidate.substring(Builder.HEADER_SIZE, (int) (Builder.HEADER_SIZE + len));
         SubjInfo obj = (SubjInfo) fromBase64(subjInfoCandidate);
 
         Peeker peeker = new Peeker(candidate, obj, null == predicate || predicate.test(obj));
@@ -388,14 +389,14 @@ public class UndoPacket {
 //    }
 
     public UndoStack stack(OnPrepareStack handler) {
-        if(null != handler) {
+        if (null != handler) {
             handler.apply(stack, subjInfo);
         }
         return stack;
     }
 
     private static Object fromBase64(String candidate) throws IOException, ClassNotFoundException {
-        if(null == candidate) {
+        if (null == candidate) {
             throw new NullPointerException("candidate");
         }
 

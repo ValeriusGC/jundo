@@ -6,7 +6,7 @@ import java.util.Objects;
 /**
  * Test class
  */
-public class Point implements Serializable{
+public class Point implements Serializable {
 
     private int x;
     private int y;

@@ -31,9 +31,10 @@ public class UndoCommand implements Serializable {
 
     /**
      * Constructs an UndoCommand object with the given caption.
-     * @param owner the stack that owns this command. required (should not be null).
+     *
+     * @param owner   the stack that owns this command. required (should not be null).
      * @param caption a short string describing what this command does. Optional.
-     * @param parent command's parent. Used in the concept of 'command-chain'.  Optional.
+     * @param parent  command's parent. Used in the concept of 'command-chain'.  Optional.
      */
     public UndoCommand(UndoStack owner, String caption, UndoCommand parent) {
         if (owner == null) {
@@ -97,11 +98,12 @@ public class UndoCommand implements Serializable {
 
     /**
      * Returns command by its index. If the index is invalid, returns null.
+     *
      * @param idx index of desired command.
      * @return Command if index is valid; otherwise null.
      */
     public UndoCommand child(int idx) {
-        if(idx < 0 || idx >= childCount()) {
+        if (idx < 0 || idx >= childCount()) {
             return null;
         }
         return children.get(idx);
@@ -111,11 +113,11 @@ public class UndoCommand implements Serializable {
      * Calls {@link #doRedo} in the derived classes.
      */
     public final void redo() {
-        if(null != children && children.size() > 0) {
+        if (null != children && children.size() > 0) {
             for (UndoCommand cmd : children) {
                 cmd.redo();
             }
-        }else {
+        } else {
             doRedo();
         }
     }
@@ -124,11 +126,11 @@ public class UndoCommand implements Serializable {
      * Calls {@link #doUndo}  in derived classes.
      */
     public final void undo() {
-        if(null != children && children.size() > 0) {
+        if (null != children && children.size() > 0) {
             for (UndoCommand cmd : children) {
                 cmd.undo();
             }
-        }else {
+        } else {
             doUndo();
         }
     }
@@ -143,6 +145,7 @@ public class UndoCommand implements Serializable {
     /**
      * Sets the command's caption.
      * <p>Specified caption should be a short user-readable string describing what this  command does.
+     *
      * @param caption a short caption string describing what this command does. Can be null.
      */
     public final void setCaption(String caption) {
@@ -154,7 +157,8 @@ public class UndoCommand implements Serializable {
      * <p>Calling {@link UndoStack#push}, {@link UndoStack#undo} or {@link UndoStack#redo} from this function
      * leads to  undefined behavior.
      */
-    protected void doRedo() { }
+    protected void doRedo() {
+    }
 
     /**
      * Reverts a change to the document. After undo() is called, the state of the document should be the same
@@ -162,6 +166,7 @@ public class UndoCommand implements Serializable {
      * <p>Calling {@link UndoStack#push}, {@link UndoStack#undo} or {@link UndoStack#redo} from this function
      * leads to  undefined behavior.
      */
-    protected void doUndo() { }
+    protected void doUndo() {
+    }
 
 }

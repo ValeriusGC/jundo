@@ -2,12 +2,9 @@ import com.gdetotut.jundo.*;
 import com.gdetotut.jundo.UndoPacket.SubjInfo;
 import org.junit.Test;
 import some.*;
-import some.SimpleUndoWatcher;
 
-import java.io.*;
+import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.zip.GZIPInputStream;
-import java.util.zip.GZIPOutputStream;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
@@ -40,13 +37,16 @@ public class UndoStackTest implements Serializable {
      * Helper function.
      */
     @SuppressWarnings("unchecked")
-    public <V extends Serializable> void testSimple() throws IOException, ClassNotFoundException {
+    public <V extends Serializable> void testSimple() throws Exception {
 
-        UndoSerializer manager = new UndoSerializer(null, 333, stack);
-        UndoSerializer managerBack = UndoSerializer.deserialize(
-                UndoSerializer.serialize(manager, false, null),
-                null);
-        UndoStack stackBack = managerBack.getStack();
+        String store = UndoPacket
+                .make(stack, "not_used", 333)
+                .store();
+        UndoStack stackBack = UndoPacket
+                .peek(store, null)
+                .restore(null)
+                .stack(null);
+
         // Here we can not compare stacks themselves 'cause of stack's comparison principle
         assertEquals(stack.getSubj(), stackBack.getSubj());
         SimpleClass<V> objBack = (SimpleClass<V>) stackBack.getSubj();
@@ -73,9 +73,6 @@ public class UndoStackTest implements Serializable {
 
         Point pt = new Point(-30, -40);
         UndoStack stack = new UndoStack(pt, null);
-//        UndoCommand undoCommand = new UndoCommand(stack, "Move point", null);
-//        new RefCmd<>(stack, "Change x", pt::getX, pt::setX, 10, undoCommand);
-//        new RefCmd<>(stack, "Change y", pt::getY, pt::setY, 20, undoCommand);
         stack.push(new RefCmd<>(stack, "Change x", pt::getX, pt::setX, 10, null));
         stack.push(new RefCmd<>(stack, "Change y", pt::getY, pt::setY, 20, null));
         assertEquals(2, stack.count());
@@ -87,9 +84,16 @@ public class UndoStackTest implements Serializable {
         assertEquals(-40, pt.getY());
         assertEquals(1, stack.getIdx());
 
-        UndoSerializer manager = new UndoSerializer(null, 4, stack);
-        manager = UndoSerializer.deserialize(UndoSerializer.serialize(manager, true, null), null);
-        UndoStack stackBack = manager.getStack();
+        String store = UndoPacket
+                // It is a good idea always store smth like subject class identifier.
+                .make(stack, "sample.Point", 1)
+                .store();
+        UndoStack stackBack = UndoPacket
+                // When we have no handler, we need to specify it explicitly.
+                .peek(store, null)
+                .restore(null)
+                .stack(null);
+
         Point ptBack = (Point) stackBack.getSubj();
         assertEquals(pt, ptBack);
         assertEquals(10, ptBack.getX());
@@ -112,7 +116,7 @@ public class UndoStackTest implements Serializable {
      * Create {@link UndoStack} with or without groups.
      */
     @Test
-    public void creation() {
+    public void testCreation() {
 
         {
             // Create without group
@@ -192,7 +196,7 @@ public class UndoStackTest implements Serializable {
      * Adding and clearing
      */
     @Test
-    public void addAndClear() throws Exception {
+    public void testAddAndClear() throws Exception {
 
         NonTrivialClass scene = new NonTrivialClass();
         UndoGroup group = new UndoGroup();
@@ -218,7 +222,7 @@ public class UndoStackTest implements Serializable {
      * - setIndex
      */
     @Test
-    public void limits() throws Exception {
+    public void testLimits() throws Exception {
 
         SimpleClass<Integer> subj = new SimpleClass<>(Integer.class);
         UndoGroup group = new UndoGroup();
@@ -244,7 +248,7 @@ public class UndoStackTest implements Serializable {
      * - getCleanIdx
      */
     @Test
-    public void clean() throws Exception {
+    public void testClean() throws Exception {
 
         SimpleClass<Integer> subj = new SimpleClass<>(Integer.class);
         UndoGroup group = new UndoGroup();
@@ -291,7 +295,7 @@ public class UndoStackTest implements Serializable {
      * - redoCaption
      */
     @Test
-    public void auxProps() throws Exception {
+    public void testAuxProps() throws Exception {
         SimpleClass<Integer> subj = new SimpleClass<>(Integer.class);
         UndoGroup group = new UndoGroup();
         UndoStack stack = new UndoStack(subj, group);
@@ -394,10 +398,22 @@ public class UndoStackTest implements Serializable {
             assertEquals(0, ntc.items.size());
 //            System.out.println(ntc);
 
-            UndoSerializer manager = new UndoSerializer(null, 333, stack);
-            UndoSerializer managerBack =
-                    UndoSerializer.deserialize(UndoSerializer.serialize(manager, false, null), null);
-            UndoStack stackBack = managerBack.getStack();
+//            UndoSerializer manager = new UndoSerializer(null, 333, stack);
+//            UndoSerializer managerBack =
+//                    UndoSerializer.deserialize(UndoSerializer.serialize(manager, false, null), null);
+//            UndoStack stackBack = managerBack.getStack();
+
+            String store = UndoPacket
+                    // It's a good practice always specify id.
+                    .make(stack, "NonTrivialClass", 1)
+                    .store();
+            UndoStack stackBack = UndoPacket
+                    // When we have no handlers, we still need to specify it explicitly.
+                    .peek(store, null)
+                    .restore(null)
+                    .stack(null);
+
+
 //            assertEquals(stack, stackBack);
             NonTrivialClass objBack = (NonTrivialClass) stackBack.getSubj();
 //            assertEquals(subj, objBack);
@@ -492,10 +508,21 @@ public class UndoStackTest implements Serializable {
             assertEquals(1, ntc.items.size());
 
             // Serialize
-            UndoSerializer manager = new UndoSerializer(null, 333, stack);
-            UndoSerializer managerBack =
-                    UndoSerializer.deserialize(UndoSerializer.serialize(manager, false, null), null);
-            UndoStack stackBack = managerBack.getStack();
+//            UndoSerializer manager = new UndoSerializer(null, 333, stack);
+//            UndoSerializer managerBack =
+//                    UndoSerializer.deserialize(UndoSerializer.serialize(manager, false, null), null);
+//            UndoStack stackBack = managerBack.getStack();
+
+            String store = UndoPacket
+                    // It's a good practice always specify id.
+                    .make(stack, "some.NonTrivialClass", 1)
+                    .store();
+            UndoStack stackBack = UndoPacket
+                    // When we have no handlers, we still need to specify it explicitly.
+                    .peek(store, null)
+                    .restore(null)
+                    .stack(null);
+
             NonTrivialClass objBack = (NonTrivialClass) stackBack.getSubj();
 
 //            System.out.println("-------serializ -");
@@ -511,113 +538,14 @@ public class UndoStackTest implements Serializable {
 
         }
 
-        {
-
-            UndoSerializer manager = new UndoSerializer(null, 333, stack);
-            String str = UndoSerializer.serialize(manager, false, null);
-
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            GZIPOutputStream gzip = new GZIPOutputStream(baos);
-            gzip.write(str.getBytes("UTF-8"));
-            gzip.close();
-//            System.out.println("Output String : " + str);
-//            System.out.println("Unzipped length : " + str.length());
-//            System.out.println("Zipped length : " + baos.size());
-//            System.out.println("Zip : " + new String(baos.toByteArray()));
-
-            GZIPInputStream gis = new GZIPInputStream(new ByteArrayInputStream(baos.toByteArray()));
-            BufferedReader bf = new BufferedReader(new InputStreamReader(gis));
-            StringBuilder str2 = new StringBuilder();
-            while (bf.ready()) {
-                str2.append(bf.readLine());
-            }
-            String outStr = str2.toString();
-//            System.out.println("Output String : " + outStr);
-            assertEquals(str, outStr);
-
-        }
-
-
     }
-
-//    @Test
-//    public void context() throws Exception {
-//
-//        // class Cmd
-//        //
-//        // Keep in mind that class of Command should be Serializable (and Superclass UndoStackTest too)
-//        class Cmd extends UndoCommand {
-//            int oldV, newV;
-//
-//            public Cmd(@NonNull String caption, int v) {
-//                super(caption, null);
-//                newV = v;
-//            }
-//
-//            @Override
-//            protected void doRedo() {
-//                if (context != null && context instanceof MyContext) {
-//                    MyContext ctx = (MyContext) context;
-//                    oldV = ctx.getValue();
-//                    ctx.setValue(newV);
-//                }
-//            }
-//
-//            @Override
-//            protected <Context> void doUndo(Context context) {
-//                if (context != null && context instanceof MyContext) {
-//                    MyContext ctx = (MyContext) context;
-//                    ctx.setValue(oldV);
-//                }
-//            }
-//        }
-//        //~class Cmd
-//
-//        // When making undo for non-serializable class
-//        //
-//        // Nonserializable class
-//        MyContext ctx = new MyContext();
-//        int start = ctx.getValue();
-//
-//        UndoStack stack = new UndoStack(null, null);
-//        stack.setWatcher(new SimpleUndoWatcher());
-//        stack.setContext(ctx);
-//        stack.push(new Cmd("Change X to 10", 10));
-//
-//        assertEquals(10, ctx.getValue());
-//        stack.push(new Cmd("Change X to 20", 20));
-//        assertEquals(20, ctx.getValue());
-//        stack.undo();
-//        assertEquals(10, ctx.getValue());
-//        stack.undo();
-//        assertEquals(start, ctx.getValue());
-//        stack.setIndex(stack.count());
-//        assertEquals(20, ctx.getValue());
-//
-//
-//        // Suppose that we are forced to save/restore UndoStack and process it again.
-//        // We know MyContext state and want restore undo-chain.
-//
-//        UndoSerializer manager = new UndoSerializer(null, 4, stack);
-//        UndoSerializer.serialize(manager, true);
-//        manager = UndoSerializer.deserialize(UndoSerializer.serialize(manager, true), ctx);
-//        UndoStack stackBack = manager.getStack();
-//
-//        stackBack.undo();
-//        assertEquals(10, ctx.getValue());
-//        stackBack.undo();
-//        assertEquals(start, ctx.getValue());
-//
-//        // ~When making undo for non-serializable class
-//
-//    }
 
     /**
      * Test for command's chain
      * <p>Makes command chain without using macrocommands.
      */
     @Test
-    public void chain() throws Exception {
+    public void testChain() {
 
         // TODO Make the same in KUndo
 
@@ -674,96 +602,11 @@ public class UndoStackTest implements Serializable {
     }
 
     /**
-     * Test for macrocommands.
-     * <p>The macro should behave like one command.
-     */
-    @Test
-    public void macro() throws Exception {
-
-        NonTrivialClass subj = new NonTrivialClass();
-        UndoStack stack = new UndoStack(subj, null);
-
-        stack.push(new NonTrivialClass.AddCommand(stack, CIRCLE, subj, null));
-        stack.push(new NonTrivialClass.AddCommand(stack, RECT, subj, null));
-        assertEquals(2, stack.count());
-        assertEquals(0, stack.getCleanIdx());
-        assertEquals(true, stack.canUndo());
-        assertEquals(false, stack.canRedo());
-        stack.undo();
-        assertEquals(true, stack.canRedo());
-        stack.redo();
-
-        // Adding macrocommand not affects count of simple commands exclude moment of beginning
-        stack.beginMacro("Moving");
-        assertEquals(3, stack.count());
-        assertEquals(false, stack.canUndo());
-        stack.push(new NonTrivialClass.MovedCommand(stack, subj.items.get(0), 20, null));
-        stack.push(new NonTrivialClass.AddCommand(stack, RECT, subj, null));
-        stack.push(new NonTrivialClass.AddCommand(stack, RECT, subj, null));
-        stack.push(new NonTrivialClass.AddCommand(stack, RECT, subj, null));
-        stack.push(new NonTrivialClass.AddCommand(stack, RECT, subj, null));
-        stack.push(new NonTrivialClass.AddCommand(stack, RECT, subj, null));
-        stack.push(new NonTrivialClass.AddCommand(stack, RECT, subj, null));
-        // Adding macrocommand not affects count
-        assertEquals(3, stack.count());
-
-        // Should has no effect inside macro process
-        stack.setClean();
-        assertEquals(0, stack.getCleanIdx());
-        assertEquals(3, stack.count());
-        assertEquals(3, stack.getIdx());
-        stack.undo();
-        assertEquals(3, stack.getIdx());
-        stack.redo();
-        assertEquals(3, stack.getIdx());
-        stack.setIndex(0);
-        assertEquals(3, stack.getIdx());
-
-        // Finish macro
-        stack.endMacro();
-        assertEquals(3, stack.getIdx());
-
-        // 2 simple and 1 macro
-        assertEquals(3, stack.count());
-        assertEquals(8, subj.items.size());
-
-        // Undo macro
-        stack.undo();
-        assertEquals(2, stack.getIdx());
-        assertEquals(2, subj.items.size());
-
-        // Undo macro
-        stack.redo();
-        assertEquals(3, stack.getIdx());
-        assertEquals(8, subj.items.size());
-
-        UndoSerializer manager = new UndoSerializer("NonTrivialClass", 2, stack);
-        String z_data = UndoSerializer.serialize(manager, true, null);
-        System.out.println("zipped length : " + z_data.length());
-        UndoSerializer managerBack = UndoSerializer.deserialize(z_data, null);
-        assertEquals(3, manager.getStack().getIdx());
-        assertEquals(8, ((NonTrivialClass) manager.getStack().getSubj()).items.size());
-
-        // After deserialization
-        // Undo macro
-        manager.getStack().undo();
-        assertEquals(2, manager.getStack().getIdx());
-        assertEquals(2, ((NonTrivialClass) manager.getStack().getSubj()).items.size());
-
-        // Undo macro
-        manager.getStack().redo();
-        assertEquals(3, manager.getStack().getIdx());
-        assertEquals(8, ((NonTrivialClass) manager.getStack().getSubj()).items.size());
-
-    }
-
-    /**
      * Real macros is a standalone macro-command that may be applied to our subject and added to our stack.
-     *
+     * <p>
      * TODO Перевод
-     *
+     * <p>
      * Другими словами это reusable набор команд.
-     *
      */
     @Test
     public void testRealMacros() throws Exception {
@@ -854,11 +697,11 @@ public class UndoStackTest implements Serializable {
 
         UndoStack stack1 = UndoPacket
                 .peek(pack, null)
-                .get(new UndoPacket.OnRestore() {
+                .restore(new UndoPacket.OnRestore() {
                     @Override
                     public Object handle(Serializable processedSubj, SubjInfo subjInfo) {
                         // Always return null for unexpected result.
-                        return SUBJ_ID.equals(subjInfo.id) ? (ArrayList<String>)processedSubj : null;
+                        return SUBJ_ID.equals(subjInfo.id) ? (ArrayList<String>) processedSubj : null;
                     }
                 })
                 .stack(new UndoPacket.OnPrepareStack() {
@@ -866,7 +709,7 @@ public class UndoStackTest implements Serializable {
                     public void apply(UndoStack stack, SubjInfo subjInfo) {
                         stack.getLocalContexts().put(TextSampleCommands.TEXT_CTX_KEY, subj1);
                         subj1.clear();
-                        subj1.text.addAll((ArrayList<String>)stack.getSubj());
+                        subj1.text.addAll((ArrayList<String>) stack.getSubj());
                     }
                 });
 

@@ -75,7 +75,7 @@ public class NonTrivialClass implements Serializable {
 
         @Override
         protected void doRedo() {
-            if(null == item) {
+            if (null == item) {
                 item = new Item(type);
                 initialPos = scene.items.size() * 2;
             }
@@ -115,14 +115,14 @@ public class NonTrivialClass implements Serializable {
 
         @Override
         protected void doUndo() {
-            if(item != null){
+            if (item != null) {
                 scene.items.add(item);
             }
         }
 
         @Override
         protected void doRedo() {
-            if(item != null) {
+            if (item != null) {
                 scene.items.remove(item);
             }
 
@@ -172,9 +172,9 @@ public class NonTrivialClass implements Serializable {
 
         @Override
         public boolean mergeWith(UndoCommand cmd) {
-            if(cmd instanceof MovedCommand){
+            if (cmd instanceof MovedCommand) {
                 Item item = ((MovedCommand) cmd).item;
-                if(item == this.item) {
+                if (item == this.item) {
                     newPos = item.x;
                     setCaption(ConstForTest.CMD_MOV + " to " + item.x);
                     return true;

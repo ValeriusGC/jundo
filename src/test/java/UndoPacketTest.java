@@ -1,229 +1,428 @@
-import com.gdetotut.jundo.RefCmd;
+import com.gdetotut.jundo.UndoCommand;
 import com.gdetotut.jundo.UndoPacket;
-import com.gdetotut.jundo.UndoPacket.SubjInfo;
 import com.gdetotut.jundo.UndoStack;
 import javafx.scene.paint.Color;
-import org.junit.Rule;
+import javafx.scene.shape.Circle;
+import javafx.scene.shape.Rectangle;
+import javafx.scene.shape.Shape;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
-import some.Point;
+import some.SimpleUndoWatcher;
+
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
 
-public class UndoPacketTest {
-
-    @Rule
-    public ExpectedException thrown = ExpectedException.none();
+/**
+ * We must make it serializable because some inner classes are subject to serialize.
+ */
+public class UndoPacketTest implements Serializable {
 
     /**
-     * Simple storing of Serializable object
+     * Here {@link UndoStack} has non-serializable subject.
+     *
      * @throws Exception
      */
     @Test
-    public void testSimpleStore() throws Exception {
+    public void testForNonSerializable() throws Exception {
 
-        Point pt = new Point(-30, -40);
-        assertEquals(-30, pt.getX());
-        assertEquals(-40, pt.getY());
+        class Util {
+            private String circleToString(Circle circle) {
+                ArrayList<String> param = new ArrayList<>();
+                param.add(String.valueOf(circle.getRadius()));
+                param.add(String.valueOf(circle.getFill()));
+                return String.join(",", param);
+            }
 
-        UndoStack stack = new UndoStack(pt, null);
-        stack.push(new RefCmd<>(stack, "Change x", pt::getX, pt::setX, 10, null));
-        stack.push(new RefCmd<>(stack, "Change y", pt::getY, pt::setY, 20, null));
+            private Object stringToCircle(String str) {
+                List<String> items = Arrays.asList(str.split("\\s*,\\s*"));
+                Circle c = new Circle(Double.valueOf(items.get(0)), Color.valueOf(items.get(1)));
+                return c;
+            }
 
-        // After 2 commands applied
-        assertEquals(2, stack.count());
-        assertEquals(2, stack.getIdx());
-        assertEquals(10, pt.getX());
-        assertEquals(20, pt.getY());
-
-        // One step back
-        stack.undo();
-        assertEquals(10, pt.getX());
-        assertEquals(-40, pt.getY());
-        assertEquals(1, stack.getIdx());
-
-        // After 2 commands applied again
-        stack.redo();
-        assertEquals(10, pt.getX());
-        assertEquals(20, pt.getY());
-        assertEquals(2, stack.getIdx());
-
-        // One step back
-        stack.undo();
-        assertEquals(1, stack.getIdx());
-
-        String packAsString = UndoPacket.make(stack, "some.Point", 1)
-                .extra("key_int", 20)
-                .extra("key_int", 30) // rewrited
-                .extra("key_str", "value")
-                .zipped(true)
-                .store();
-
-        System.out.println(packAsString.length());
-
-        // Распаковка информации и проверка соответствия стека ожидаемому.
-        UndoPacket packet = UndoPacket
-                .peek(packAsString, null)
-                .get(null);
-
-        SubjInfo subjInfo = packet.subjInfo;
-        assertEquals("some.Point", subjInfo.id);
-        assertEquals(1, subjInfo.version);
-        assertEquals(30, subjInfo.extras.get("key_int"));
-        assertEquals("value", subjInfo.extras.get("key_str"));
-        assertEquals(2, subjInfo.extras.size());
-
-        // Раз стек ожидаемого типа, можно смело распаковывать остальное
-        UndoStack stack1 = packet.stack(null);
-        // Это логично - стек, воссозданный заново ничего общего не имеет с текущим по адресному пространству
-        assertNotEquals(stack, stack1);
-        // Зато это должно быть одинаково
-        assertEquals(stack.getIdx(), stack1.getIdx());
-        assertEquals(stack.getCleanIdx(), stack1.getCleanIdx());
-        assertEquals(stack.getUndoLimit(), stack1.getUndoLimit());
-
-        // We shoul understand that after deserialization it is new instance of subj.
-        Point pt1 = (Point) stack1.getSubj();
-        assertEquals(pt, pt1);
-
-        stack1.redo();
-        // After 2 commands applied
-        assertEquals(2, stack1.count());
-        assertEquals(10, pt1.getX());
-        assertEquals(20, pt1.getY());
-
-        stack1.undo();
-        stack1.undo();
-        assertEquals(-30, pt1.getX());
-        assertEquals(-40, pt1.getY());
-
-    }
-
-    @Test
-    public void testEmptyExtras() throws Exception {
-
-    }
-
-
-    /**
-     * Tests exception
-     * @throws Exception
-     */
-    @Test
-    public void testNonSerializableException() throws Exception {
-
-        Color color = Color.RED;
-        UndoStack stack = new UndoStack(color, null);
-        thrown.expect(Exception.class);
-        UndoPacket
-                .make(stack, "", 1)
-                .store();
-        thrown = ExpectedException.none();
-
-    }
-
-    /**
-     * Simplified version for non-serializable with {@link com.gdetotut.jundo.UndoPacket.OnRestore}
-     */
-    @Test
-    public void testWithHandlers1() throws Exception {
-
-        {
-            Color color = Color.RED;
-            UndoStack stack = new UndoStack(color, null);
-            String str = UndoPacket
-                    .make(stack, "", 1)
-                    .onStore(subj -> "RED")
-                    .store();
-            // We need handler here 'cause we store with handler
-            UndoPacket
-                    .peek(str, null)
-                    .get((processedSubj, subjInfo) -> Color.RED);
         }
 
-    }
+        class CircleRadiusUndoCmd extends UndoCommand {
 
-    /**
-     * Tests exception
-     * Simplified version for non-serializable without {@link com.gdetotut.jundo.UndoPacket.OnRestore}
-     */
-    @Test
-    public void testWithHandlers2() throws Exception {
+            Double oldV;
+            Double newV;
 
-        {
-            Color color = Color.RED;
-            UndoStack stack = new UndoStack(color, null);
-            String str = UndoPacket
-                    .make(stack, "", 1)
-                    .onStore(new UndoPacket.OnStore() {
-                        @Override
-                        public String handle(Object subj) {
-                            return "RED";
-                        }
-                    })
-                    .store();
-            thrown.expect(Exception.class);
-            // We need handler here 'cause we store with handler
-            UndoPacket.peek(str, null).get(null);
-            thrown = ExpectedException.none();
+            public CircleRadiusUndoCmd(UndoStack owner, Circle circle, Double newV, UndoCommand parent) {
+                super(owner, "", parent);
+                oldV = circle.getRadius();
+                this.newV = newV;
+            }
+
+            @Override
+            protected void doRedo() {
+                Circle c = (Circle) owner.getSubj();
+                c.setRadius(newV);
+            }
+
+            @Override
+            protected void doUndo() {
+                Circle c = (Circle) owner.getSubj();
+                c.setRadius(oldV);
+            }
         }
 
-    }
+        int count = 101;
 
-    /**
-     * Tests exception
-     * - Simplified version for serializable without {@link com.gdetotut.jundo.UndoPacket.OnRestore}
-     */
-    @Test
-    public void testWithHandlers3() throws Exception {
-
-        {
-            Point pt = new Point(1, 2);
-            UndoStack stack = new UndoStack(pt, null);
-            // Here handler is redundant, only for illustrating pair OnStore/OnRestore
-            String str = UndoPacket
-                    .make(stack, "", 1)
-                    .onStore(new UndoPacket.OnStore() {
-                        @Override
-                        public String handle(Object subj) {
-                            return "Point";
-                        }
-                    })
-                    .store();
-            thrown.expect(Exception.class);
-            // We need handler here 'cause we store with handler
-            UndoPacket.peek(str, null).get(null);
-            thrown = ExpectedException.none();
+        Circle circle = new Circle(20.0, Color.RED);
+        // Circle is non-serializable subject.
+        UndoStack stack = new UndoStack(circle, null);
+        stack.setWatcher(new SimpleUndoWatcher());
+        for (int i = 0; i < count; ++i) {
+            stack.push(new CircleRadiusUndoCmd(stack, circle, i * 2.0, null));
         }
+        assertEquals(count, stack.count());
+        assertEquals(0, Double.compare(200.0, circle.getRadius()));
 
-    }
+        while (stack.canUndo())
+            stack.undo();
+        assertEquals(count, stack.count());
+        assertEquals(0, Double.compare(20.0, circle.getRadius()));
 
-    @Test
-    public void testNew() throws Exception {
+//        UndoSerializer managerBack = null;
+//        // Make unzipped serialization
+//        UndoSerializer manager = new UndoSerializer(null,2, stack);
+//        String data = UndoSerializer.serialize(manager, false, subj -> new Util().circleToString((Circle)subj));
+//        managerBack = UndoSerializer.deserialize(data, (subjAsString, subjInfo) -> new Util().stringToCircle(subjAsString));
 
-        Point pt = new Point(1, 2);
-        UndoStack stack = new UndoStack(pt, null);
-        // Here handler is redundant, only for illustrating pair OnStore/OnRestore
-        String str = UndoPacket
-                .make(stack, "", 1)
-                .onStore(subj -> "Point")
+        String store = UndoPacket
+                // It's a good practice always specify id.
+                .make(stack, "javafx.scene.shape.Circle", 1)
+                // Circle is not serializable so we have to make it by hands.
+                .onStore(subj -> new Util().circleToString((Circle) subj))
+                .zipped(true) // why not?
                 .store();
-
-        SubjInfo subjInfo = UndoPacket.peek(str, p -> p.id.equals("abc")).subjInfo;
-        UndoPacket packet = UndoPacket
-                .peek(str, it -> it.id.equals("abc"))
-                .get((processedSubj, it) -> "");
-        UndoStack stack1 = UndoPacket
-                .peek(str, it -> it.id.equals("abc"))
-                .get((processedSubj, it) -> "")
-                .stack((s, si) -> {
-                    if(si.version == 2) {
-                        s.getLocalContexts().put("a", "aa");
-                        s.getLocalContexts().put("b", "bb");
+        UndoPacket packetBack = UndoPacket
+                // When we have no handlers, we still need to specify it explicitly.
+                .peek(store, subjInfo -> {
+                    // If not, no further restore and no excessive work.
+                    return "javafx.scene.shape.Circle".equals(subjInfo.id);
+                })
+                .restore((processedSubj, subjInfo) -> {
+                    // Strictly speaking we check id above, so check here just version.
+                    if (subjInfo.version != 1) {
+                        throw new Exception("Unexpected version");
                     }
+                    return new Util().stringToCircle((String) processedSubj);
                 });
+        UndoStack stack2 = packetBack
+                // When we have no handler, we still need to specify it explicitly.
+                .stack(null);
 
+        Circle circle1 = (Circle) stack2.getSubj();
+        assertEquals(count, stack2.count());
+        assertEquals(0, Double.compare(20.0, circle1.getRadius()));
+
+        while (stack2.canRedo())
+            stack2.redo();
+        assertEquals(0, Double.compare(200.0, circle1.getRadius()));
     }
 
+
+    /**
+     * Tests complex non-serializable class as subject for UndoStack
+     *
+     * @throws Exception
+     */
+    @Test
+    public void testComplexSubj() throws Exception {
+
+        // Non-serializable subject
+        class Canvas {
+            final static int CT_Circle = 1;
+            final static int CT_Rect = 2;
+            List<Shape> shapes = new ArrayList<>();
+
+        }
+
+        // Context #1
+        class LocalContext {
+            final String ADD = "cmd_add";
+            final String REMOVE = "cmd_remove";
+            final String RESIZE = "cmd_resize";
+        }
+
+        // Context #2
+        class LocalContext1 {
+            final String ADD = "cmd_add1";
+            final String REMOVE = "cmd_remove1";
+            final String RESIZE = "cmd_resize1";
+        }
+
+        // Makes Shapes for Canvas and converts String <--> Canvas
+        class Factory {
+
+            Shape make(int type) {
+                switch (type) {
+                    case Canvas.CT_Circle:
+                        return new Circle(10.0, Color.RED);
+                    case Canvas.CT_Rect:
+                    default:
+                        return new Rectangle(10.0, 10.0, Color.BLUE);
+                }
+            }
+
+            private String toStr(Canvas canvas) {
+                ArrayList<String> param = new ArrayList<>();
+                for (Shape shape :
+                        canvas.shapes) {
+                    if (shape.getClass() == Circle.class) {
+                        param.add(String.valueOf(Canvas.CT_Circle));
+                        param.add(String.valueOf(((Circle) shape).getRadius()));
+                    } else {
+                        param.add(String.valueOf(Canvas.CT_Rect));
+                        param.add(String.valueOf(((Rectangle) shape).getWidth()));
+                    }
+                }
+                return String.join(",", param);
+            }
+
+            private Object toSubj(String str) {
+                Canvas canvas = new Canvas();
+                List<String> items = Arrays.asList(str.split("\\s*,\\s*"));
+                int i = 0;
+                Shape shape = null;
+                while (i < items.size() - 1) {
+                    int type = Integer.parseInt(items.get(i++));
+                    Double val = Double.parseDouble(items.get(i++));
+                    if (type == Canvas.CT_Circle) {
+                        shape = new Circle(val);
+                    } else {
+                        shape = new Rectangle(val, val);
+                    }
+                    canvas.shapes.add(shape);
+                }
+                return canvas;
+            }
+
+        }
+
+        // Controller of Canvas undo commands.
+        class CanvasCmdCtrl implements Serializable {
+
+            // Adds Shape to Canvas
+            class Add extends UndoCommand {
+                int type;
+
+                public Add(UndoStack owner, int type, UndoCommand parent) {
+                    super(owner, "", parent);
+                    this.type = type;
+                    LocalContext ctx = (LocalContext) owner.getLocalContexts().get("resources");
+                    setCaption(ctx.ADD);
+                }
+
+                @Override
+                protected void doRedo() {
+                    ((Canvas) owner.getSubj()).shapes.add(new Factory().make(type));
+                }
+
+                @Override
+                protected void doUndo() {
+                    List<Shape> shapes = ((Canvas) owner.getSubj()).shapes;
+                    shapes.remove(shapes.size() - 1);
+                }
+            }
+
+            // Removes Shape from Canvas
+            class Remove extends UndoCommand {
+                int type;
+
+                public Remove(UndoStack owner, UndoCommand parent) {
+                    super(owner, "", parent);
+                    List<Shape> shapes = ((Canvas) owner.getSubj()).shapes;
+                    this.type = shapes.get(shapes.size() - 1) instanceof Circle ? Canvas.CT_Circle : Canvas.CT_Rect;
+
+                    LocalContext ctx = (LocalContext) owner.getLocalContexts().get("resources");
+                    setCaption(ctx.REMOVE);
+                }
+
+                @Override
+                protected void doRedo() {
+                    List<Shape> shapes = ((Canvas) owner.getSubj()).shapes;
+                    shapes.remove(shapes.size() - 1);
+                }
+
+                @Override
+                protected void doUndo() {
+                    ((Canvas) owner.getSubj()).shapes.add(new Factory().make(type));
+                }
+            }
+
+            //
+            class Resize extends UndoCommand {
+                int idx;
+                double oldV;
+                double newV;
+
+                public Resize(UndoStack owner, UndoCommand parent, int idx, double newValue) {
+                    super(owner, "", parent);
+                    this.idx = idx;
+                    this.newV = newValue;
+
+                    LocalContext ctx = (LocalContext) owner.getLocalContexts().get("resources");
+                    setCaption(ctx.RESIZE);
+
+                }
+
+                @Override
+                protected void doRedo() {
+                    List<Shape> shapes = ((Canvas) owner.getSubj()).shapes;
+                    Shape shape = shapes.get(idx);
+                    if (shape instanceof Circle) {
+                        oldV = ((Circle) shape).getRadius();
+                        ((Circle) shape).setRadius(newV);
+                    } else {
+                        oldV = ((Rectangle) shape).getWidth();
+                        ((Rectangle) shape).setWidth(newV);
+                        ((Rectangle) shape).setHeight(newV);
+                    }
+                }
+
+                @Override
+                protected void doUndo() {
+                    List<Shape> shapes = ((Canvas) owner.getSubj()).shapes;
+                    Shape shape = shapes.get(idx);
+                    if (shape instanceof Circle) {
+                        ((Circle) shape).setRadius(oldV);
+                    } else {
+                        ((Rectangle) shape).setWidth(oldV);
+                        ((Rectangle) shape).setHeight(oldV);
+                    }
+                }
+            }
+
+        }
+
+        /////////////////////////////
+
+        // First only add/remove
+        Canvas canvas = new Canvas();
+        // Use non-serializable subject.
+        UndoStack stack = new UndoStack(canvas, null);
+        // Use local context.
+        stack.getLocalContexts().put("resources", new LocalContext());
+        stack.push(new CanvasCmdCtrl().new Add(stack, Canvas.CT_Circle, null));
+        stack.push(new CanvasCmdCtrl().new Add(stack, Canvas.CT_Rect, null));
+        stack.push(new CanvasCmdCtrl().new Add(stack, Canvas.CT_Circle, null));
+        stack.push(new CanvasCmdCtrl().new Add(stack, Canvas.CT_Rect, null));
+        assertEquals(4, canvas.shapes.size());
+        assertEquals(Circle.class, canvas.shapes.get(0).getClass());
+        assertEquals(Rectangle.class, canvas.shapes.get(1).getClass());
+        stack.undo();
+        stack.undo();
+        stack.undo();
+        stack.undo();
+        assertEquals(0, canvas.shapes.size());
+        stack.setIndex(100);
+        assertEquals(4, stack.getIdx());
+        assertEquals(4, canvas.shapes.size());
+
+        // Remove last one and return back
+        stack.push(new CanvasCmdCtrl().new Remove(stack, null));
+        assertEquals(3, canvas.shapes.size());
+
+        stack.undo();
+        assertEquals(4, canvas.shapes.size());
+        assertEquals(5, stack.count());
+
+        assertEquals(new LocalContext().ADD, stack.getCommand(0).getCaption());
+        assertEquals(new LocalContext().ADD, stack.getCommand(1).getCaption());
+        assertEquals(new LocalContext().ADD, stack.getCommand(2).getCaption());
+        assertEquals(new LocalContext().ADD, stack.getCommand(3).getCaption());
+        assertEquals(new LocalContext().REMOVE, stack.getCommand(4).getCaption());
+
+        // undo two and add new one. Should start new branch
+        stack.undo();
+        stack.undo();
+        assertEquals(2, canvas.shapes.size());
+        stack.push(new CanvasCmdCtrl().new Add(stack, Canvas.CT_Rect, null));
+        assertEquals(3, stack.count());
+
+
+        // Serialization after add/remove
+        {
+            String store = UndoPacket
+                    // It's a good practice always specify id.
+                    .make(stack, "local.Canvas", 2)
+                    // We need convert non-serializable subject by hand.
+                    .onStore(subj -> new Factory().toStr((Canvas) subj))
+                    .zipped(true) //
+                    .store();
+            UndoStack stack1 = UndoPacket
+                    // When we have no handlers, we still need to specify it explicitly.
+                    .peek(store, subjInfo -> {
+                        // This way we check our subject; if false no further unpacking and no excessive work.
+                        return "local.Canvas".equals(subjInfo.id);
+                    })
+                    .restore((processedSubj, subjInfo) -> {
+                        if (subjInfo.version != 2) {
+                            throw new Exception("unexpected version");
+                        }
+                        return new Factory().toSubj((String) processedSubj);
+                    })
+                    .stack((stack2, subjInfo) -> {
+                        // Good place to restore local contexts.
+                        stack2.getLocalContexts().put("resources", new LocalContext1());
+                    });
+            Canvas canvas1 = (Canvas) stack1.getSubj();
+
+            stack1.undo();
+            stack1.undo();
+            assertEquals(1, canvas1.shapes.size());
+            stack1.setIndex(100);
+            assertEquals(3, stack1.getIdx());
+            assertEquals(3, canvas1.shapes.size());
+            assertEquals(3, stack1.count());
+
+            UndoCommand cmd = stack.getCommand(0);
+            assertEquals(new LocalContext().ADD, cmd.getCaption());
+        }
+
+        // Now change
+        Rectangle rect = (Rectangle) canvas.shapes.get(1);
+        assertEquals(0, Double.compare(10.0, rect.getWidth()));
+        stack.push(new CanvasCmdCtrl().new Resize(stack, null, 1, 50.0));
+        assertEquals(0, Double.compare(50.0, rect.getWidth()));
+        stack.undo();
+        assertEquals(0, Double.compare(10.0, rect.getWidth()));
+        stack.redo();
+        assertEquals(3, canvas.shapes.size());
+        {
+            String store = UndoPacket
+                    // It's a good practice always specify id.
+                    .make(stack, "local.Canvas", 2)
+                    // We need convert non-serializable subject by hand.
+                    .onStore(subj -> new Factory().toStr((Canvas) subj))
+                    .zipped(true) //
+                    .store();
+            UndoStack stack1 = UndoPacket
+                    // When we have no handlers, we still need to specify it explicitly.
+                    .peek(store, subjInfo -> {
+                        // This way we check our subject; if false no further unpacking and no excessive work.
+                        return "local.Canvas".equals(subjInfo.id);
+                    })
+                    .restore((processedSubj, subjInfo) -> {
+                        if (subjInfo.version != 2) {
+                            throw new Exception("unexpected version");
+                        }
+                        return new Factory().toSubj((String) processedSubj);
+                    })
+                    .stack((stack2, subjInfo) -> {
+                        // Good place to restore local contexts.
+                        stack2.getLocalContexts().put("resources", new LocalContext1());
+                    });
+            Canvas canvas1 = (Canvas) stack1.getSubj();
+            assertEquals(3, canvas1.shapes.size());
+
+            Rectangle rect1 = (Rectangle) canvas1.shapes.get(1);
+            assertEquals(0, Double.compare(50.0, rect1.getWidth()));
+        }
+
+    }
 }

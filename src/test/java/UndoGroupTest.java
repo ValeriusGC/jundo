@@ -11,7 +11,7 @@ public class UndoGroupTest {
      * Group should not contain two or more stacks with one object.
      */
     @Test
-    public void oneGroupOneObject() {
+    public void testOneGroupOneObject() {
 
         SimpleClass<Integer> subj = new SimpleClass<>(Integer.class);
         UndoGroup group = new UndoGroup();

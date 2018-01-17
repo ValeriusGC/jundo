@@ -37,6 +37,7 @@ public class UndoGroup implements Serializable {
 
     /**
      * Adds {@link UndoStack} to this group.
+     *
      * @param stack stack to be added. Required (should not be null).
      */
     public void add(UndoStack stack) {
@@ -55,6 +56,7 @@ public class UndoGroup implements Serializable {
     /**
      * Removes stack from this group. If the stack was the active stack in the group,
      * the active stack becomes null.
+     *
      * @param stack stack to be removed. Required (should not be null).
      */
     public void remove(UndoStack stack) {
@@ -62,7 +64,7 @@ public class UndoGroup implements Serializable {
             throw new NullPointerException("stack");
         } else if (this.stacks.remove(stack)) {
             if (stack == this.active) {
-                this.setActive((UndoStack)null);
+                this.setActive((UndoStack) null);
             }
 
             stack.group = null;
@@ -71,6 +73,7 @@ public class UndoGroup implements Serializable {
 
     /**
      * Returns a list of stacks in this group.
+     *
      * @return Stack list.
      */
     public List<UndoStack> getStacks() {
@@ -81,6 +84,7 @@ public class UndoGroup implements Serializable {
      * Sets the active stack of this group to stack.
      * <p>If the stack is not a member of this group, this function does nothing.
      * Synonymous with calling {@link UndoStack#setActive} on stack.
+     *
      * @param stack stack to make active or null.
      */
     public void setActive(UndoStack stack) {
@@ -93,6 +97,7 @@ public class UndoGroup implements Serializable {
     /**
      * Returns the active stack of this group.
      * <p>If none of the stacks are active, or if the group is empty, this function returns null.
+     *
      * @return active stack or null.
      */
     public UndoStack getActive() {

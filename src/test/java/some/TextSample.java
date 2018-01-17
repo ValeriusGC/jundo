@@ -13,6 +13,7 @@ public class TextSample {
 
     /**
      * Добавление строки в текущую позицию
+     *
      * @param s
      */
     public void add(String s) {
@@ -23,6 +24,7 @@ public class TextSample {
 
     /**
      * Удаление субстроки, начиная с текущей позиции.
+     *
      * @param s
      */
     public void remove(String s) {
@@ -48,6 +50,7 @@ public class TextSample {
 
     /**
      * Вывод "на печать"
+     *
      * @return
      */
     public String print() {
