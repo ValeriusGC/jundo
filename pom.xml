@@ -6,7 +6,7 @@
 
     <groupId>com.gdetotut</groupId>
     <artifactId>jundo-framework</artifactId>
-    <version>1.10-SNAPSHOT</version>
+    <version>1.12-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>JUndo</name>
