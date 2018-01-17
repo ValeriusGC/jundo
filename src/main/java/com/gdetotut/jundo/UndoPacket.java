@@ -15,7 +15,7 @@ public class UndoPacket {
      * Для ручного управления упаковкой, например в случае, если субъект не имплементирует {@link java.io.Serializable}
      */
     public interface OnStore {
-        String handle(Object subj);
+        Serializable handle(Object subj);
     }
 
     /**

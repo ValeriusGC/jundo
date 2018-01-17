@@ -5,6 +5,7 @@ import some.*;
 import some.SimpleUndoWatcher;
 
 import java.io.*;
+import java.util.ArrayList;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
@@ -682,8 +683,8 @@ public class UndoStackTest implements Serializable {
         NonTrivialClass subj = new NonTrivialClass();
         UndoStack stack = new UndoStack(subj, null);
 
-        stack.push(new NonTrivialClass.AddCommand(stack, NonTrivialClass.Item.Type.CIRCLE, subj, null));
-        stack.push(new NonTrivialClass.AddCommand(stack, NonTrivialClass.Item.Type.RECT, subj, null));
+        stack.push(new NonTrivialClass.AddCommand(stack, CIRCLE, subj, null));
+        stack.push(new NonTrivialClass.AddCommand(stack, RECT, subj, null));
         assertEquals(2, stack.count());
         assertEquals(0, stack.getCleanIdx());
         assertEquals(true, stack.canUndo());
@@ -697,12 +698,12 @@ public class UndoStackTest implements Serializable {
         assertEquals(3, stack.count());
         assertEquals(false, stack.canUndo());
         stack.push(new NonTrivialClass.MovedCommand(stack, subj.items.get(0), 20, null));
-        stack.push(new NonTrivialClass.AddCommand(stack, NonTrivialClass.Item.Type.RECT, subj, null));
-        stack.push(new NonTrivialClass.AddCommand(stack, NonTrivialClass.Item.Type.RECT, subj, null));
-        stack.push(new NonTrivialClass.AddCommand(stack, NonTrivialClass.Item.Type.RECT, subj, null));
-        stack.push(new NonTrivialClass.AddCommand(stack, NonTrivialClass.Item.Type.RECT, subj, null));
-        stack.push(new NonTrivialClass.AddCommand(stack, NonTrivialClass.Item.Type.RECT, subj, null));
-        stack.push(new NonTrivialClass.AddCommand(stack, NonTrivialClass.Item.Type.RECT, subj, null));
+        stack.push(new NonTrivialClass.AddCommand(stack, RECT, subj, null));
+        stack.push(new NonTrivialClass.AddCommand(stack, RECT, subj, null));
+        stack.push(new NonTrivialClass.AddCommand(stack, RECT, subj, null));
+        stack.push(new NonTrivialClass.AddCommand(stack, RECT, subj, null));
+        stack.push(new NonTrivialClass.AddCommand(stack, RECT, subj, null));
+        stack.push(new NonTrivialClass.AddCommand(stack, RECT, subj, null));
         // Adding macrocommand not affects count
         assertEquals(3, stack.count());
 
@@ -768,7 +769,7 @@ public class UndoStackTest implements Serializable {
     public void testRealMacros() throws Exception {
 
         final TextSample subj = new TextSample();
-        UndoStack stack = new UndoStack(subj, null);
+        UndoStack stack = new UndoStack(new ArrayList<String>(), null);
         stack.getLocalContexts().put(TextSampleCommands.TEXT_CTX_KEY, subj);
 
         String s = "start: ";
@@ -842,12 +843,14 @@ public class UndoStackTest implements Serializable {
         // store/restore
         String pack = UndoPacket
                 .make(stack, SUBJ_ID, 1)
-                .onStore(o -> {
-                    TextSample ts = (TextSample) o;
-                    return ts.print();
-                })
+//                .onStore(o -> {
+//                    // Here it is redundant
+//                    return (String)o;
+//                })
                 .store();
-        /*UndoPacket packet = */
+
+        // Let's emulate new local context
+        TextSample subj1 = new TextSample();
 
         UndoStack stack1 = UndoPacket
                 .peek(pack, null)
@@ -855,13 +858,15 @@ public class UndoStackTest implements Serializable {
                     @Override
                     public Object handle(Serializable processedSubj, SubjInfo subjInfo) {
                         // Always return null for unexpected result.
-                        return SUBJ_ID.equals(subjInfo.id) ? processedSubj : null;
+                        return SUBJ_ID.equals(subjInfo.id) ? (ArrayList<String>)processedSubj : null;
                     }
                 })
                 .stack(new UndoPacket.OnPrepareStack() {
                     @Override
                     public void apply(UndoStack stack, SubjInfo subjInfo) {
-                        stack.getLocalContexts().put(TextSampleCommands.TEXT_CTX_KEY, subj);
+                        stack.getLocalContexts().put(TextSampleCommands.TEXT_CTX_KEY, subj1);
+                        subj1.clear();
+                        subj1.text.addAll((ArrayList<String>)stack.getSubj());
                     }
                 });
 
@@ -870,7 +875,7 @@ public class UndoStackTest implements Serializable {
 
         // pos.0
         stack1.setIndex(0);
-        System.out.println(subj.print());
+        System.out.println(subj1.print());
 
         // repeat pos.1
         stack1.redo();
@@ -878,35 +883,35 @@ public class UndoStackTest implements Serializable {
         testText = new TextSample();
         testText.addLine();
         testText.add(s);
-        assertEquals(subj, testText);
-        System.out.println(subj.print());
+        assertEquals(subj1, testText);
+        System.out.println(subj1.print());
         assertEquals(2, stack1.getIdx());
 
         // repeat pos.2
         stack1.redo();
         testText.add(s2);
-        assertEquals(subj, testText);
-        System.out.println(subj.print());
+        assertEquals(subj1, testText);
+        System.out.println(subj1.print());
 
         // repeat pos.3: It shows that macros restored correctly
-        stack1.push(new TextSampleCommands.AddLine(stack, "new line", null));
+        stack1.push(new TextSampleCommands.AddLine(stack1, "new line", null));
         testText.addLine();
-        assertEquals(subj, testText);
+        assertEquals(subj1, testText);
         UndoCommand macro1 = stack1.clone(stack1.getMacros().get(0));
         stack1.push(macro1);
         testText.add(s2);
-        assertEquals(subj, testText);
-        System.out.println(subj.print());
+        assertEquals(subj1, testText);
+        System.out.println(subj1.print());
 
         // Use macros from zero point
         stack1.setIndex(0);
-        stack1.push(new TextSampleCommands.AddLine(stack, "new line", null));
+        stack1.push(new TextSampleCommands.AddLine(stack1, "new line", null));
         stack1.push(macro1);
         testText.clear();
         testText.addLine();
         testText.add(s2);
-        assertEquals(subj, testText);
-        System.out.println(subj.print());
+        assertEquals(subj1, testText);
+        System.out.println(subj1.print());
         assertEquals(2, stack1.count());
 
     }

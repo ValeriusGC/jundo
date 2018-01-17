@@ -27,12 +27,14 @@ public class TextSampleCommands implements Serializable{
         protected void doRedo() {
             TextSample textSample = (TextSample)owner.getLocalContexts().get(TEXT_CTX_KEY);
             textSample.add(str);
+            owner.setSubj(textSample.text);
         }
 
         @Override
         protected void doUndo() {
             TextSample textSample = (TextSample)owner.getLocalContexts().get(TEXT_CTX_KEY);
             textSample.remove(str);
+            owner.setSubj(textSample.text);
         }
     }
 
@@ -46,12 +48,14 @@ public class TextSampleCommands implements Serializable{
         protected void doRedo() {
             TextSample textSample = (TextSample)owner.getLocalContexts().get(TEXT_CTX_KEY);
             textSample.addLine();
+            owner.setSubj(textSample.text);
         }
 
         @Override
         protected void doUndo() {
             TextSample textSample = (TextSample)owner.getLocalContexts().get(TEXT_CTX_KEY);
             textSample.removeLine();
+            owner.setSubj(textSample.text);
         }
     }
 
