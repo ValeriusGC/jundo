@@ -1,5 +1,4 @@
 import com.gdetotut.jundo.*;
-import com.sun.xml.internal.bind.v2.TODO;
 import org.junit.Test;
 import some.*;
 import some.SimpleUndoWatcher;
@@ -12,6 +11,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static some.NonTrivialClass.Item.Type.CIRCLE;
 import static some.NonTrivialClass.Item.Type.RECT;
+import static some.TextSampleCommands.SUBJ_ID;
 
 public class UndoStackTest implements Serializable {
 
@@ -756,7 +756,7 @@ public class UndoStackTest implements Serializable {
     }
 
     /**
-     * Real macros is standalone macro-command that may be applied to our subject and added to our stack.
+     * Real macros is a standalone macro-command that may be applied to our subject and added to our stack.
      *
      * TODO Перевод
      *
@@ -764,7 +764,7 @@ public class UndoStackTest implements Serializable {
      *
      */
     @Test
-    public void testRealMacros() throws IOException, ClassNotFoundException {
+    public void testRealMacros() throws Exception {
 
         TextSample subj = new TextSample();
         UndoStack stack = new UndoStack(subj, null);
@@ -831,6 +831,27 @@ public class UndoStackTest implements Serializable {
         testText.remove(s);
         assertEquals(subj, testText);
         System.out.println(subj.print());
+
+        // store/restore
+        String pack = UndoPacket
+                .make(stack, SUBJ_ID, 1)
+                .onStore(o -> {
+                    TextSample ts = (TextSample) o;
+                    return ts.print();
+                })
+                .store();
+        /*UndoPacket packet = */
+        UndoPacket
+                .peek(pack, null)
+                .get(new UndoPacket.OnRestore() {
+                    @Override
+                    public Object handle(Serializable processedSubj, UndoPacket.SubjInfo subjInfo) {
+                        // Always return null for unexpected result.
+                        return SUBJ_ID.equals(subjInfo.id) ? processedSubj : null;
+                    }
+                });
+
+
     }
 
 }

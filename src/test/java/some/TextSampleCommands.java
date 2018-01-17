@@ -14,6 +14,7 @@ import java.util.List;
 public class TextSampleCommands implements Serializable{
 
     public static final String TEXT_CTX_KEY = "text_context";
+    public static final String SUBJ_ID = "some.TextSample";
 
     public static class AddString extends UndoCommand {
 

@@ -5,6 +5,8 @@ import java.util.Arrays;
 import java.util.Base64;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
@@ -21,7 +23,18 @@ public class UndoPacket {
      * Для ручного управления распаковкой, например в случае, если субъект не имплементирует {@link java.io.Serializable}
      */
     public interface OnRestore {
+        /**
+         *
+         * @param processedSubj Не обязательно это ручная строка. Возможно, обработчик вызван для чистого субъекта.
+         *                      ПОэтому это не String, a {@link Serializable}
+         * @param subjInfo
+         * @return
+         */
         Object handle(Serializable processedSubj, SubjInfo subjInfo);
+    }
+
+    public interface OnPrepareStack {
+        void apply(UndoStack stack, SubjInfo subjInfo);
     }
 
     /**
@@ -160,49 +173,59 @@ public class UndoPacket {
     //-------------------------------------------------------------------------------------------------
 
     public final boolean isExpected;
-
-    public final UndoStack stack;
+    private final UndoStack stack;
+    public final SubjInfo subjInfo;
 
     //-------------------------------------------------------------------------------------------------
 
-    public static Builder builder(UndoStack stack, String id, int version) {
+    public static Builder make(UndoStack stack, String id, int version) {
         return new Builder(stack, id, version);
     }
 
-    /**
-     * Распаковывает и возвращает часть строки, как доп.данные о субъекте.
-     * <p>Может сэкономить время и память при большом размере объекта.
-     * В случае, если субъект ожидаемого типа, можно запросить распаковку; иначе можно не тратить ресурсы.
-     * @param candidate
-     * @return
-     * @throws Exception
-     */
-    public static SubjInfo peek(String candidate) throws Exception {
-        if(null == candidate) {
-            throw new NullPointerException("candidate");
-        }
-        if(candidate.length() < Builder.HEADER_SIZE) {
-            throw new Exception("too small size");
+//    /**
+//     * Распаковывает и возвращает часть строки, как доп.данные о субъекте.
+//     * <p>Может сэкономить время и память при большом размере объекта.
+//     * В случае, если субъект ожидаемого типа, можно запросить распаковку; иначе можно не тратить ресурсы.
+//     * @param candidate
+//     * @return
+//     * @throws Exception
+//     */
+//    public static SubjInfo peek(String candidate) throws Exception {
+//        if(null == candidate) {
+//            throw new NullPointerException("candidate");
+//        }
+//        if(candidate.length() < Builder.HEADER_SIZE) {
+//            throw new Exception("too small size");
+//        }
+//
+//        String lenPart = candidate.substring(0, Builder.HEADER_SIZE);
+//        lenPart = lenPart.substring(0, lenPart.indexOf(Builder.HEADER_FILLER));
+//        long len = Long.valueOf(lenPart);
+//        String subjInfoCandidate = candidate.substring(Builder.HEADER_SIZE, (int)(Builder.HEADER_SIZE + len));
+//        Object obj = fromBase64(subjInfoCandidate);
+//        return (SubjInfo)obj;
+//    }
+
+
+    public static class Peeker {
+        public final SubjInfo subjInfo;
+        private final String candidate;
+        private final boolean allow;
+
+        Peeker(String candidate, SubjInfo subjInfo, boolean allow) throws Exception {
+            if(null == candidate) {
+                throw new Exception("candidate");
+            }
+            if(null == subjInfo) {
+                throw new Exception("subjInfo");
+            }
+
+            this.candidate = candidate;
+            this.subjInfo = subjInfo;
+            this.allow = allow;
         }
 
-        String lenPart = candidate.substring(0, Builder.HEADER_SIZE);
-        lenPart = lenPart.substring(0, lenPart.indexOf(Builder.HEADER_FILLER));
-        long len = Long.valueOf(lenPart);
-        String subjInfoCandidate = candidate.substring(Builder.HEADER_SIZE, (int)(Builder.HEADER_SIZE + len));
-        Object obj = fromBase64(subjInfoCandidate);
-        return (SubjInfo)obj;
-    }
-
-    /**
-     * Распаковывает и возвращает пакет.
-     * @param candidate
-     * @return
-     * @throws Exception
-     */
-    public static UndoPacket restore(String candidate, OnRestore handler) throws Exception {
-        if(null == candidate) {
-            throw new NullPointerException("candidate");
-        } else {
+        public UndoPacket get(OnRestore handler) throws Exception {
 
             String lenPart = candidate.substring(0, Builder.HEADER_SIZE);
             lenPart = lenPart.substring(0, lenPart.indexOf(Builder.HEADER_FILLER));
@@ -224,7 +247,6 @@ public class UndoPacket {
 
                 // Если хендлер назначен, надо его использовать
                 if(null != handler) {
-                    SubjInfo subjInfo = peek(candidate);
                     subj = handler.handle(data.subj, subjInfo);
                 }else if(data.subjHandled) {
                     throw new Exception("need subject handler");
@@ -235,10 +257,142 @@ public class UndoPacket {
                     subj = new Object();
                 }
                 stack.setSubj(subj);
-                UndoPacket packet = new UndoPacket(stack, isExp);
+                UndoPacket packet = new UndoPacket(stack, isExp, subjInfo);
                 return packet;
             }
         }
+
+
+    }
+
+//    public static class Rest {
+//        private final String candidate;
+//        private final SubjInfo subjInfo;
+//        private final boolean allow;
+//        //private OnRestore handler = null;
+//
+//        Rest(String candidate, SubjInfo subjInfo, boolean allow) {
+//            this.candidate = candidate;
+//            this.subjInfo = subjInfo;
+//            this.allow = allow;
+//        }
+//
+//        public UndoPacket restore(OnRestore handler) throws Exception {
+//            if(null == candidate) {
+//                throw new NullPointerException("candidate");
+//            } else {
+//
+//                String lenPart = candidate.substring(0, Builder.HEADER_SIZE);
+//                lenPart = lenPart.substring(0, lenPart.indexOf(Builder.HEADER_FILLER));
+//                long len = Long.valueOf(lenPart);
+//                String dataCandidate = candidate.substring((int)(Builder.HEADER_SIZE + len));
+//
+//                final byte[] arr = Base64.getUrlDecoder().decode(dataCandidate);
+//                final boolean zipped = (arr[0] == (byte) (GZIPInputStream.GZIP_MAGIC))
+//                        && (arr[1] == (byte) (GZIPInputStream.GZIP_MAGIC >> 8));
+//
+//                try (ObjectInputStream ois = zipped
+//                        ? new ObjectInputStream(new GZIPInputStream(new ByteArrayInputStream(arr)))
+//                        : new ObjectInputStream(new ByteArrayInputStream(arr))) {
+//
+//                    boolean isExp = true;
+//                    Data data = (Data) ois.readObject();
+//                    UndoStack stack = data.stack;
+//                    Object subj = data.subj;
+//
+//                    // Если хендлер назначен, надо его использовать
+//                    if(null != handler) {
+//                        subj = handler.handle(data.subj, subjInfo);
+//                    }else if(data.subjHandled) {
+//                        throw new Exception("need subject handler");
+//                    }
+//
+//                    if(null == subj) {
+//                        isExp = false;
+//                        subj = new Object();
+//                    }
+//                    stack.setSubj(subj);
+//                    UndoPacket packet = new UndoPacket(stack, isExp, subjInfo);
+//                    return packet;
+//                }
+//            }
+//        }
+//
+////        public restore()
+//
+//    }
+
+    public static Peeker peek(String candidate, Predicate<SubjInfo> predicate) throws Exception {
+        if(null == candidate) {
+            throw new NullPointerException("candidate");
+        }
+        if(candidate.length() < Builder.HEADER_SIZE) {
+            throw new Exception("too small size");
+        }
+        String lenPart = candidate.substring(0, Builder.HEADER_SIZE);
+        lenPart = lenPart.substring(0, lenPart.indexOf(Builder.HEADER_FILLER));
+        long len = Long.valueOf(lenPart);
+        String subjInfoCandidate = candidate.substring(Builder.HEADER_SIZE, (int)(Builder.HEADER_SIZE + len));
+        SubjInfo obj = (SubjInfo) fromBase64(subjInfoCandidate);
+
+        Peeker peeker = new Peeker(candidate, obj, null == predicate || predicate.test(obj));
+        return peeker;
+    }
+
+//    /**
+//     * Распаковывает и возвращает пакет.
+//     * @param candidate
+//     * @return
+//     * @throws Exception
+//     */
+//    public static UndoPacket restore(String candidate, OnRestore handler) throws Exception {
+//        if(null == candidate) {
+//            throw new NullPointerException("candidate");
+//        } else {
+//
+//            String lenPart = candidate.substring(0, Builder.HEADER_SIZE);
+//            lenPart = lenPart.substring(0, lenPart.indexOf(Builder.HEADER_FILLER));
+//            long len = Long.valueOf(lenPart);
+//            String dataCandidate = candidate.substring((int)(Builder.HEADER_SIZE + len));
+//
+//            final byte[] arr = Base64.getUrlDecoder().decode(dataCandidate);
+//            final boolean zipped = (arr[0] == (byte) (GZIPInputStream.GZIP_MAGIC))
+//                    && (arr[1] == (byte) (GZIPInputStream.GZIP_MAGIC >> 8));
+//
+//            try (ObjectInputStream ois = zipped
+//                    ? new ObjectInputStream(new GZIPInputStream(new ByteArrayInputStream(arr)))
+//                    : new ObjectInputStream(new ByteArrayInputStream(arr))) {
+//
+//                boolean isExp = true;
+//                Data data = (Data) ois.readObject();
+//                UndoStack stack = data.stack;
+//                Object subj = data.subj;
+//
+//                // Если хендлер назначен, надо его использовать
+//                SubjInfo subjInfo = null;
+//                if(null != handler) {
+//                    subjInfo = peek(candidate);
+//                    subj = handler.handle(data.subj, subjInfo);
+//                }else if(data.subjHandled) {
+//                    throw new Exception("need subject handler");
+//                }
+//
+//                if(null == subj) {
+//                    isExp = false;
+//                    subj = new Object();
+//                }
+//                stack.setSubj(subj);
+//                UndoPacket packet = new UndoPacket(stack, isExp, subjInfo);
+//                return packet;
+//            }
+//        }
+//    }
+
+    public UndoStack stack(OnPrepareStack handler) {
+        if(null != handler) {
+            handler.apply(stack, subjInfo);
+        }
+        return stack;
     }
 
     private static Object fromBase64(String candidate) throws IOException, ClassNotFoundException {
@@ -261,9 +415,10 @@ public class UndoPacket {
 
     }
 
-    private UndoPacket(UndoStack stack, boolean isExpected) {
+    private UndoPacket(UndoStack stack, boolean isExpected, SubjInfo subjInfo) {
         this.stack = stack;
         this.isExpected = isExpected;
+        this.subjInfo = subjInfo;
     }
 
 }

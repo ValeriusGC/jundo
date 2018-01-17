@@ -1,15 +1,12 @@
 import com.gdetotut.jundo.RefCmd;
 import com.gdetotut.jundo.UndoPacket;
+import com.gdetotut.jundo.UndoPacket.SubjInfo;
 import com.gdetotut.jundo.UndoStack;
 import javafx.scene.paint.Color;
-import javafx.scene.paint.Paint;
-import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import some.Point;
-
-import java.io.Serializable;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
@@ -56,7 +53,7 @@ public class UndoPacketTest {
         stack.undo();
         assertEquals(1, stack.getIdx());
 
-        String packAsString = UndoPacket.builder(stack, "some.Point", 1)
+        String packAsString = UndoPacket.make(stack, "some.Point", 1)
                 .extra("key_int", 20)
                 .extra("key_int", 30) // rewrited
                 .extra("key_str", "value")
@@ -66,7 +63,11 @@ public class UndoPacketTest {
         System.out.println(packAsString.length());
 
         // Распаковка информации и проверка соответствия стека ожидаемому.
-        UndoPacket.SubjInfo subjInfo = UndoPacket.peek(packAsString);
+        UndoPacket packet = UndoPacket
+                .peek(packAsString, null)
+                .get(null);
+
+        SubjInfo subjInfo = packet.subjInfo;
         assertEquals("some.Point", subjInfo.id);
         assertEquals(1, subjInfo.version);
         assertEquals(30, subjInfo.extras.get("key_int"));
@@ -74,26 +75,26 @@ public class UndoPacketTest {
         assertEquals(2, subjInfo.extras.size());
 
         // Раз стек ожидаемого типа, можно смело распаковывать остальное
-        UndoPacket packet = UndoPacket.restore(packAsString, null);
+        UndoStack stack1 = packet.stack(null);
         // Это логично - стек, воссозданный заново ничего общего не имеет с текущим по адресному пространству
-        assertNotEquals(stack, packet.stack);
+        assertNotEquals(stack, stack1);
         // Зато это должно быть одинаково
-        assertEquals(stack.getIdx(), packet.stack.getIdx());
-        assertEquals(stack.getCleanIdx(), packet.stack.getCleanIdx());
-        assertEquals(stack.getUndoLimit(), packet.stack.getUndoLimit());
+        assertEquals(stack.getIdx(), stack1.getIdx());
+        assertEquals(stack.getCleanIdx(), stack1.getCleanIdx());
+        assertEquals(stack.getUndoLimit(), stack1.getUndoLimit());
 
         // We shoul understand that after deserialization it is new instance of subj.
-        Point pt1 = (Point) packet.stack.getSubj();
+        Point pt1 = (Point) stack1.getSubj();
         assertEquals(pt, pt1);
 
-        packet.stack.redo();
+        stack1.redo();
         // After 2 commands applied
-        assertEquals(2, packet.stack.count());
+        assertEquals(2, stack1.count());
         assertEquals(10, pt1.getX());
         assertEquals(20, pt1.getY());
 
-        packet.stack.undo();
-        packet.stack.undo();
+        stack1.undo();
+        stack1.undo();
         assertEquals(-30, pt1.getX());
         assertEquals(-40, pt1.getY());
 
@@ -116,7 +117,7 @@ public class UndoPacketTest {
         UndoStack stack = new UndoStack(color, null);
         thrown.expect(Exception.class);
         UndoPacket
-                .builder(stack, "", 1)
+                .make(stack, "", 1)
                 .store();
         thrown = ExpectedException.none();
 
@@ -132,11 +133,13 @@ public class UndoPacketTest {
             Color color = Color.RED;
             UndoStack stack = new UndoStack(color, null);
             String str = UndoPacket
-                    .builder(stack, "", 1)
+                    .make(stack, "", 1)
                     .onStore(subj -> "RED")
                     .store();
             // We need handler here 'cause we store with handler
-            UndoPacket.restore(str, (processedSubj, subjInfo) -> Color.RED);
+            UndoPacket
+                    .peek(str, null)
+                    .get((processedSubj, subjInfo) -> Color.RED);
         }
 
     }
@@ -152,7 +155,7 @@ public class UndoPacketTest {
             Color color = Color.RED;
             UndoStack stack = new UndoStack(color, null);
             String str = UndoPacket
-                    .builder(stack, "", 1)
+                    .make(stack, "", 1)
                     .onStore(new UndoPacket.OnStore() {
                         @Override
                         public String handle(Object subj) {
@@ -162,7 +165,7 @@ public class UndoPacketTest {
                     .store();
             thrown.expect(Exception.class);
             // We need handler here 'cause we store with handler
-            UndoPacket.restore(str, null);
+            UndoPacket.peek(str, null).get(null);
             thrown = ExpectedException.none();
         }
 
@@ -180,7 +183,7 @@ public class UndoPacketTest {
             UndoStack stack = new UndoStack(pt, null);
             // Here handler is redundant, only for illustrating pair OnStore/OnRestore
             String str = UndoPacket
-                    .builder(stack, "", 1)
+                    .make(stack, "", 1)
                     .onStore(new UndoPacket.OnStore() {
                         @Override
                         public String handle(Object subj) {
@@ -190,12 +193,37 @@ public class UndoPacketTest {
                     .store();
             thrown.expect(Exception.class);
             // We need handler here 'cause we store with handler
-            UndoPacket.restore(str, null);
+            UndoPacket.peek(str, null).get(null);
             thrown = ExpectedException.none();
         }
 
     }
 
+    @Test
+    public void testNew() throws Exception {
 
+        Point pt = new Point(1, 2);
+        UndoStack stack = new UndoStack(pt, null);
+        // Here handler is redundant, only for illustrating pair OnStore/OnRestore
+        String str = UndoPacket
+                .make(stack, "", 1)
+                .onStore(subj -> "Point")
+                .store();
+
+        SubjInfo subjInfo = UndoPacket.peek(str, p -> p.id.equals("abc")).subjInfo;
+        UndoPacket packet = UndoPacket
+                .peek(str, it -> it.id.equals("abc"))
+                .get((processedSubj, it) -> "");
+        UndoStack stack1 = UndoPacket
+                .peek(str, it -> it.id.equals("abc"))
+                .get((processedSubj, it) -> "")
+                .stack((s, si) -> {
+                    if(si.version == 2) {
+                        s.getLocalContexts().put("a", "aa");
+                        s.getLocalContexts().put("b", "bb");
+                    }
+                });
+
+    }
 
 }
