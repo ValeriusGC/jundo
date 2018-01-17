@@ -1,4 +1,5 @@
 import com.gdetotut.jundo.*;
+import com.gdetotut.jundo.UndoPacket.SubjInfo;
 import org.junit.Test;
 import some.*;
 import some.SimpleUndoWatcher;
@@ -766,11 +767,12 @@ public class UndoStackTest implements Serializable {
     @Test
     public void testRealMacros() throws Exception {
 
-        TextSample subj = new TextSample();
+        final TextSample subj = new TextSample();
         UndoStack stack = new UndoStack(subj, null);
         stack.getLocalContexts().put(TextSampleCommands.TEXT_CTX_KEY, subj);
 
         String s = "start: ";
+        // pos.1: Two commands up
         stack.push(new TextSampleCommands.AddLine(stack, "new line", null));
         stack.push(new TextSampleCommands.AddString(stack, "new string", s, null));
         TextSample testText = new TextSample();
@@ -797,41 +799,46 @@ public class UndoStackTest implements Serializable {
         assertEquals(subj, testText);
         System.out.println(subj.print());
 
+        // pos.2: One command up and macros is created
         stack.beginMacro("macro 1");
         stack.push(new TextSampleCommands.AddString(stack, "new string", "Hello", null));
         stack.push(new TextSampleCommands.AddString(stack, "new string", ", ", null));
         stack.push(new TextSampleCommands.AddString(stack, "new string", "world!", null));
         stack.endMacro();
-        s = "Hello, world!";
-        testText.add(s);
+        String s2 = "Hello, world!";
+        testText.add(s2);
         assertEquals(subj, testText);
         System.out.println(subj.print());
 
         stack.undo();
-        testText.remove(s);
+        testText.remove(s2);
         assertEquals(subj, testText);
         System.out.println(subj.print());
 
         stack.redo();
-        testText.add(s);
+        testText.add(s2);
         assertEquals(subj, testText);
         System.out.println(subj.print());
 
-        // Теперь используем макрос
+        // pos.3: Теперь используем макрос
         stack.push(new TextSampleCommands.AddLine(stack, "new line", null));
         testText.addLine();
         assertEquals(subj, testText);
         UndoCommand macro = stack.clone(stack.getMacros().get(0));
         stack.push(macro);
-        testText.add(s);
+        testText.add(s2);
         assertEquals(subj, testText);
         System.out.println(subj.print());
         //
         stack.undo();
-        testText.remove(s);
+        testText.remove(s2);
         assertEquals(subj, testText);
+        assertEquals(5, stack.count());
+        assertEquals(4, stack.getIdx());
+
         System.out.println(subj.print());
 
+        //-----------------------------------------------------------------
         // store/restore
         String pack = UndoPacket
                 .make(stack, SUBJ_ID, 1)
@@ -841,16 +848,66 @@ public class UndoStackTest implements Serializable {
                 })
                 .store();
         /*UndoPacket packet = */
-        UndoPacket
+
+        UndoStack stack1 = UndoPacket
                 .peek(pack, null)
                 .get(new UndoPacket.OnRestore() {
                     @Override
-                    public Object handle(Serializable processedSubj, UndoPacket.SubjInfo subjInfo) {
+                    public Object handle(Serializable processedSubj, SubjInfo subjInfo) {
                         // Always return null for unexpected result.
                         return SUBJ_ID.equals(subjInfo.id) ? processedSubj : null;
                     }
+                })
+                .stack(new UndoPacket.OnPrepareStack() {
+                    @Override
+                    public void apply(UndoStack stack, SubjInfo subjInfo) {
+                        stack.getLocalContexts().put(TextSampleCommands.TEXT_CTX_KEY, subj);
+                    }
                 });
 
+        assertEquals(5, stack1.count());
+        assertEquals(4, stack1.getIdx());
+
+        // pos.0
+        stack1.setIndex(0);
+        System.out.println(subj.print());
+
+        // repeat pos.1
+        stack1.redo();
+        stack1.redo();
+        testText = new TextSample();
+        testText.addLine();
+        testText.add(s);
+        assertEquals(subj, testText);
+        System.out.println(subj.print());
+        assertEquals(2, stack1.getIdx());
+
+        // repeat pos.2
+        stack1.redo();
+        testText.add(s2);
+        assertEquals(subj, testText);
+        System.out.println(subj.print());
+
+        // repeat pos.3: It shows that macros restored correctly
+        stack1.push(new TextSampleCommands.AddLine(stack, "new line", null));
+        testText.addLine();
+        assertEquals(subj, testText);
+        UndoCommand macro1 = stack1.clone(stack1.getMacros().get(0));
+        stack1.push(macro1);
+        testText.add(s2);
+        assertEquals(subj, testText);
+        System.out.println(subj.print());
+
+        // Use macros from zero point
+        stack1.setIndex(0);
+        stack1.push(new TextSampleCommands.AddLine(stack, "new line", null));
+        stack1.push(macro1);
+        testText.clear();
+        testText.addLine();
+        testText.add(s2);
+        assertEquals(subj, testText);
+        System.out.println(subj.print());
+        assertEquals(2, stack1.count());
 
     }
 

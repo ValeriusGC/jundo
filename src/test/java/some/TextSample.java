@@ -42,6 +42,10 @@ public class TextSample {
         text.remove(text.size() - 1);
     }
 
+    public void clear() {
+        text.clear();
+    }
+
     /**
      * Вывод "на печать"
      * @return
