@@ -17,18 +17,18 @@ public final class RefCmd<V extends Serializable> extends UndoCommand {
     /**
      * Constructs object.
      *
-     * @param stack    required.
-     * @param caption  caption for the command.
+     * @param owner   the stack that owns this command. Required.
+     * @param caption a short string describing what this command does. Optional.
      * @param getter   a reference to getter-method for this value. Getter shouldn't has parameters
      *                 and should return value of the V type. Required.
      * @param setter   a reference to setter-method for this value. Getter should has parameter
      *                 of the V type and shouldn't return value. Required.
      * @param newValue the value to set to.
-     * @param parent   command's parent. Used in the concept of 'command-chain'.  Optional.
+     * @param parent  command's parent. Used in the concept of 'command-chain'.  Optional.
      */
-    public RefCmd(UndoStack stack, String caption, Getter<V> getter, Setter<V> setter, V newValue,
+    public RefCmd(UndoStack owner, String caption, Getter<V> getter, Setter<V> setter, V newValue,
                   UndoCommand parent) {
-        super(stack, caption, parent);
+        super(owner, caption, parent);
         if (getter == null) {
             throw new NullPointerException("getter");
         } else if (setter == null) {

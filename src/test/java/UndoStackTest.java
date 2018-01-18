@@ -5,6 +5,7 @@ import some.*;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
@@ -17,6 +18,8 @@ public class UndoStackTest implements Serializable {
     UndoStack stack;
     Object[] arr;
     Serializable subj;
+
+    // TODO: 18.01.18 Перевод в тестах! 
 
     /**
      * Helper function.

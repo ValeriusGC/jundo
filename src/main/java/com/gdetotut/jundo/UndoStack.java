@@ -4,33 +4,65 @@ import java.io.*;
 import java.util.*;
 
 /**
+ * Stack of entire {@link UndoCommand} chain for subject.
  * <b>Main characteristic of {@link UndoStack} is that two different stacks should not share one subject.</b>
  * <p>Otherwise {@link UndoGroup} may not add them both, and there will be collision when undoing one subject
  * via different stacks.
  */
 public class UndoStack implements Serializable {
 
+    /**
+     * Group of stacks that owns this stack. Optional.
+     */
     UndoGroup group;
 
     /**
-     * Keeps the subject for whom {@link #commands} are behave.
-     * <p>Required parameter.
+     * Keeps the subject for whom {@link #commands} are behave. Required.
      */
     private transient Object subj;
+
+    /**
+     * Index of current command that redo.
+     */
     private int idx;
+
+    /**
+     * Index of clean state command.
+     */
     private int cleanIdx;
+
+    /**
+     * List of commands.
+     */
     private List<UndoCommand> commands;
+
+    /**
+     * Macro that is been building at this moment.
+     */
     private UndoCommand macroCmd;
+
+    /**
+     * List of macros.
+     */
     private List<UndoCommand> macros;
+
+    /**
+     * Limit for command's stack.
+     */
     private int undoLimit;
+
+    /**
+     * Client that watching events. Optional.
+     */
     private transient UndoWatcher watcher;
 
+    /**
+     * List of local contexts. Optional.
+     */
     private transient Map<String, Object> localContexts;
 
-    // TODO: 07.01.18 Перевод!!!!!
     /**
-     * Суспендер нужен для приостановки добавления команд в момент выполнения undo/redo.
-     * В некоторых случаях только это может избавить от добавления "паразитных команд".
+     * Flag for get rid of parasite commands.
      */
     private boolean suspend = false;
 
@@ -53,6 +85,9 @@ public class UndoStack implements Serializable {
         }
     }
 
+    /**
+     * @return List of local contexts.
+     */
     public Map<String, Object> getLocalContexts() {
         if (localContexts == null) {
             localContexts = new HashMap<>();
@@ -71,14 +106,6 @@ public class UndoStack implements Serializable {
         }
 
         boolean wasClean = isClean();
-//
-//
-//        if(null != macroCmd){
-//            macroCmd.clear();
-//        }
-//
-//
-
         for (UndoCommand cmd : commands) {
             if (cmd.children != null) {
                 cmd.children.clear();
@@ -125,7 +152,7 @@ public class UndoStack implements Serializable {
             UndoCommand copy = null;
             try {
                 copy = clone(cmd);
-            } catch (IOException | ClassNotFoundException e) {
+            } catch (Exception e) {
                 e.printStackTrace();
             }
 
@@ -386,7 +413,7 @@ public class UndoStack implements Serializable {
      * <p>The stack becomes enabled and appropriate signals are emitted when {@link #endMacro()} is called
      * for the outermost macro.
      *
-     * @param caption description for this macro.
+     * @param caption description for this macro. Optional.
      */
     public void beginMacro(String caption) {
 
@@ -399,7 +426,7 @@ public class UndoStack implements Serializable {
 
         try {
             macroCmd = clone(startMacro);
-        } catch (IOException | ClassNotFoundException e) {
+        } catch (Exception  e) {
             System.err.println(e.getLocalizedMessage());
             endMacro();
         }
@@ -427,23 +454,6 @@ public class UndoStack implements Serializable {
         }
     }
 
-    public UndoCommand cloneCommand(int idx) throws IOException, ClassNotFoundException {
-        if (commands == null || idx < 0 || idx >= commands.size()) {
-            return null;
-        }
-
-        UndoCommand cmd = commands.get(idx);
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        try (final ObjectOutputStream oos = new ObjectOutputStream(baos)) {
-            oos.writeObject(cmd);
-        }
-
-        try (ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(baos.toByteArray()))) {
-            UndoCommand cmdClone = (UndoCommand) ois.readObject();
-            return cmdClone;
-        }
-    }
-
     /**
      * Ends composition of a macro command.
      * <p>If this is the outermost macro in a set nested macros, this function
@@ -463,6 +473,9 @@ public class UndoStack implements Serializable {
         }
     }
 
+    /**
+     * Drops macro creation.
+     */
     public void dropMacro() {
         macroCmd = null;
         if (null != watcher) {
@@ -562,6 +575,10 @@ public class UndoStack implements Serializable {
         return subj;
     }
 
+    /**
+     * Reset subj. Used in {@link UndoPacket}.
+     * <p><b>Do not use it!</b>
+     */
     public void setSubj(Object value) {
         if (null == value) {
             throw new NullPointerException("value");
@@ -570,12 +587,15 @@ public class UndoStack implements Serializable {
         }
     }
 
+    /**
+     * @return List of macros.
+     */
     public List<UndoCommand> getMacros() {
         return macros;
     }
 
     /**
-     * @return The subscribed wather if it exists or null.
+     * @return The subscribed watcher if it exists or null.
      */
     public UndoWatcher getWatcher() {
         return watcher;
@@ -588,6 +608,33 @@ public class UndoStack implements Serializable {
      */
     public void setWatcher(UndoWatcher watcher) {
         this.watcher = watcher;
+    }
+
+    /**
+     * Clones command. Use it for clone macro only!
+     * @param cmd macro for clone.
+     * @return Cloned command.
+     */
+    public UndoCommand clone(UndoCommand cmd) throws Exception {
+        if (null == cmd) {
+            throw new NullPointerException("cmd");
+        }
+
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        try (final ObjectOutputStream oos = new ObjectOutputStream(baos)) {
+            oos.writeObject(cmd);
+        }
+
+        try (ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(baos.toByteArray()))) {
+            UndoCommand cmdClone = (UndoCommand) ois.readObject();
+            cmdClone.owner = cmd.owner;
+            if (null != cmdClone.children) {
+                for (UndoCommand uc : cmdClone.children) {
+                    uc.owner = cmd.owner;
+                }
+            }
+            return cmdClone;
+        }
     }
 
     /**
@@ -671,28 +718,6 @@ public class UndoStack implements Serializable {
             } else {
                 cleanIdx -= delCnt;
             }
-        }
-    }
-
-    public UndoCommand clone(UndoCommand cmd) throws IOException, ClassNotFoundException {
-        if (null == cmd) {
-            throw new NullPointerException("cmd");
-        }
-
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        try (final ObjectOutputStream oos = new ObjectOutputStream(baos)) {
-            oos.writeObject(cmd);
-        }
-
-        try (ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(baos.toByteArray()))) {
-            UndoCommand cmdClone = (UndoCommand) ois.readObject();
-            cmdClone.owner = cmd.owner;
-            if (null != cmdClone.children) {
-                for (UndoCommand uc : cmdClone.children) {
-                    uc.owner = cmd.owner;
-                }
-            }
-            return cmdClone;
         }
     }
 

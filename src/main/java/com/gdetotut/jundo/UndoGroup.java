@@ -6,8 +6,8 @@ import java.util.List;
 
 /**
  * The UndoGroup class is a group of {@link UndoStack} objects.
- * <p>An application often has multiple undo stacks, one for each opened document. At the same time,
- * an application usually has one undo action and one redo action, which triggers undo or redo in the active document.</p>
+ * <p>An application often has multiple undo stacks, one for each subject. At the same time,
+ * an application usually has one undo action and one redo action, which triggers undo or redo for the active subject.
  * <p>UndoGroup is a group of {@link UndoStack} objects, one of which may be active.
  * It has an {@link #undo} and {@link #redo} methods, which calls {@link UndoStack#undo} and {@link UndoStack#redo}
  * for the active stack.
@@ -16,12 +16,19 @@ import java.util.List;
  * <p><b>UndoGroup doesn't allow to add 2 stacks with the same subject (compares by address) because
  * it is a logical violation.</b>
  * <p>It is the programmer's responsibility to specify which stack is active by calling {@link UndoStack#setActive},
- * usually when the associated document window receives focus. The active stack may also be set with {@link #setActive},
+ * usually when the associated subject "receives focus". The active stack may also be set with {@link #setActive},
  * and is returned by {@link #getActive}.
  */
 public class UndoGroup implements Serializable {
 
+    /**
+     * Active stack. Can be null if no one stack is active at the moment.
+     */
     private UndoStack active;
+
+    /**
+     * List of associated stacks.
+     */
     private final List<UndoStack> stacks = new ArrayList<>();
 
     /**
@@ -38,7 +45,7 @@ public class UndoGroup implements Serializable {
     /**
      * Adds {@link UndoStack} to this group.
      *
-     * @param stack stack to be added. Required (should not be null).
+     * @param stack stack to be added. Required.
      */
     public void add(UndoStack stack) {
         if (stack == null) {
@@ -57,7 +64,7 @@ public class UndoGroup implements Serializable {
      * Removes stack from this group. If the stack was the active stack in the group,
      * the active stack becomes null.
      *
-     * @param stack stack to be removed. Required (should not be null).
+     * @param stack stack to be removed. Required.
      */
     public void remove(UndoStack stack) {
         if (stack == null) {
