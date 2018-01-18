@@ -37,7 +37,7 @@ public class UndoStackTest implements Serializable {
      * Helper function.
      */
     @SuppressWarnings("unchecked")
-    public <V extends Serializable> void testSimple() throws Exception {
+    public <V extends Serializable> void makeTestSimple() throws Exception {
 
         String store = UndoPacket
                 .make(stack, "not_used", 333)
@@ -350,19 +350,19 @@ public class UndoStackTest implements Serializable {
     public void testSimpleUndo() throws Exception {
 
         initSimple(String.class, new String[]{"one", null, "two"});
-        testSimple();
+        makeTestSimple();
 
         initSimple(Integer.class, new Integer[]{1, 2, 3, null, 8});
-        testSimple();
+        makeTestSimple();
 
         initSimple(Long.class, new Long[]{11L, 12L, 13L, 14L, null});
-        testSimple();
+        makeTestSimple();
 
         initSimple(Double.class, new Double[]{1.1, 2.2, 3.222});
-        testSimple();
+        makeTestSimple();
 
         initSimple(Boolean.class, new Boolean[]{true, false, true, null});
-        testSimple();
+        makeTestSimple();
 
     }
 
@@ -396,12 +396,6 @@ public class UndoStackTest implements Serializable {
             assertEquals(2, stack.count());
             assertEquals(0, stack.getIdx());
             assertEquals(0, ntc.items.size());
-//            System.out.println(ntc);
-
-//            UndoSerializer manager = new UndoSerializer(null, 333, stack);
-//            UndoSerializer managerBack =
-//                    UndoSerializer.deserialize(UndoSerializer.serialize(manager, false, null), null);
-//            UndoStack stackBack = managerBack.getStack();
 
             String store = UndoPacket
                     // It's a good practice always specify id.
@@ -508,11 +502,6 @@ public class UndoStackTest implements Serializable {
             assertEquals(1, ntc.items.size());
 
             // Serialize
-//            UndoSerializer manager = new UndoSerializer(null, 333, stack);
-//            UndoSerializer managerBack =
-//                    UndoSerializer.deserialize(UndoSerializer.serialize(manager, false, null), null);
-//            UndoStack stackBack = managerBack.getStack();
-
             String store = UndoPacket
                     // It's a good practice always specify id.
                     .make(stack, "some.NonTrivialClass", 1)
