@@ -13,7 +13,7 @@ The `Command pattern` is based on the idea that all editing in an application is
 
 So, a template implementation of UndoCommand was added, which allows creating a command for simply changing a property without creating a class (FunctionalCommand <V extends java.io.Serializable>).
 
- ```java
+```java
 // How FunctionalCommand works
 Point pt = new Point(-30, -40);
 UndoStack stack = new UndoStack(pt, null);
