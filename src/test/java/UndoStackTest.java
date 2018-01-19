@@ -18,9 +18,6 @@ public class UndoStackTest implements Serializable {
     UndoStack stack;
     Object[] arr;
     Serializable subj;
-
-    // TODO: 18.01.18 Перевод в тестах! 
-
     /**
      * Helper function.
      */
@@ -539,8 +536,6 @@ public class UndoStackTest implements Serializable {
     @Test
     public void testChain() {
 
-        // TODO Make the same in KUndo
-
         {
             // Independently
             final int x = 10;
@@ -595,10 +590,6 @@ public class UndoStackTest implements Serializable {
 
     /**
      * Real macros is a standalone macro-command that may be applied to our subject and added to our stack.
-     * <p>
-     * TODO Перевод
-     * <p>
-     * Другими словами это reusable набор команд.
      */
     @Test
     public void testRealMacros() throws Exception {
@@ -656,7 +647,7 @@ public class UndoStackTest implements Serializable {
         assertEquals(subj, testText);
         System.out.println(subj.print());
 
-        // pos.3: Теперь используем макрос
+        // pos.3: Use macro
         stack.push(new TextSampleCommands.AddLine(stack, "new line", null));
         testText.addLine();
         assertEquals(subj, testText);

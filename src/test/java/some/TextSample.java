@@ -5,14 +5,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+/**
+ * Sample class for macros example.
+ */
 public class TextSample {
-
-    // TODO: 16.01.18 Этот класс с "несколькими строками" будет примером для macros
 
     public final List<String> text = new ArrayList<>();
 
     /**
-     * Добавление строки в текущую позицию
+     * Adds substring to current position.
      *
      * @param s
      */
@@ -23,7 +24,7 @@ public class TextSample {
     }
 
     /**
-     * Удаление субстроки, начиная с текущей позиции.
+     * Removes substring from current position
      *
      * @param s
      */
@@ -34,7 +35,7 @@ public class TextSample {
     }
 
     /**
-     * Добавление новой строки
+     * Adds new line
      */
     public void addLine() {
         text.add("" + text.size() + ": ");
@@ -49,7 +50,7 @@ public class TextSample {
     }
 
     /**
-     * Вывод "на печать"
+     * Prints.
      *
      * @return
      */

@@ -85,12 +85,6 @@ public class UndoPacketTest implements Serializable {
         assertEquals(count, stack.count());
         assertEquals(0, Double.compare(20.0, circle.getRadius()));
 
-//        UndoSerializer managerBack = null;
-//        // Make unzipped serialization
-//        UndoSerializer manager = new UndoSerializer(null,2, stack);
-//        String data = UndoSerializer.serialize(manager, false, subj -> new Util().circleToString((Circle)subj));
-//        managerBack = UndoSerializer.deserialize(data, (subjAsString, subjInfo) -> new Util().stringToCircle(subjAsString));
-
         String store = UndoPacket
                 // It's a good practice always specify id.
                 .make(stack, "javafx.scene.shape.Circle", 1)
