@@ -578,6 +578,8 @@ public class UndoStack implements Serializable {
     /**
      * Reset subj. Used in {@link UndoPacket}.
      * <p><b>Do not use it!</b>
+     *
+     * @param value new subject. Required.
      */
     public void setSubj(Object value) {
         if (null == value) {
@@ -612,8 +614,10 @@ public class UndoStack implements Serializable {
 
     /**
      * Clones command. Use it for clone macro only!
+     *
      * @param cmd macro for clone.
      * @return Cloned command.
+     * @throws Exception If something goes wrong.
      */
     public UndoCommand clone(UndoCommand cmd) throws Exception {
         if (null == cmd) {

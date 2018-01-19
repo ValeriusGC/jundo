@@ -43,9 +43,11 @@ public class UndoPacket {
     public interface OnRestore {
 
         /**
+         *
          * @param processedSubj {@link UndoStack#subj} in the Serializable form that earlier processed in the {@link Builder#onStore}.
          * @param subjInfo additional information stored with the stack
          * @return Restored {@link UndoStack#subj}.
+         * @throws Exception If something goes wrong.
          */
         Object handle(Serializable processedSubj, SubjInfo subjInfo) throws Exception;
     }
@@ -111,6 +113,10 @@ public class UndoPacket {
         /**
          * Adds key-value pair to map of additional information.
          * <p>If key exists replaces value.
+         *
+         * @param key key for additional parameter.
+         * @param value value of additional parameter.
+         * @return Instance of Builder.
          */
         public Builder extra(String key, Serializable value) {
             if (null == key) {
@@ -125,6 +131,9 @@ public class UndoPacket {
 
         /**
          * Sets flag for gzip when store.
+         *
+         * @param value true if wanna to gzip; otherwise pass false.
+         * @return Instance of Builder.
          */
         public Builder zipped(boolean value) {
             this.zipped = value;
@@ -133,7 +142,9 @@ public class UndoPacket {
 
         /**
          * Sets event handler for manual tune to store non-serializable subject.
+         *
          * @param onStore if not null user can manually convert non-serializable subject to {@link Serializable} form.
+         * @return Instance of Builder.
          */
         public Builder onStore(OnStore onStore) {
             this.onStore = onStore;
@@ -316,6 +327,8 @@ public class UndoPacket {
      * It is possible we have wrong input string so we can save resources when interrupt process on time.
      * @param candidate input Base64 string.
      * @param p predicate.
+     * @return Helper Peeker's instance.
+     * @throws Exception If something goes wrong.
      */
     public static Peeker peek(String candidate, Predicate<SubjInfo> p) throws Exception {
         if (null == candidate) {
