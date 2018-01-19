@@ -4,7 +4,7 @@
 
 
 - [Features](#features)
-- [How to (simple cases)](#How to - simple cases)
+- [How to use - simple case](#Howto_simple_case)
 - [Terms and definitions](#terms-and-definitions)
 - [Classes](#classes)
 - [Rules and constraints](#rules-and-constraints)
@@ -26,7 +26,7 @@ Along with ordinary undo/redo actions this library can:
 - allows to handle special events for manual tune storing/restoring process if necessary
 
 
-<a name="How to - simple cases"></a>
+<a name="Howto_simple_case"></a>
 ## How to - simple cases
 
 #### create and use
