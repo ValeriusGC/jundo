@@ -6,7 +6,7 @@ package com.gdetotut.jundo;
 public interface UndoWatcher {
 
     /**
-     * This event fires when {@link UndoStack@idx} is changed.
+     * This event fires when {@link UndoStack#idx} is changed.
      *
      * @param idx new index of current command.
      */
