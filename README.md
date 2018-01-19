@@ -10,6 +10,9 @@
 - [Rules and constraints](#rules-and-constraints)
 - [Advanced using](#advanced-using)
 
+
+![gif](https://github.com/ValeriusGC/jundo/blob/master/doc/sample.gif)
+
 ## Features
 
 Along with ordinary undo/redo actions this library can:
