@@ -27,7 +27,7 @@ Along with ordinary undo/redo actions this library can:
 
 
 <a name="Howto_simple_case"></a>
-## How to - simple cases
+## How to use - simple case
 
 #### create and use
 
