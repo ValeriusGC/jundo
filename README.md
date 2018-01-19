@@ -3,8 +3,12 @@
 [![Build Status](https://travis-ci.org/ValeriusGC/jundo.svg?branch=master)](https://travis-ci.org/ValeriusGC/jundo)
 
 
-[TOC]
-
+- [Features](#features)
+- [How to (simple cases)](#How to - simple cases)
+- [Terms and definitions](#terms-and-definitions)
+- [Classes](#classes)
+- [Rules and constraints](#rules-and-constraints)
+- [Advanced using](#advanced-using)
 
 ## Features
 
@@ -18,7 +22,9 @@ Along with ordinary undo/redo actions this library can:
 - has 'merge' option for chain of identical commands (e.g. resizing or moving)
 - allows to handle special events for manual tune storing/restoring process if necessary
 
-## How to (simple cases)
+
+<a name="How to - simple cases"></a>
+## How to - simple cases
 
 #### create and use
 
