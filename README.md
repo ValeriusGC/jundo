@@ -2,14 +2,12 @@
 
 [![Build Status](https://travis-ci.org/ValeriusGC/jundo.svg?branch=master)](https://travis-ci.org/ValeriusGC/jundo)
 
-
 - [Features](#features)
 - [How to use - simple case](#Howto_simple_case)
 - [Terms and definitions](#terms-and-definitions)
 - [Classes](#classes)
 - [Rules and constraints](#rules-and-constraints)
 - [Advanced using](#advanced-using)
-
 
 ![gif](https://github.com/ValeriusGC/jundo/blob/master/doc/sample.gif)
 
@@ -177,7 +175,7 @@ The fact is under the hood the library uses ObjectOutputStream methods as when s
 
 #### Do not store non-serializable types in commands fields
 
-There is no way to manually tune them, so it will lead to exception later. 
+There is no way to manually tune them, so it will lead to exception later.
 Instead use stack's local contexts (see 'advanced using' below).
 
 #### Use external objects that are part of app's memory only via local contexts
@@ -186,9 +184,9 @@ This rule refers to views, widgets, string and other resources, etc. When stack 
 
 ## Advanced using
 
-This example is a part of JavaFx app. It illustrates all library's advanced features. 
+This example is a part of [JavaFx app](https://github.com/ValeriusGC/jundo_javafx_sample). It illustrates library's advanced features.
 
-As mentioned above, advanced using requires more complex approach. 
+As mentioned above, advanced using requires more complex approach.
 
 First af all you should plan the design of your 'undo stack' for specific subject.
 
@@ -383,13 +381,10 @@ stack.setWatcher(this);
 ```
 
 Next connection to app's widgets and actions - as in **Step 2. Commands and stack linking**.
-
 **Voila!**
 
 As you see if you take time for design you get simple and elegant undo system.
 
-
 - - -
 
-
-==The library has a lot of tests with using techniques. See them in code.==
+==The library has a lot of tests with using techniques. See them in the code.==
