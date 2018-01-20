@@ -9,6 +9,7 @@ import some.*;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
@@ -442,6 +443,12 @@ public class UndoStackTest implements Serializable {
         UndoGroup group = new UndoGroup();
         UndoStack stack = new UndoStack(subj, group);
         stack.setWatcher(new SimpleUndoWatcher());
+
+        // Without commands not affected
+        assertEquals(0, stack.getIdx());
+        stack.setIndex(2);
+        assertEquals(0, stack.getIdx());
+
         for (int i = 0; i < 10; ++i) {
             stack.push(new RefCmd<>(stack, String.valueOf(i), subj::getValue, subj::setValue, i, null));
         }
@@ -986,5 +993,14 @@ public class UndoStackTest implements Serializable {
         //~
 
     }
+
+    @Test
+    public void hash() {
+        HashMap<UndoStack, Integer> map = new HashMap<>();
+        map.put(new UndoStack(new Point(1, 2), null), null);
+        map.put(new UndoStack(new Point(1, 2), null), null);
+        assertEquals(2, map.size());
+    }
+
 
 }

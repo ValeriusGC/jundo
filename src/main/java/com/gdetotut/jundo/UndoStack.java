@@ -143,18 +143,13 @@ public class UndoStack implements Serializable {
      *
      * @param cmd new command to execute. Required.
      */
-    public void push(UndoCommand cmd) {
+    public void push(UndoCommand cmd) throws Exception {
 
         if (cmd == null) {
             throw new NullPointerException("cmd");
         } else if (!suspend) {
 
-            UndoCommand copy = null;
-            try {
-                copy = clone(cmd);
-            } catch (Exception e) {
-                System.err.println(e.getLocalizedMessage());
-            }
+            UndoCommand copy = clone(cmd);
 
             cmd.redo();
 
@@ -281,12 +276,12 @@ public class UndoStack implements Serializable {
      * this function does nothing.
      */
     public void redo() {
-        if (commands == null || idx == commands.size()) {
+        if (macroCmd != null) {
+            System.err.println("UndoStack.redo(): cannot redo in the middle of a macro");
             return;
         }
 
-        if (null != macroCmd) {
-            System.err.println("UndoStack.redo(): cannot redo in the middle of a macro");
+        if (commands == null || idx == commands.size()) {
             return;
         }
 
