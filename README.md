@@ -381,10 +381,27 @@ stack.setWatcher(this);
 ```
 
 Next connection to app's widgets and actions - as in **Step 2. Commands and stack linking**.
+
 **Voila!**
 
 As you see if you take time for design you get simple and elegant undo system.
 
+## Download
+
+#### Maven
+
+	<dependency>
+	    <groupId>com.gdetotut</groupId>
+	    <artifactId>jundo-framework</artifactId>
+	    <version>1.15</version>
+	</dependency>
+
+#### Gradle
+
+	compile 'com.gdetotut:jundo-framework:1.15'
+
+*[See it on the Maven](https://mvnrepository.com/artifact/com.gdetotut/jundo-framework/1.15)*
+
 - - -
 
-==The library has a lot of tests with using techniques. See them in the code.==
+The library has a lot of tests with using techniques. See them in the code.
