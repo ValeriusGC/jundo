@@ -50,18 +50,4 @@ public final class RefCmd<V extends Serializable> extends UndoCommand {
         setter.set(newValue);
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        RefCmd<?> that = (RefCmd<?>) o;
-        return Objects.equals(oldValue, that.oldValue) &&
-                Objects.equals(newValue, that.newValue);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(oldValue, newValue);
-    }
-
 }
