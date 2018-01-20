@@ -10,6 +10,7 @@
 - [Classes](#classes)
 - [Rules and constraints](#rules-and-constraints)
 - [Advanced using](#advanced-using)
+- [Download](#download)
 
 ![gif](https://github.com/ValeriusGC/jundo/blob/master/doc/sample.gif)
 
