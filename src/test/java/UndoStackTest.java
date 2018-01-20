@@ -949,7 +949,7 @@ public class UndoStackTest implements Serializable {
         assertEquals(subj1, testText);
         System.out.println(subj1.print());
 
-        // Use macros from zero point
+        // Use macros from zero subj
         stack1.setIndex(0);
         stack1.push(new TextSampleCommands.AddLine(stack1, "new line", null));
         stack1.push(macro1);
