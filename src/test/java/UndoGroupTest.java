@@ -110,7 +110,7 @@ public class UndoGroupTest {
     }
 
     @Test
-    public void testUndoRedo() {
+    public void testUndoRedo() throws Exception {
         Point pt = new Point(1, 1);
         UndoGroup group = new UndoGroup();
         UndoStack stack = new UndoStack(pt, group);
@@ -134,7 +134,7 @@ public class UndoGroupTest {
     }
 
     @Test
-    public void testCanUndoRedo() {
+    public void testCanUndoRedo() throws Exception {
         Point pt = new Point(1, 1);
         UndoGroup group = new UndoGroup();
         UndoStack stack = new UndoStack(pt, group);
@@ -154,7 +154,7 @@ public class UndoGroupTest {
     }
 
     @Test
-    public void testCaption() {
+    public void testCaption() throws Exception {
         Point pt = new Point(1, 1);
         UndoGroup group = new UndoGroup();
         UndoStack stack = new UndoStack(pt, group);
@@ -174,7 +174,7 @@ public class UndoGroupTest {
     }
 
     @Test
-    public void testIsClean() {
+    public void testIsClean() throws Exception {
         Point pt = new Point(1, 1);
         UndoGroup group = new UndoGroup();
         UndoStack stack = new UndoStack(pt, group);
