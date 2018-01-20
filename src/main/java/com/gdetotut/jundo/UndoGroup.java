@@ -48,14 +48,13 @@ public class UndoGroup implements Serializable {
      * @param stack stack to be added. Required.
      */
     public void add(UndoStack stack) {
-        if (stack == null) {
+        if (null == stack) {
             throw new NullPointerException("stack");
-        } else if (!this.stacks.contains(stack)) {
-            this.stacks.add(stack);
+        } else if (!stacks.contains(stack)) {
+            stacks.add(stack);
             if (null != stack.group) {
                 stack.group.remove(stack);
             }
-
             stack.group = this;
         }
     }
@@ -67,14 +66,14 @@ public class UndoGroup implements Serializable {
      * @param stack stack to be removed. Required.
      */
     public void remove(UndoStack stack) {
-        if (stack == null) {
+        if (null == stack) {
             throw new NullPointerException("stack");
-        } else if (this.stacks.remove(stack)) {
-            if (stack == this.active) {
-                this.setActive((UndoStack) null);
+        } else {
+            if (stack == active) {
+                setActive((UndoStack) null);
             }
-
             stack.group = null;
+            stacks.remove(stack);
         }
     }
 
@@ -116,7 +115,7 @@ public class UndoGroup implements Serializable {
      * <p>If none of the stacks are active, or if the group is empty, this function  does nothing.
      */
     public void undo() {
-        if (active != null) {
+        if (null != active) {
             active.undo();
         }
     }
@@ -126,7 +125,7 @@ public class UndoGroup implements Serializable {
      * <p>If none of the stacks are active, or if the group is empty, this function  does nothing.
      */
     public void redo() {
-        if (active != null) {
+        if (null != active) {
             active.redo();
         }
     }
@@ -136,7 +135,7 @@ public class UndoGroup implements Serializable {
      * <p>If none of the stacks are active, or if the group is empty, this function returns false.
      */
     public boolean canUndo() {
-        return active != null && active.canUndo();
+        return null != active && active.canUndo();
     }
 
     /**
@@ -144,7 +143,7 @@ public class UndoGroup implements Serializable {
      * <p>If none of the stacks are active, or if the group is empty, this function returns false.
      */
     public boolean canRedo() {
-        return active != null && active.canRedo();
+        return null != active && active.canRedo();
     }
 
     /**
@@ -152,7 +151,7 @@ public class UndoGroup implements Serializable {
      * <p>If none of the stacks are active, or if the group is empty, this function returns an empty string.
      */
     public String undoCaption() {
-        return active != null ? active.undoCaption() : "";
+        return null != active ? active.undoCaption() : "";
     }
 
     /**
@@ -160,7 +159,7 @@ public class UndoGroup implements Serializable {
      * <p>If none of the stacks are active, or if the group is empty, this function returns an empty string.
      */
     public String redoCaption() {
-        return active != null ? active.redoCaption() : "";
+        return null != active ? active.redoCaption() : "";
     }
 
     /**
@@ -168,7 +167,7 @@ public class UndoGroup implements Serializable {
      * <p>If none of the stacks are active, or if the group is empty, this function returns true.
      */
     public boolean isClean() {
-        return active == null || active.isClean();
+        return null == active || active.isClean();
     }
 
 }
