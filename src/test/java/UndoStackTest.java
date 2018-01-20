@@ -190,8 +190,6 @@ public class UndoStackTest implements Serializable {
         stackBack.redo();
         assertEquals(10, ptBack.getX());
         assertEquals(20, ptBack.getY());
-
-
     }
 
     /**
