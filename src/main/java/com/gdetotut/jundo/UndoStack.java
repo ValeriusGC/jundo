@@ -153,7 +153,7 @@ public class UndoStack implements Serializable {
             try {
                 copy = clone(cmd);
             } catch (Exception e) {
-                e.printStackTrace();
+                System.err.println(e.getLocalizedMessage());
             }
 
             cmd.redo();
@@ -524,6 +524,7 @@ public class UndoStack implements Serializable {
 
         if (commands != null && commands.size() > 0) {
             System.err.println("UndoStack.setUndoLimit(): an undo limit can only be set when the stack is empty");
+            return;
         }
 
         if (value == undoLimit) {
@@ -620,6 +621,7 @@ public class UndoStack implements Serializable {
      * @throws Exception If something goes wrong.
      */
     public UndoCommand clone(UndoCommand cmd) throws Exception {
+
         if (null == cmd) {
             throw new NullPointerException("cmd");
         }
