@@ -120,11 +120,14 @@ public class UndoPacket {
          */
         public Builder extra(String key, Serializable value) {
             if (key == null) {
+                System.out.println("VFX: throw new NullPointerException");
                 throw new NullPointerException("key");
             }
             if (extras == null) {
+                System.out.println("VFX: extras = new TreeMap<>()");
                 extras = new TreeMap<>();
             }
+            System.out.println("VFX: extras.put(key, value)");
             extras.put(key, value);
             return this;
         }
