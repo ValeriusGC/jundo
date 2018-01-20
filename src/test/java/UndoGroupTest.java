@@ -116,8 +116,13 @@ public class UndoGroupTest {
         UndoStack stack = new UndoStack(pt, group);
         stack.push(new RefCmd<>(stack, "1", pt::getY, pt::setY, 2, null));
         stack.push(new RefCmd<>(stack, "2", pt::getY, pt::setY, 4, null));
+
+        // before active
         group.undo();
         assertEquals(4, pt.getY());
+        group.redo();
+        assertEquals(4, pt.getY());
+
         group.setActive(stack);
         group.undo();
         assertEquals(2, pt.getY());
