@@ -65,7 +65,7 @@ public class UndoPacketTest2 {
 
     @Test
     public void testCandidateEx() throws Exception {
-        thrown.expect(Exception.class);
+        thrown.expect(NullPointerException.class);
         UndoPacket.peek(null, null);
         thrown = ExpectedException.none();
     }

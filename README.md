@@ -1,6 +1,8 @@
 # jundo - Java's undo library
 
-[![Build Status](https://travis-ci.org/ValeriusGC/jundo.svg?branch=master)](https://travis-ci.org/ValeriusGC/jundo)
+
+
+[![Build Status](https://travis-ci.org/ValeriusGC/jundo.svg?branch=master)](https://travis-ci.org/ValeriusGC/jundo) [![codecov.io](https://codecov.io/github/ValeriusGC/jundo/coverage.svg?branch=master)](https://codecov.io/github/ValeriusGC/jundo?branch=master)
 
 - [Features](#features)
 - [How to use - simple case](#Howto_simple_case)
