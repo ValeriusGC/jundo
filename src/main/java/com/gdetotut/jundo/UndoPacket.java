@@ -263,9 +263,6 @@ public class UndoPacket {
         private final boolean allow;
 
         Peeker(String candidate, SubjInfo subjInfo, boolean allow) throws Exception {
-            if (null == candidate) {
-                throw new Exception("candidate");
-            }
             if (null == subjInfo) {
                 throw new Exception("subjInfo");
             }

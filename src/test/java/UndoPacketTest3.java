@@ -60,6 +60,7 @@ public class UndoPacketTest3 implements Serializable {
                 .extra("a", "b")
                 .zipped(true)
                 .store();
+
     }
 
     @Test
