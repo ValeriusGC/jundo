@@ -9,6 +9,7 @@ import java.util.Arrays;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNotNull;
 import static some.NonTrivialClass.Item.Type.CIRCLE;
 import static some.NonTrivialClass.Item.Type.RECT;
 import static some.TextSampleCommands.SUBJ_ID;
@@ -64,6 +65,87 @@ public class UndoStackTest implements Serializable {
         }
     }
 
+
+    @Test
+    public void testGetLocalContexts() {
+        Point pt = new Point(1,1);
+        UndoStack stack = new UndoStack(pt, null);
+        assertNotNull(stack);
+    }
+
+    @Test
+    public void testClear() {
+        Point pt = new Point(1,1);
+        UndoStack stack = new UndoStack(pt, null);
+        stack.push(new RefCmd<>(stack, "", pt::getX, pt::setX, 2, null));
+        stack.push(new RefCmd<>(stack, "", pt::getX, pt::setX, 4, null));
+        stack.clear();
+        assertEquals(0, stack.count());
+        assertEquals(0, stack.getIdx());
+    }
+
+    @Test
+    public void testSetClean() {
+        Point pt = new Point(1,1);
+        UndoStack stack = new UndoStack(pt, null);
+        stack.push(new RefCmd<>(stack, "", pt::getX, pt::setX, 2, null));
+        stack.push(new RefCmd<>(stack, "", pt::getX, pt::setX, 4, null));
+        stack.setClean();
+        assertEquals(2, stack.getCleanIdx());
+    }
+
+    @Test
+    public void testIsClean() {
+        Point pt = new Point(1,1);
+        UndoStack stack = new UndoStack(pt, null);
+        stack.push(new RefCmd<>(stack, "", pt::getX, pt::setX, 2, null));
+        stack.push(new RefCmd<>(stack, "", pt::getX, pt::setX, 4, null));
+        stack.setClean();
+        stack.push(new RefCmd<>(stack, "", pt::getX, pt::setX, 3, null));
+        assertEquals(false, stack.isClean());
+        stack.undo();
+        assertEquals(true, stack.isClean());
+    }
+
+    @Test
+    public void testUndoCaption() {
+        Point pt = new Point(1,1);
+        UndoStack stack = new UndoStack(pt, null);
+        stack.push(new RefCmd<>(stack, "1", pt::getX, pt::setX, 2, null));
+        stack.push(new RefCmd<>(stack, "2", pt::getX, pt::setX, 4, null));
+        stack.push(new RefCmd<>(stack, "3", pt::getX, pt::setX, 4, null));
+        assertEquals("3", stack.undoCaption());
+        stack.undo();
+        assertEquals("2", stack.undoCaption());
+        stack.setIndex(0);
+        assertEquals("", stack.undoCaption());
+    }
+
+    @Test
+    public void testRedoCaption() {
+        Point pt = new Point(1,1);
+        UndoStack stack = new UndoStack(pt, null);
+        stack.push(new RefCmd<>(stack, "1", pt::getX, pt::setX, 2, null));
+        stack.push(new RefCmd<>(stack, "2", pt::getX, pt::setX, 4, null));
+        stack.push(new RefCmd<>(stack, "3", pt::getX, pt::setX, 4, null));
+        assertEquals("", stack.redoCaption());
+        stack.undo();
+        assertEquals("3", stack.redoCaption());
+        stack.setIndex(0);
+        assertEquals("1", stack.redoCaption());
+    }
+
+    @Test
+    public void testCaption() {
+        Point pt = new Point(1,1);
+        UndoStack stack = new UndoStack(pt, null);
+        stack.push(new RefCmd<>(stack, "1", pt::getX, pt::setX, 2, null));
+        stack.push(new RefCmd<>(stack, "2", pt::getX, pt::setX, 4, null));
+        stack.push(new RefCmd<>(stack, "3", pt::getX, pt::setX, 4, null));
+        assertEquals("1", stack.caption(0));
+        assertEquals("2", stack.caption(1));
+        assertEquals("3", stack.caption(2));
+    }
 
     /**
      * Simply shows how elegant {@link RefCmd} works
