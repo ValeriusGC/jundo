@@ -119,10 +119,10 @@ public class UndoPacket {
          * @return Instance of Builder.
          */
         public Builder extra(String key, Serializable value) {
-            if (null == key) {
+            if (key == null) {
                 throw new NullPointerException("key");
             }
-            if (null == extras) {
+            if (extras == null) {
                 extras = new TreeMap<>();
             }
             extras.put(key, value);

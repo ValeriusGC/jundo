@@ -11,8 +11,9 @@ import some.Point;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNotNull;
 
-public class UndoPacketTest2 {
+public class UndoPacket_AgainTest {
 
     @Rule
     public ExpectedException thrown = ExpectedException.none();
@@ -38,20 +39,18 @@ public class UndoPacketTest2 {
     @Test
     public void testExtraEx() throws Exception {
         thrown.expect(NullPointerException.class);
-        UndoPacket.make(stack, "", 1)
-                .extra(null, "")
-                .store();
+        UndoPacket.Builder builder = UndoPacket.make(stack, "", 1);
+        builder.extra(null, "");
         thrown = ExpectedException.none();
     }
 
     // for 100% test coverage
     @Test
     public void testExtra() throws Exception {
-        UndoPacket.make(stack, "", 1)
-                .extra("a", "b")
-                .zipped(true)
-                .store();
-
+        UndoPacket.Builder builder = UndoPacket.make(stack, "", 1);
+        UndoPacket.make(stack, "", 1);
+        assertNotNull(builder.extra("a", "b"));
+        assertNotNull(builder.zipped(true));
     }
 
     @Test
