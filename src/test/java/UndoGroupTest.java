@@ -1,5 +1,7 @@
 import com.gdetotut.jundo.RefCmd;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import some.Point;
 import some.SimpleClass;
 import com.gdetotut.jundo.UndoGroup;
@@ -10,6 +12,9 @@ import java.util.List;
 import static org.junit.Assert.assertEquals;
 
 public class UndoGroupTest {
+
+    @Rule
+    public ExpectedException thrown = ExpectedException.none();
 
     /**
      * Group should not contain two or more stacks with one object.
@@ -43,9 +48,19 @@ public class UndoGroupTest {
     @Test
     public void testAdd() {
         UndoGroup group = new UndoGroup();
-        group.add(new UndoStack(new Point(1,1), null));
+        UndoStack stack = new UndoStack(new Point(1,1), null);
+        group.add(stack);
         group.add(new UndoStack(new Point(1,1), null));
         assertEquals(2, group.getStacks().size());
+
+        UndoGroup group2 = new UndoGroup();
+        group2.add(stack);
+        assertEquals(1, group.getStacks().size());
+        assertEquals(1, group2.getStacks().size());
+
+        thrown.expect(NullPointerException.class);
+        group.add(null);
+        thrown = ExpectedException.none();
     }
 
     @Test
@@ -57,6 +72,11 @@ public class UndoGroupTest {
         assertEquals(1, group.getStacks().size());
         group.remove(stack2);
         assertEquals(0, group.getStacks().size());
+
+        thrown.expect(NullPointerException.class);
+        group.remove(null);
+        thrown = ExpectedException.none();
+
     }
 
     @Test
@@ -80,6 +100,13 @@ public class UndoGroupTest {
         assertEquals(stack1, group.getActive());
         group.setActive(stack2);
         assertEquals(stack2, group.getActive());
+        // repeat for 100% test coverage
+        group.setActive(stack2);
+        assertEquals(stack2, group.getActive());
+
+
+        group.remove(stack2);
+        assertEquals(null, group.getActive());
     }
 
     @Test
@@ -154,5 +181,7 @@ public class UndoGroupTest {
         stack.setClean();
         assertEquals(true, group.isClean());
     }
+
+
 
 }
