@@ -2,7 +2,8 @@
 
 
 
-[![Build Status](https://travis-ci.org/ValeriusGC/jundo.svg?branch=master)](https://travis-ci.org/ValeriusGC/jundo) [![codecov.io](https://codecov.io/github/ValeriusGC/jundo/coverage.svg?branch=master)](https://codecov.io/github/ValeriusGC/jundo?branch=master)
+[![Build Status](https://travis-ci.org/ValeriusGC/jundo.svg?branch=master)](https://travis-ci.org/ValeriusGC/jundo) [![codecov.io](https://codecov.io/github/ValeriusGC/jundo/coverage.svg?branch=master)](https://codecov.io/github/ValeriusGC/jundo?branch=master) [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.gdetotut/jundo-framework/badge.svg)](https://search.maven.org/#search|ga|1|com.gdetotut.jundo-framework)
+
 
 - [Features](#features)
 - [How to use - simple case](#Howto_simple_case)
