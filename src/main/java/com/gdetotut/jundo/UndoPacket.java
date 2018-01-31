@@ -228,6 +228,17 @@ public class UndoPacket {
         boolean subjHandled;
     }
 
+
+    public static class Result {
+        final UndoPacket.UnpackResult result;
+        final String msg;
+
+        public Result(UndoPacket.UnpackResult result, String msg) {
+            this.result = result;
+            this.msg = msg;
+        }
+    }
+
     //-------------------------------------------------------------------------------------------------
 
     /**
@@ -239,6 +250,15 @@ public class UndoPacket {
      * {@link UndoStack} itself. Available only through {@link UndoPacket#stack} method.
      */
     private final UndoStack stack;
+
+    public enum UnpackResult {
+        UPR_Success, // unpack was successful
+        UPR_WrongCandidate, // Input string (candidate) was wrong
+        UPR_PeekRefused,    // Refusing on peek stage
+        UPR___tail          // Just tail of list
+    }
+
+    private Result result;
 
     //-------------------------------------------------------------------------------------------------
 
@@ -259,17 +279,18 @@ public class UndoPacket {
     public static class Peeker {
 
         public final SubjInfo subjInfo;
-        private final String candidate;
-        private final boolean allow;
+        public final String candidate;
+        public UndoPacket.Result result;
 
-        Peeker(String candidate, SubjInfo subjInfo, boolean allow) throws Exception {
+
+        Peeker(String candidate, SubjInfo subjInfo, UndoPacket.Result result) throws Exception {
+
             if (null == subjInfo) {
                 throw new Exception("subjInfo");
             }
 
             this.candidate = candidate;
             this.subjInfo = subjInfo;
-            this.allow = allow;
         }
 
         /**
@@ -327,20 +348,41 @@ public class UndoPacket {
      * @return Helper Peeker's instance.
      * @throws Exception If something goes wrong.
      */
-    public static Peeker peek(String candidate, Predicate<SubjInfo> p) throws Exception {
-        if (null == candidate) {
-            throw new NullPointerException("candidate");
-        }
-        if (candidate.length() < Builder.HEADER_SIZE) {
-            throw new Exception("too small size");
-        }
-        String lenPart = candidate.substring(0, Builder.HEADER_SIZE);
-        lenPart = lenPart.substring(0, lenPart.indexOf(Builder.HEADER_FILLER));
-        long len = Long.valueOf(lenPart);
-        String subjInfoCandidate = candidate.substring(Builder.HEADER_SIZE, (int) (Builder.HEADER_SIZE + len));
-        SubjInfo obj = (SubjInfo) fromBase64(subjInfoCandidate);
+    public static Peeker peek(String candidate, Predicate<SubjInfo> p) {
 
-        Peeker peeker = new Peeker(candidate, obj, null == p || p.test(obj));
+        UndoPacket.Result result = new Result(UnpackResult.UPR_Success, null);
+
+        if (null == candidate) {
+            result = new Result(UnpackResult.UPR_WrongCandidate, "is null");
+        } else if (candidate.length() < Builder.HEADER_SIZE ){
+            result = new Result(UnpackResult.UPR_WrongCandidate, "too small size");
+        }
+
+        SubjInfo obj = null;
+
+        if(result.result == UnpackResult.UPR_Success) {
+            String lenPart = candidate.substring(0, Builder.HEADER_SIZE);
+            lenPart = lenPart.substring(0, lenPart.indexOf(Builder.HEADER_FILLER));
+            long len = Long.valueOf(lenPart);
+            String subjInfoCandidate = candidate.substring(Builder.HEADER_SIZE, (int) (Builder.HEADER_SIZE + len));
+
+            // This show if candidate has UndoStack inside it.
+            try {
+                obj = (SubjInfo) fromBase64(subjInfoCandidate);
+            }catch (Exception e) {
+                result = new Result(UnpackResult.UPR_WrongCandidate, e.getLocalizedMessage());
+            }
+
+
+            if(result.result == UnpackResult.UPR_Success) {
+                if(p != null && !p.test(obj)) {
+                    result = new Result(UnpackResult.UPR_PeekRefused, "");
+                }
+            }
+
+        }
+
+        Peeker peeker = new Peeker(candidate, obj, result);
         return peeker;
     }
 
