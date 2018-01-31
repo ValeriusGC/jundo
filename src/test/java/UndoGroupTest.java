@@ -114,8 +114,8 @@ public class UndoGroupTest {
         Point pt = new Point(1, 1);
         UndoGroup group = new UndoGroup();
         UndoStack stack = new UndoStack(pt, group);
-        stack.push(new RefCmd<>(stack, "1", pt::getY, pt::setY, 2, null));
-        stack.push(new RefCmd<>(stack, "2", pt::getY, pt::setY, 4, null));
+        stack.push(new RefCmd<>("1", pt::getY, pt::setY, 2));
+        stack.push(new RefCmd<>("2", pt::getY, pt::setY, 4));
 
         // before active
         group.undo();
@@ -138,8 +138,8 @@ public class UndoGroupTest {
         Point pt = new Point(1, 1);
         UndoGroup group = new UndoGroup();
         UndoStack stack = new UndoStack(pt, group);
-        stack.push(new RefCmd<>(stack, "1", pt::getY, pt::setY, 2, null));
-        stack.push(new RefCmd<>(stack, "2", pt::getY, pt::setY, 4, null));
+        stack.push(new RefCmd<>("1", pt::getY, pt::setY, 2));
+        stack.push(new RefCmd<>("2", pt::getY, pt::setY, 4));
         assertEquals(false, group.canUndo());
         assertEquals(false, group.canRedo());
         group.setActive(stack);
@@ -158,8 +158,8 @@ public class UndoGroupTest {
         Point pt = new Point(1, 1);
         UndoGroup group = new UndoGroup();
         UndoStack stack = new UndoStack(pt, group);
-        stack.push(new RefCmd<>(stack, "1", pt::getY, pt::setY, 2, null));
-        stack.push(new RefCmd<>(stack, "2", pt::getY, pt::setY, 4, null));
+        stack.push(new RefCmd<>("1", pt::getY, pt::setY, 2));
+        stack.push(new RefCmd<>("2", pt::getY, pt::setY, 4));
         assertEquals("", group.undoCaption());
         assertEquals("", group.redoCaption());
         group.setActive(stack);
@@ -178,8 +178,8 @@ public class UndoGroupTest {
         Point pt = new Point(1, 1);
         UndoGroup group = new UndoGroup();
         UndoStack stack = new UndoStack(pt, group);
-        stack.push(new RefCmd<>(stack, "1", pt::getY, pt::setY, 2, null));
-        stack.push(new RefCmd<>(stack, "2", pt::getY, pt::setY, 4, null));
+        stack.push(new RefCmd<>("1", pt::getY, pt::setY, 2));
+        stack.push(new RefCmd<>("2", pt::getY, pt::setY, 4));
         assertEquals(true, group.isClean());
         group.setActive(stack);
         assertEquals(false, group.isClean());

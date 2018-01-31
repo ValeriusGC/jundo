@@ -85,6 +85,11 @@ public class UndoStack implements Serializable {
         }
     }
 
+    public UndoStack(Object subj) {
+        this(subj, null);
+    }
+
+
     /**
      * @return List of local contexts.
      */
@@ -143,12 +148,13 @@ public class UndoStack implements Serializable {
      *
      * @param cmd new command to execute. Required.
      */
-    public void push(UndoCommand cmd) throws Exception {
+    public UndoStack push(UndoCommand cmd) throws Exception {
 
         if (cmd == null) {
             throw new NullPointerException("cmd");
         } else if (!suspend) {
 
+            cmd.setOwner(this);
             UndoCommand copy = clone(cmd);
 
             cmd.redo();
@@ -206,6 +212,7 @@ public class UndoStack implements Serializable {
                 }
             }
         }
+        return this;
     }
 
     /**
@@ -417,7 +424,7 @@ public class UndoStack implements Serializable {
             return;
         }
 
-        UndoCommand startMacro = new UndoCommand(this, caption, null);
+        UndoCommand startMacro = new UndoCommand(caption).setOwner(this);
 
         try {
             macroCmd = clone(startMacro);
@@ -628,10 +635,12 @@ public class UndoStack implements Serializable {
 
         try (ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(baos.toByteArray()))) {
             UndoCommand cmdClone = (UndoCommand) ois.readObject();
-            cmdClone.owner = cmd.owner;
+            // THe fact is new Owner is not the same because it recreated as new from stream.
+            // and we should reset it...
+            cmdClone.setOwner(cmd.getOwner());
             if (null != cmdClone.children) {
                 for (UndoCommand uc : cmdClone.children) {
-                    uc.owner = cmd.owner;
+                    uc.setOwner(cmd.getOwner());
                 }
             }
             return cmdClone;

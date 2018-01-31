@@ -61,8 +61,8 @@ public class NonTrivialClass implements Serializable {
         private Item item = null;
         private int initialPos = 0;
 
-        public AddCommand(UndoStack owner, Item.Type type, NonTrivialClass scene, UndoCommand parent) {
-            super(owner, "", parent);
+        public AddCommand(Item.Type type, NonTrivialClass scene) {
+            super("");
             this.scene = scene;
             this.type = type;
             setCaption(ConstForTest.CMD_ADD + " at " + initialPos);
@@ -106,8 +106,8 @@ public class NonTrivialClass implements Serializable {
         private final NonTrivialClass scene;
         private final Item item;
 
-        public DeleteCommand(UndoStack owner, NonTrivialClass scene, UndoCommand parent) {
-            super(owner, "", parent);
+        public DeleteCommand( NonTrivialClass scene) {
+            super("");
             this.scene = scene;
             this.item = scene.items.size() > 0 ? scene.items.get(0) : null;
             setCaption(ConstForTest.CMD_DEL + " at " + item.x);
@@ -152,8 +152,8 @@ public class NonTrivialClass implements Serializable {
         private final int oldPos;
         private int newPos;
 
-        public MovedCommand(UndoStack owner, Item item, int oldPos, UndoCommand parent) {
-            super(owner, "", parent);
+        public MovedCommand( Item item, int oldPos) {
+            super("");
             this.item = item;
             this.oldPos = oldPos;
             this.newPos = item.x;

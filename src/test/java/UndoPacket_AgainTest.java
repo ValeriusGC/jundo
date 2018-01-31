@@ -116,8 +116,8 @@ public class UndoPacket_AgainTest {
         assertEquals(-40, pt.getY());
 
         UndoStack stack = new UndoStack(pt, null);
-        stack.push(new RefCmd<>(stack, "Change x", pt::getX, pt::setX, 10, null));
-        stack.push(new RefCmd<>(stack, "Change y", pt::getY, pt::setY, 20, null));
+        stack.push(new RefCmd<>("Change x", pt::getX, pt::setX, 10));
+        stack.push(new RefCmd<>("Change y", pt::getY, pt::setY, 20));
 
         // After 2 commands applied
         assertEquals(2, stack.count());

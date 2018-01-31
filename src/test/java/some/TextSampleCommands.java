@@ -18,44 +18,44 @@ public class TextSampleCommands implements Serializable {
 
         private String str;
 
-        public AddString(UndoStack owner, String caption, String str, UndoCommand parent) {
-            super(owner, caption, parent);
+        public AddString(String caption, String str) {
+            super(caption);
             this.str = str;
         }
 
         @Override
         protected void doRedo() {
-            TextSample textSample = (TextSample) owner.getLocalContexts().get(TEXT_CTX_KEY);
+            TextSample textSample = (TextSample) getOwner().getLocalContexts().get(TEXT_CTX_KEY);
             textSample.add(str);
-            owner.setSubj(textSample.text);
+            getOwner().setSubj(textSample.text);
         }
 
         @Override
         protected void doUndo() {
-            TextSample textSample = (TextSample) owner.getLocalContexts().get(TEXT_CTX_KEY);
+            TextSample textSample = (TextSample) getOwner().getLocalContexts().get(TEXT_CTX_KEY);
             textSample.remove(str);
-            owner.setSubj(textSample.text);
+            getOwner().setSubj(textSample.text);
         }
     }
 
     public static class AddLine extends UndoCommand {
 
-        public AddLine(UndoStack owner, String caption, UndoCommand parent) {
-            super(owner, caption, parent);
+        public AddLine(String caption) {
+            super(caption);
         }
 
         @Override
         protected void doRedo() {
-            TextSample textSample = (TextSample) owner.getLocalContexts().get(TEXT_CTX_KEY);
+            TextSample textSample = (TextSample) getOwner().getLocalContexts().get(TEXT_CTX_KEY);
             textSample.addLine();
-            owner.setSubj(textSample.text);
+            getOwner().setSubj(textSample.text);
         }
 
         @Override
         protected void doUndo() {
-            TextSample textSample = (TextSample) owner.getLocalContexts().get(TEXT_CTX_KEY);
+            TextSample textSample = (TextSample) getOwner().getLocalContexts().get(TEXT_CTX_KEY);
             textSample.removeLine();
-            owner.setSubj(textSample.text);
+            getOwner().setSubj(textSample.text);
         }
     }
 

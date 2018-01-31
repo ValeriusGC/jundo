@@ -53,21 +53,21 @@ public class UndoPacketTest implements Serializable {
             Double oldV;
             Double newV;
 
-            public CircleRadiusUndoCmd(UndoStack owner, Circle circle, Double newV, UndoCommand parent) {
-                super(owner, "", parent);
+            public CircleRadiusUndoCmd(Circle circle, Double newV) {
+                super("");
                 oldV = circle.getRadius();
                 this.newV = newV;
             }
 
             @Override
             protected void doRedo() {
-                Circle c = (Circle) owner.getSubj();
+                Circle c = (Circle) getOwner().getSubj();
                 c.setRadius(newV);
             }
 
             @Override
             protected void doUndo() {
-                Circle c = (Circle) owner.getSubj();
+                Circle c = (Circle) getOwner().getSubj();
                 c.setRadius(oldV);
             }
         }
@@ -79,7 +79,7 @@ public class UndoPacketTest implements Serializable {
         UndoStack stack = new UndoStack(circle, null);
         stack.setWatcher(new SimpleUndoWatcher());
         for (int i = 0; i < count; ++i) {
-            stack.push(new CircleRadiusUndoCmd(stack, circle, i * 2.0, null));
+            stack.push(new CircleRadiusUndoCmd(circle, i * 2.0));
         }
         assertEquals(count, stack.count());
         assertEquals(0, Double.compare(200.0, circle.getRadius()));
@@ -139,18 +139,40 @@ public class UndoPacketTest implements Serializable {
 
         }
 
+
         // Context #1
         class LocalContext {
-            final String ADD = "cmd_add";
-            final String REMOVE = "cmd_remove";
-            final String RESIZE = "cmd_resize";
+            String getAdd() {
+                return "cmd_add";
+            }
+
+            String getRemove() {
+                return "cmd_remove";
+            }
+
+            String getResize() {
+                return "cmd_resize";
+            }
         }
 
         // Context #2
-        class LocalContext1 {
-            final String ADD = "cmd_add1";
-            final String REMOVE = "cmd_remove1";
-            final String RESIZE = "cmd_resize1";
+        class LocalContext1 extends LocalContext{
+
+            @Override
+            String getAdd() {
+                return "cmd_add1";
+            }
+
+            @Override
+            String getRemove() {
+                return "cmd_remove1";
+            }
+
+            @Override
+            String getResize() {
+                return "cmd_resize1";
+            }
+
         }
 
         // Makes Shapes for Canvas and converts String <--> Canvas
@@ -208,21 +230,21 @@ public class UndoPacketTest implements Serializable {
             class Add extends UndoCommand {
                 int type;
 
-                public Add(UndoStack owner, int type, UndoCommand parent) {
-                    super(owner, "", parent);
+                public Add(int type) {
+                    super("");
                     this.type = type;
-                    LocalContext ctx = (LocalContext) owner.getLocalContexts().get("resources");
-                    setCaption(ctx.ADD);
                 }
 
                 @Override
                 protected void doRedo() {
-                    ((Canvas) owner.getSubj()).shapes.add(new Factory().make(type));
+                    LocalContext ctx = (LocalContext) getOwner().getLocalContexts().get("resources");
+                    setCaption(ctx.getAdd());
+                    ((Canvas) getOwner().getSubj()).shapes.add(new Factory().make(type));
                 }
 
                 @Override
                 protected void doUndo() {
-                    List<Shape> shapes = ((Canvas) owner.getSubj()).shapes;
+                    List<Shape> shapes = ((Canvas) getOwner().getSubj()).shapes;
                     shapes.remove(shapes.size() - 1);
                 }
             }
@@ -231,24 +253,25 @@ public class UndoPacketTest implements Serializable {
             class Remove extends UndoCommand {
                 int type;
 
-                public Remove(UndoStack owner, UndoCommand parent) {
-                    super(owner, "", parent);
-                    List<Shape> shapes = ((Canvas) owner.getSubj()).shapes;
-                    this.type = shapes.get(shapes.size() - 1) instanceof Circle ? Canvas.CT_Circle : Canvas.CT_Rect;
-
-                    LocalContext ctx = (LocalContext) owner.getLocalContexts().get("resources");
-                    setCaption(ctx.REMOVE);
+                public Remove() {
+                    super("");
                 }
 
                 @Override
                 protected void doRedo() {
-                    List<Shape> shapes = ((Canvas) owner.getSubj()).shapes;
+
+                    List<Shape> shapes = ((Canvas) getOwner().getSubj()).shapes;
+                    this.type = shapes.get(shapes.size() - 1) instanceof Circle ? Canvas.CT_Circle : Canvas.CT_Rect;
+                    LocalContext ctx = (LocalContext) getOwner().getLocalContexts().get("resources");
+                    setCaption(ctx.getRemove());
+
+
                     shapes.remove(shapes.size() - 1);
                 }
 
                 @Override
                 protected void doUndo() {
-                    ((Canvas) owner.getSubj()).shapes.add(new Factory().make(type));
+                    ((Canvas) getOwner().getSubj()).shapes.add(new Factory().make(type));
                 }
             }
 
@@ -258,19 +281,19 @@ public class UndoPacketTest implements Serializable {
                 double oldV;
                 double newV;
 
-                public Resize(UndoStack owner, UndoCommand parent, int idx, double newValue) {
-                    super(owner, "", parent);
+                public Resize(int idx, double newValue) {
+                    super("");
                     this.idx = idx;
                     this.newV = newValue;
-
-                    LocalContext ctx = (LocalContext) owner.getLocalContexts().get("resources");
-                    setCaption(ctx.RESIZE);
-
                 }
 
                 @Override
                 protected void doRedo() {
-                    List<Shape> shapes = ((Canvas) owner.getSubj()).shapes;
+                    List<Shape> shapes = ((Canvas) getOwner().getSubj()).shapes;
+
+                    LocalContext ctx = (LocalContext) getOwner().getLocalContexts().get("resources");
+                    setCaption(ctx.getResize());
+
                     Shape shape = shapes.get(idx);
                     if (shape instanceof Circle) {
                         oldV = ((Circle) shape).getRadius();
@@ -284,7 +307,7 @@ public class UndoPacketTest implements Serializable {
 
                 @Override
                 protected void doUndo() {
-                    List<Shape> shapes = ((Canvas) owner.getSubj()).shapes;
+                    List<Shape> shapes = ((Canvas) getOwner().getSubj()).shapes;
                     Shape shape = shapes.get(idx);
                     if (shape instanceof Circle) {
                         ((Circle) shape).setRadius(oldV);
@@ -305,10 +328,10 @@ public class UndoPacketTest implements Serializable {
         UndoStack stack = new UndoStack(canvas, null);
         // Use local context.
         stack.getLocalContexts().put("resources", new LocalContext());
-        stack.push(new CanvasCmdCtrl().new Add(stack, Canvas.CT_Circle, null));
-        stack.push(new CanvasCmdCtrl().new Add(stack, Canvas.CT_Rect, null));
-        stack.push(new CanvasCmdCtrl().new Add(stack, Canvas.CT_Circle, null));
-        stack.push(new CanvasCmdCtrl().new Add(stack, Canvas.CT_Rect, null));
+        stack.push(new CanvasCmdCtrl().new Add(Canvas.CT_Circle));
+        stack.push(new CanvasCmdCtrl().new Add(Canvas.CT_Rect));
+        stack.push(new CanvasCmdCtrl().new Add(Canvas.CT_Circle));
+        stack.push(new CanvasCmdCtrl().new Add(Canvas.CT_Rect));
         assertEquals(4, canvas.shapes.size());
         assertEquals(Circle.class, canvas.shapes.get(0).getClass());
         assertEquals(Rectangle.class, canvas.shapes.get(1).getClass());
@@ -322,24 +345,24 @@ public class UndoPacketTest implements Serializable {
         assertEquals(4, canvas.shapes.size());
 
         // Remove last one and return back
-        stack.push(new CanvasCmdCtrl().new Remove(stack, null));
+        stack.push(new CanvasCmdCtrl().new Remove());
         assertEquals(3, canvas.shapes.size());
 
         stack.undo();
         assertEquals(4, canvas.shapes.size());
         assertEquals(5, stack.count());
 
-        assertEquals(new LocalContext().ADD, stack.getCommand(0).getCaption());
-        assertEquals(new LocalContext().ADD, stack.getCommand(1).getCaption());
-        assertEquals(new LocalContext().ADD, stack.getCommand(2).getCaption());
-        assertEquals(new LocalContext().ADD, stack.getCommand(3).getCaption());
-        assertEquals(new LocalContext().REMOVE, stack.getCommand(4).getCaption());
+        assertEquals(new LocalContext().getAdd(), stack.getCommand(0).getCaption());
+        assertEquals(new LocalContext().getAdd(), stack.getCommand(1).getCaption());
+        assertEquals(new LocalContext().getAdd(), stack.getCommand(2).getCaption());
+        assertEquals(new LocalContext().getAdd(), stack.getCommand(3).getCaption());
+        assertEquals(new LocalContext().getRemove(), stack.getCommand(4).getCaption());
 
         // undo two and add new one. Should start new branch
         stack.undo();
         stack.undo();
         assertEquals(2, canvas.shapes.size());
-        stack.push(new CanvasCmdCtrl().new Add(stack, Canvas.CT_Rect, null));
+        stack.push(new CanvasCmdCtrl().new Add(Canvas.CT_Rect));
         assertEquals(3, stack.count());
 
 
@@ -379,13 +402,13 @@ public class UndoPacketTest implements Serializable {
             assertEquals(3, stack1.count());
 
             UndoCommand cmd = stack.getCommand(0);
-            assertEquals(new LocalContext().ADD, cmd.getCaption());
+            assertEquals(new LocalContext().getAdd(), cmd.getCaption());
         }
 
         // Now change
         Rectangle rect = (Rectangle) canvas.shapes.get(1);
         assertEquals(0, Double.compare(10.0, rect.getWidth()));
-        stack.push(new CanvasCmdCtrl().new Resize(stack, null, 1, 50.0));
+        stack.push(new CanvasCmdCtrl().new Resize(1, 50.0));
         assertEquals(0, Double.compare(50.0, rect.getWidth()));
         stack.undo();
         assertEquals(0, Double.compare(10.0, rect.getWidth()));
