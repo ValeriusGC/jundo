@@ -586,7 +586,7 @@ public class UndoStack implements Serializable {
      */
     public void setSubj(Object value) {
         if (null == value) {
-            throw new NullPointerException("value");
+            throw new NullPointerException("subj");
         } else {
             subj = value;
         }

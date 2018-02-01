@@ -53,7 +53,7 @@ public class UndoStackTest implements Serializable {
                 .store();
         UndoStack stackBack = UndoPacket
                 .peek(store, null)
-                .restore(null)
+                .restore(null, null)
                 .stack(null);
 
         // Here we can not compare stacks themselves 'cause of stack's comparison principle
@@ -229,7 +229,7 @@ public class UndoStackTest implements Serializable {
         UndoStack stackBack = UndoPacket
                 // When we have no handler, we need to specify it explicitly.
                 .peek(store, null)
-                .restore(null)
+                .restore(null, null)
                 .stack(null);
 
         Point ptBack = (Point) stackBack.getSubj();
@@ -623,7 +623,7 @@ public class UndoStackTest implements Serializable {
             UndoStack stackBack = UndoPacket
                     // When we have no handlers, we still need to specify it explicitly.
                     .peek(store, null)
-                    .restore(null)
+                    .restore(null, null)
                     .stack(null);
 
 
@@ -728,7 +728,7 @@ public class UndoStackTest implements Serializable {
             UndoStack stackBack = UndoPacket
                     // When we have no handlers, we still need to specify it explicitly.
                     .peek(store, null)
-                    .restore(null)
+                    .restore(null, null)
                     .stack(null);
 
             NonTrivialClass objBack = (NonTrivialClass) stackBack.getSubj();
@@ -917,7 +917,7 @@ public class UndoStackTest implements Serializable {
                 .restore((processedSubj, subjInfo) -> {
                     // Always return null for unexpected result.
                     return SUBJ_ID.equals(subjInfo.id) ? (ArrayList<String>) processedSubj : null;
-                })
+                }, null)
                 .stack((stack2, subjInfo) -> {
                     stack2.getLocalContexts().put(TextSampleCommands.TEXT_CTX_KEY, subj1);
                     subj1.clear();

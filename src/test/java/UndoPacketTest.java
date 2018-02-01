@@ -108,7 +108,7 @@ public class UndoPacketTest implements Serializable {
                         throw new Exception("Unexpected version");
                     }
                     return new Util().stringToCircle((String) processedSubj);
-                });
+                }, null);
         UndoStack stack2 = packetBack
                 // When we have no handler, we still need to specify it explicitly.
                 .stack(null);
@@ -386,7 +386,7 @@ public class UndoPacketTest implements Serializable {
                             throw new Exception("unexpected version");
                         }
                         return new Factory().toSubj((String) processedSubj);
-                    })
+                    }, null)
                     .stack((stack2, subjInfo) -> {
                         // Good place to restore local contexts.
                         stack2.getLocalContexts().put("resources", new LocalContext1());
@@ -433,7 +433,7 @@ public class UndoPacketTest implements Serializable {
                             throw new Exception("unexpected version");
                         }
                         return new Factory().toSubj((String) processedSubj);
-                    })
+                    }, null)
                     .stack((stack2, subjInfo) -> {
                         // Good place to restore local contexts.
                         stack2.getLocalContexts().put("resources", new LocalContext1());
