@@ -1,3 +1,4 @@
+import com.gdetotut.jundo.CreatorException;
 import com.gdetotut.jundo.RefCmd;
 import com.gdetotut.jundo.UndoPacket;
 import com.gdetotut.jundo.UndoPacket.SubjInfo;
@@ -75,6 +76,37 @@ public class UndoPacket_AgainTest {
 //        UndoPacket.peek("too short", null);
 //        thrown = ExpectedException.none();
 //    }
+
+
+    @Test
+    public void testCreateNewEx() throws CreatorException {
+        thrown.expect(CreatorException.class);
+        UndoPacket
+                .peek("", null)
+                .restore(null, () -> null);
+        thrown = ExpectedException.none();
+    }
+
+    @Test
+    public void testNullCandidate() {
+        UndoPacket.Peeker peeker = UndoPacket.peek(null, null);
+        assertEquals(peeker.result.result, UndoPacket.UnpackResult.UPR_WrongCandidate);
+        assertEquals(peeker.result.msg, "is null");
+    }
+
+    @Test
+    public void testShortCandidate() {
+        UndoPacket.Peeker peeker = UndoPacket.peek("short", null);
+        assertEquals(peeker.result.result, UndoPacket.UnpackResult.UPR_WrongCandidate);
+        assertEquals(peeker.result.msg, "too small size");
+    }
+
+    @Test
+    public void testBadSubjInfo() {
+        UndoPacket.Peeker peeker = UndoPacket.peek("0ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ", null);
+        assertEquals(peeker.result.result, UndoPacket.UnpackResult.UPR_WrongCandidate);
+    }
+
 
     @Test
     public void testHandlerEx() throws Exception {

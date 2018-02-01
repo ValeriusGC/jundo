@@ -97,6 +97,14 @@ public class UndoStackTest implements Serializable {
         assertNotEquals(stack1, stack2);
     }
 
+    @Test
+    public void testAddChildEx() throws Exception {
+        thrown.expect(NullPointerException.class);
+        UndoCommand parent = new UndoCmdStub("");
+        parent.addChild(null);
+        thrown = ExpectedException.none();
+    }
+
 
     @Test
     public void testClear() throws Exception {

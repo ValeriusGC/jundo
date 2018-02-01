@@ -238,8 +238,8 @@ public class UndoPacket {
 
 
     public static class Result {
-        final UndoPacket.UnpackResult result;
-        final String msg;
+        public final UndoPacket.UnpackResult result;
+        public final String msg;
 
         public Result(UndoPacket.UnpackResult result, String msg) {
             this.result = result;
@@ -249,6 +249,7 @@ public class UndoPacket {
 
     //-------------------------------------------------------------------------------------------------
 
+    // TODO: 01.02.18 Рассортировать, убрать лишнее
     public enum UnpackResult {
         UPR_Success, // unpack was successful
         UPR_WrongCandidate, // Input string (candidate) was wrong
@@ -258,10 +259,11 @@ public class UndoPacket {
         UPR___tail          // Just tail of list
     }
 
-    private final Result result;
+    public final Result result;
 
     /**
      * Additional information about {@link UndoStack#subj}.
+     * Can be null if {@link Result} is UPR_NewStack
      */
     public final SubjInfo subjInfo;
 
@@ -273,10 +275,10 @@ public class UndoPacket {
     //-------------------------------------------------------------------------------------------------
 
     /**
-     * Initial method in storing chain.
+     * Initial method in the storing chain.
      * @param stack {@link UndoStack} to store. Required.
-     * @param id subject identifier. Desirable.
-     * @param version subject version. Desirable.
+     * @param id subject identifier. Highly recommend because allows restore stack more precisely.
+     * @param version subject version. Highly recommend because allows migration in restore process.
      * @return {@link Builder} instance.
      */
     public static Builder make(UndoStack stack, String id, int version) {
@@ -442,9 +444,10 @@ public class UndoPacket {
     }
 
     private static Object fromBase64(String candidate) throws IOException, ClassNotFoundException {
-        if (null == candidate) {
-            throw new NullPointerException("candidate");
-        }
+//      It can not be null because chacked when called
+//        if (null == candidate) {
+//            throw new NullPointerException("candidate");
+//        }
 
         final byte[] data = Base64.getUrlDecoder().decode(candidate);
         final boolean zipped = (data[0] == (byte) (GZIPInputStream.GZIP_MAGIC))

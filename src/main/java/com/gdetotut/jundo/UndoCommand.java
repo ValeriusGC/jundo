@@ -42,9 +42,10 @@ public class UndoCommand implements Serializable {
     }
 
     UndoCommand setOwner(UndoStack owner) {
-        if (owner == null) {
-            throw new NullPointerException("owner");
-        }
+//      It is checked for null everywhere when is called.
+//        if (owner == null) {
+//            throw new NullPointerException("owner");
+//        }
 
         this.owner = owner;
         return this;
