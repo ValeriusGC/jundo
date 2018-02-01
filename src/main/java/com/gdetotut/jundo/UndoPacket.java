@@ -254,9 +254,7 @@ public class UndoPacket {
         UPR_Success, // unpack was successful
         UPR_WrongCandidate, // Input string (candidate) was wrong
         UPR_PeekRefused,    // Refusing on peek stage
-        UPR_NewStack,       // Error at restore step
-        UPR_WrongStream,    // Wrong input stream
-        UPR___tail          // Just tail of list
+        UPR_NewStack        // Error at restore step
     }
 
     public final Result result;
@@ -290,7 +288,7 @@ public class UndoPacket {
      */
     public static class Peeker {
 
-        public final SubjInfo subjInfo;
+        public SubjInfo subjInfo;
         public final String candidate;
         public UndoPacket.Result result;
 
@@ -372,10 +370,12 @@ public class UndoPacket {
                     stack.setSubj(subj);
 
                 } catch (Exception e) {
-                    stack = createNew(creator, new Result(UnpackResult.UPR_WrongStream, e.getLocalizedMessage()));
+                    subjInfo = null;
+                    result = new Result(UnpackResult.UPR_NewStack, e.getLocalizedMessage());
+                    stack = createNew(creator, result);
                 }
 
-                packet = new UndoPacket(stack, subjInfo, null);
+                packet = new UndoPacket(stack, subjInfo, result);
             }
 
             return packet;
@@ -420,7 +420,7 @@ public class UndoPacket {
 
             if(result.result == UnpackResult.UPR_Success) {
                 if(p != null && !p.test(obj)) {
-                    result = new Result(UnpackResult.UPR_PeekRefused, "");
+                    result = new Result(UnpackResult.UPR_PeekRefused, null);
                 }
             }
 

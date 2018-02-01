@@ -10,15 +10,12 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import some.Point;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.*;
 
 public class UndoPacket_AgainTest {
 
     @Rule
     public ExpectedException thrown = ExpectedException.none();
-
 
     Point subj = null;
     UndoStack stack = null;
@@ -58,25 +55,11 @@ public class UndoPacket_AgainTest {
     public void testSubjEx() throws Exception {
         thrown.expect(Exception.class);
         stack.setSubj(new Object());
-        UndoPacket.make(stack, "", 1)
+        UndoPacket
+                .make(stack, "", 1)
                 .store();
         thrown = ExpectedException.none();
     }
-
-//    @Test
-//    public void testCandidateEx() throws Exception {
-//        thrown.expect(NullPointerException.class);
-//        UndoPacket.peek(null, null);
-//        thrown = ExpectedException.none();
-//    }
-
-//    @Test
-//    public void testCandidateEx2() throws Exception {
-//        thrown.expect(Exception.class);
-//        UndoPacket.peek("too short", null);
-//        thrown = ExpectedException.none();
-//    }
-
 
     @Test
     public void testCreateNewEx() throws CreatorException {
@@ -107,6 +90,17 @@ public class UndoPacket_AgainTest {
         assertEquals(peeker.result.result, UndoPacket.UnpackResult.UPR_WrongCandidate);
     }
 
+    @Test
+    public void testPeeker() throws Exception {
+        String s = UndoPacket.make(stack, "stack", 1).store();
+        UndoPacket.Peeker peeker = UndoPacket.peek(s, null);
+        assertEquals(peeker.result.result, UndoPacket.UnpackResult.UPR_Success);
+        assertEquals(peeker.result.msg, null);
+
+        peeker = UndoPacket.peek(s, it -> false);
+        assertEquals(peeker.result.result, UndoPacket.UnpackResult.UPR_PeekRefused);
+        assertEquals(peeker.result.msg, null);
+    }
 
     @Test
     public void testHandlerEx() throws Exception {
@@ -128,10 +122,12 @@ public class UndoPacket_AgainTest {
                 .onStore(subj -> "")
                 .store();
 
-        // for 100% test coverage
-        UndoPacket.peek(s, null)
-                .restore((processedSubj, subjInfo) -> null, () -> stack)
-                .stack(null);
+        UndoPacket packet = UndoPacket
+                .peek(s, null)
+                .restore((processedSubj, subjInfo) -> null, () -> stack);
+
+        assertNull(packet.subjInfo);
+        assertEquals(UndoPacket.UnpackResult.UPR_NewStack, packet.result.result);
     }
 
 
