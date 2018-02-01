@@ -427,8 +427,7 @@ public class UndoPacket {
         }
 
         // Here result is signal of whether candidate and obj are good or bad
-        Peeker peeker = new Peeker(candidate, obj, result);
-        return peeker;
+        return new Peeker(candidate, obj, result);
     }
 
     /**
