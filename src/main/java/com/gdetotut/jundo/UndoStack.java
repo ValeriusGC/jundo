@@ -190,19 +190,10 @@ public class UndoStack implements Serializable {
                 }
             } else {
                 if (onMacro) {
-                    if (null != copy) {
-                        if (macroCmd.children == null) {
-                            macroCmd.children = new ArrayList<>();
-                        }
-                        macroCmd.children.add(copy);
-                    } else {
-                        dropMacro();
-                    }
+                    macroCmd.addChild(copy);
 
-                    if (null == cur.children) {
-                        cur.children = new ArrayList<>();
-                    }
-                    cur.children.add(cmd);
+                    if(cur != null) // cur can not be null but do this to get rid of warning
+                        cur.addChild(cmd);
 
                 } else {
                     // And last actions
