@@ -48,9 +48,9 @@ public class UndoGroupTest {
     @Test
     public void testAdd() {
         UndoGroup group = new UndoGroup();
-        UndoStack stack = new UndoStack(new Point(1,1), null);
+        UndoStack stack = new UndoStack(new Point(1,1));
         group.add(stack);
-        group.add(new UndoStack(new Point(1,1), null));
+        group.add(new UndoStack(new Point(1,1)));
         assertEquals(2, group.getStacks().size());
 
         UndoGroup group2 = new UndoGroup();

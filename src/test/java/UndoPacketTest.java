@@ -76,7 +76,7 @@ public class UndoPacketTest implements Serializable {
 
         Circle circle = new Circle(20.0, Color.RED);
         // Circle is non-serializable subject.
-        UndoStack stack = new UndoStack(circle, null);
+        UndoStack stack = new UndoStack(circle);
         stack.setWatcher(new SimpleUndoWatcher());
         for (int i = 0; i < count; ++i) {
             stack.push(new CircleRadiusUndoCmd(circle, i * 2.0));
@@ -325,7 +325,7 @@ public class UndoPacketTest implements Serializable {
         // First only add/remove
         Canvas canvas = new Canvas();
         // Use non-serializable subject.
-        UndoStack stack = new UndoStack(canvas, null);
+        UndoStack stack = new UndoStack(canvas);
         // Use local context.
         stack.getLocalContexts().put("resources", new LocalContext());
         stack.push(new CanvasCmdCtrl().new Add(Canvas.CT_Circle));

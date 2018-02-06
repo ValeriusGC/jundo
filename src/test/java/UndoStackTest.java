@@ -34,7 +34,7 @@ public class UndoStackTest implements Serializable {
     public <V extends Serializable> void initSimple(Class<V> type, V[] array) throws Exception {
         arr = array;
         subj = new SimpleClass<V>(type);
-        stack = new UndoStack(subj, null);
+        stack = new UndoStack(subj);
         stack.setWatcher(new SimpleUndoWatcher());
         for (V i : array) {
             stack.push(new RefCmd<>("", ((SimpleClass<V>) subj)::getValue,
@@ -77,14 +77,14 @@ public class UndoStackTest implements Serializable {
     @Test
     public void testGetLocalContexts() {
         Point pt = new Point(1, 1);
-        UndoStack stack = new UndoStack(pt, null);
+        UndoStack stack = new UndoStack(pt);
         assertNotNull(stack);
     }
 
     @Test
     public void testGetCommand() {
         Point pt = new Point(1, 1);
-        UndoStack stack = new UndoStack(pt, null);
+        UndoStack stack = new UndoStack(pt);
         assertEquals(null, stack.getCommand(0));
         assertEquals(null, stack.getCommand(-1));
         assertEquals(null, stack.getCommand(1000));
@@ -92,8 +92,8 @@ public class UndoStackTest implements Serializable {
 
     @Test
     public void testStackCompare() {
-        UndoStack stack1 = new UndoStack(new Point(1, 1), null);
-        UndoStack stack2 = new UndoStack(new Point(1, 1), null);
+        UndoStack stack1 = new UndoStack(new Point(1, 1));
+        UndoStack stack2 = new UndoStack(new Point(1, 1));
         assertNotEquals(stack1, stack2);
     }
 
@@ -110,7 +110,7 @@ public class UndoStackTest implements Serializable {
     public void testClear() throws Exception {
 
         Point pt = new Point(1, 1);
-        UndoStack stack = new UndoStack(pt, null);
+        UndoStack stack = new UndoStack(pt);
 
         // for 100% test coverage
         stack.clear();
@@ -140,7 +140,7 @@ public class UndoStackTest implements Serializable {
     @Test
     public void testSetClean() throws Exception {
         Point pt = new Point(1, 1);
-        UndoStack stack = new UndoStack(pt, null);
+        UndoStack stack = new UndoStack(pt);
         stack.push(new RefCmd<>("", pt::getX, pt::setX, 2));
         stack.push(new RefCmd<>("", pt::getX, pt::setX, 4));
         stack.setClean();
@@ -150,7 +150,7 @@ public class UndoStackTest implements Serializable {
     @Test
     public void testIsClean() throws Exception {
         Point pt = new Point(1, 1);
-        UndoStack stack = new UndoStack(pt, null);
+        UndoStack stack = new UndoStack(pt);
         stack.push(new RefCmd<>("", pt::getX, pt::setX, 2));
         stack.push(new RefCmd<>("", pt::getX, pt::setX, 4));
         stack.setClean();
@@ -163,7 +163,7 @@ public class UndoStackTest implements Serializable {
     @Test
     public void testUndoCaption() throws Exception {
         Point pt = new Point(1, 1);
-        UndoStack stack = new UndoStack(pt, null);
+        UndoStack stack = new UndoStack(pt);
         stack.push(new RefCmd<>("1", pt::getX, pt::setX, 2));
         stack.push(new RefCmd<>("2", pt::getX, pt::setX, 4));
         stack.push(new RefCmd<>("3", pt::getX, pt::setX, 4));
@@ -177,7 +177,7 @@ public class UndoStackTest implements Serializable {
     @Test
     public void testRedoCaption() throws Exception {
         Point pt = new Point(1, 1);
-        UndoStack stack = new UndoStack(pt, null);
+        UndoStack stack = new UndoStack(pt);
         stack.push(new RefCmd<>("1", pt::getX, pt::setX, 2));
         stack.push(new RefCmd<>("2", pt::getX, pt::setX, 4));
         stack.push(new RefCmd<>("3", pt::getX, pt::setX, 4));
@@ -191,7 +191,7 @@ public class UndoStackTest implements Serializable {
     @Test
     public void testCaption() throws Exception {
         Point pt = new Point(1, 1);
-        UndoStack stack = new UndoStack(pt, null);
+        UndoStack stack = new UndoStack(pt);
         assertEquals("", stack.caption(0));
 
         stack.push(new RefCmd<>("1", pt::getX, pt::setX, 2));
@@ -213,7 +213,7 @@ public class UndoStackTest implements Serializable {
     public void testIntegerClass() throws Exception {
 
         Point pt = new Point(-30, -40);
-        UndoStack stack = new UndoStack(pt, null);
+        UndoStack stack = new UndoStack(pt);
 
         // for 100% test coverage
         stack.undo();
@@ -260,7 +260,7 @@ public class UndoStackTest implements Serializable {
     @Test
     public void testException1() {
         thrown.expect(NullPointerException.class);
-        new UndoStack(null, null);
+        new UndoStack(null);
         thrown = ExpectedException.none();
     }
 
@@ -268,14 +268,14 @@ public class UndoStackTest implements Serializable {
     @Test
     public void testException2() throws Exception {
         thrown.expect(NullPointerException.class);
-        new UndoStack(new Point(1, 1), null).push(null);
+        new UndoStack(new Point(1, 1)).push(null);
         thrown = ExpectedException.none();
     }
 
     // null subject 2
     @Test
     public void testException3() throws Exception {
-        UndoStack stack = new UndoStack(new Point(0, 0), null);
+        UndoStack stack = new UndoStack(new Point(0, 0));
         thrown.expect(Exception.class);
         stack.clone(null);
         thrown = ExpectedException.none();
@@ -284,7 +284,7 @@ public class UndoStackTest implements Serializable {
     // null subject 2
     @Test
     public void testException4() {
-        UndoStack stack = new UndoStack(new Point(0, 0), null);
+        UndoStack stack = new UndoStack(new Point(0, 0));
         thrown.expect(NullPointerException.class);
         stack.setSubj(null);
         thrown = ExpectedException.none();
@@ -293,7 +293,7 @@ public class UndoStackTest implements Serializable {
     @Test
     public void testException5() {
         thrown.expect(NullPointerException.class);
-        new UndoStack(null, null);
+        new UndoStack(null);
         thrown = ExpectedException.none();
     }
 
@@ -306,7 +306,7 @@ public class UndoStackTest implements Serializable {
         {
             // Create without group
             Serializable subj = new SimpleClass<>(Integer.class);
-            UndoStack stack = new UndoStack(subj, null);
+            UndoStack stack = new UndoStack(subj);
             stack.setWatcher(new SimpleUndoWatcher());
             assertEquals(true, stack.isClean());
             assertEquals(false, stack.canRedo());
@@ -404,7 +404,7 @@ public class UndoStackTest implements Serializable {
     @Test
     public void testSetIndex() throws Exception {
         NonTrivialClass scene = new NonTrivialClass();
-        UndoStack stack = new UndoStack(scene, null);
+        UndoStack stack = new UndoStack(scene);
         stack.push(new NonTrivialClass.AddCommand(CIRCLE, scene));
         assertEquals(1, stack.getIdx());
         stack.setIndex(-1);
@@ -596,7 +596,7 @@ public class UndoStackTest implements Serializable {
     @Test
     public void testNonTrivial() throws Exception {
         NonTrivialClass ntc = new NonTrivialClass();
-        UndoStack stack = new UndoStack(ntc, null);
+        UndoStack stack = new UndoStack(ntc);
         stack.setWatcher(new SimpleUndoWatcher());
         assertEquals(0, ntc.items.size());
 
@@ -768,7 +768,7 @@ public class UndoStackTest implements Serializable {
             final int x = 10;
             final int y = 20;
             Point subj = new Point(x, y);
-            UndoStack stack = new UndoStack(subj, null);
+            UndoStack stack = new UndoStack(subj);
             UndoCommand parentCmd = new UndoCmdStub("parent");
             parentCmd.addChild(new RefCmd<>("move 1", subj::getY, subj::setY, 50));
             parentCmd.addChild(new RefCmd<>("move 2", subj::getX, subj::setX, 35));
@@ -788,7 +788,7 @@ public class UndoStackTest implements Serializable {
             final int x = 10;
             final int y = 20;
             Point subj = new Point(x, y);
-            UndoStack stack = new UndoStack(subj, null);
+            UndoStack stack = new UndoStack(subj);
             UndoCommand parentCmd = new UndoCmdStub("parent");
             parentCmd.addChild(new RefCmd<>("move 1", subj::getY, subj::setY, 50));
             parentCmd.addChild(new RefCmd<>("move 2", subj::getX, subj::setX, 35));
@@ -822,7 +822,7 @@ public class UndoStackTest implements Serializable {
     public void testRealMacros() throws Exception {
 
         final TextSample subj = new TextSample();
-        UndoStack stack = new UndoStack(new ArrayList<String>(), null);
+        UndoStack stack = new UndoStack(new ArrayList<String>());
         stack.getLocalContexts().put(TextSampleCommands.TEXT_CTX_KEY, subj);
 
         String s = "start: ";
@@ -982,7 +982,7 @@ public class UndoStackTest implements Serializable {
     @Test
     public void testMacros2() {
         final Point pt = new Point(1, 1);
-        UndoStack stack = new UndoStack(pt, null);
+        UndoStack stack = new UndoStack(pt);
         stack.setWatcher(new SimpleUndoWatcher());
         assertEquals(null, stack.getMacros());
         stack.beginMacro("macro 1");
@@ -1005,8 +1005,8 @@ public class UndoStackTest implements Serializable {
     @Test
     public void hash() {
         HashMap<UndoStack, Integer> map = new HashMap<>();
-        map.put(new UndoStack(new Point(1, 2), null), null);
-        map.put(new UndoStack(new Point(1, 2), null), null);
+        map.put(new UndoStack(new Point(1, 2)), null);
+        map.put(new UndoStack(new Point(1, 2)), null);
         assertEquals(2, map.size());
     }
 

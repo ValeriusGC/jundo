@@ -23,7 +23,7 @@ public class UndoCommandTest {
     @Before
     public void prepare() {
         subj = new Point(1, 1);
-        stack = new UndoStack(subj, null);
+        stack = new UndoStack(subj);
     }
 
     @Test

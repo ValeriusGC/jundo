@@ -24,7 +24,7 @@ public class UndoPacket_AgainTest {
     @Before
     public void prepare() {
         subj = new Point(1, 1);
-        stack = new UndoStack(subj, null);
+        stack = new UndoStack(subj);
     }
 
     @Test
@@ -144,7 +144,7 @@ public class UndoPacket_AgainTest {
         assertEquals(-30, pt.getX());
         assertEquals(-40, pt.getY());
 
-        UndoStack stack = new UndoStack(pt, null);
+        UndoStack stack = new UndoStack(pt);
         stack.push(new RefCmd<>("Change x", pt::getX, pt::setX, 10));
         stack.push(new RefCmd<>("Change y", pt::getY, pt::setY, 20));
 
@@ -232,7 +232,7 @@ public class UndoPacket_AgainTest {
     public void testNonSerializableException() throws Exception {
 
         Color color = Color.RED;
-        UndoStack stack = new UndoStack(color, null);
+        UndoStack stack = new UndoStack(color);
         thrown.expect(Exception.class);
         UndoPacket
                 .make(stack, "", 1)
@@ -249,7 +249,7 @@ public class UndoPacket_AgainTest {
 
         {
             Color color = Color.RED;
-            UndoStack stack = new UndoStack(color, null);
+            UndoStack stack = new UndoStack(color);
             String str = UndoPacket
                     .make(stack, "", 1)
                     .onStore(subj -> "RED")
@@ -271,7 +271,7 @@ public class UndoPacket_AgainTest {
 
         {
             Color color = Color.RED;
-            UndoStack stack = new UndoStack(color, null);
+            UndoStack stack = new UndoStack(color);
             String str = UndoPacket
                     .make(stack, "", 1)
                     .onStore(new UndoPacket.OnStore() {
@@ -298,7 +298,7 @@ public class UndoPacket_AgainTest {
 
         {
             Point pt = new Point(1, 2);
-            UndoStack stack = new UndoStack(pt, null);
+            UndoStack stack = new UndoStack(pt);
             // Here handler is redundant, only for illustrating pair OnStore/OnRestore
             String str = UndoPacket
                     .make(stack, "", 1)
@@ -321,7 +321,7 @@ public class UndoPacket_AgainTest {
     public void testNew() throws Exception {
 
         Point pt = new Point(1, 2);
-        UndoStack stack = new UndoStack(pt, null);
+        UndoStack stack = new UndoStack(pt);
         // Here handler is redundant, only for illustrating pair OnStore/OnRestore
         String str = UndoPacket
                 .make(stack, "", 1)
