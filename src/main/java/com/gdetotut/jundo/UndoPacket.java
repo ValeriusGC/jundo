@@ -68,9 +68,10 @@ public class UndoPacket {
 
         /**
          * @param stack restored stack.
-         * @param subjInfo additional information stored with the stack
+         * @param subjInfo additional information stored with the stack.
+         * @param result code of unpacking procedure.
          */
-        void apply(UndoStack stack, SubjInfo subjInfo);
+        void apply(UndoStack stack, SubjInfo subjInfo, Result result);
     }
 
     /**
@@ -238,11 +239,11 @@ public class UndoPacket {
 
 
     public static class Result {
-        public final UndoPacket.UnpackResult result;
+        public final UndoPacket.UnpackResult code;
         public final String msg;
 
-        public Result(UndoPacket.UnpackResult result, String msg) {
-            this.result = result;
+        public Result(UndoPacket.UnpackResult code, String msg) {
+            this.code = code;
             this.msg = msg;
         }
     }
@@ -251,7 +252,7 @@ public class UndoPacket {
 
     // TODO: 01.02.18 Рассортировать, убрать лишнее
     public enum UnpackResult {
-        UPR_Success, // unpack was successful
+        UPR_Success,        // unpack was successful
         UPR_WrongCandidate, // Input string (candidate) was wrong
         UPR_PeekRefused,    // Refusing on peek stage
         UPR_NewStack        // Error at restore step
@@ -335,7 +336,7 @@ public class UndoPacket {
             UndoPacket packet;
             UndoStack stack;
 
-            if(result.result != UnpackResult.UPR_Success) {
+            if(result.code != UnpackResult.UPR_Success) {
                 stack = createNew(creator, result);
                 // When is new, subjInfo is null
                 packet = new UndoPacket(stack, null, new Result(UnpackResult.UPR_NewStack, result.msg));
@@ -390,7 +391,6 @@ public class UndoPacket {
      * @param candidate input Base64 string.
      * @param p predicate.
      * @return Helper Peeker's instance.
-     * @throws Exception If something goes wrong.
      */
     public static Peeker peek(String candidate, Predicate<SubjInfo> p) {
 
@@ -404,7 +404,7 @@ public class UndoPacket {
 
         SubjInfo obj = null;
 
-        if(result.result == UnpackResult.UPR_Success) {
+        if(result.code == UnpackResult.UPR_Success) {
             String lenPart = candidate.substring(0, Builder.HEADER_SIZE);
             lenPart = lenPart.substring(0, lenPart.indexOf(Builder.HEADER_FILLER));
             long len = Long.valueOf(lenPart);
@@ -418,7 +418,7 @@ public class UndoPacket {
             }
 
 
-            if(result.result == UnpackResult.UPR_Success) {
+            if(result.code == UnpackResult.UPR_Success) {
                 if(p != null && !p.test(obj)) {
                     result = new Result(UnpackResult.UPR_PeekRefused, null);
                 }
@@ -426,7 +426,7 @@ public class UndoPacket {
 
         }
 
-        // Here result is signal of whether candidate and obj are good or bad
+        // Here code is signal of whether candidate and obj are good or bad
         return new Peeker(candidate, obj, result);
     }
 
@@ -437,7 +437,7 @@ public class UndoPacket {
      */
     public UndoStack stack(OnPrepareStack handler) {
         if (null != handler) {
-            handler.apply(stack, subjInfo);
+            handler.apply(stack, subjInfo, result);
         }
         return stack;
     }

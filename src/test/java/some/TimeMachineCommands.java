@@ -20,7 +20,7 @@ public class TimeMachineCommands implements Serializable {
      */
     public static final String SUBJ_ID = "some.TimeMachineCommands";
 
-    class TimeMachineBaseCmd extends UndoCommand {
+    public static abstract class TimeMachineBaseCmd extends UndoCommand {
 
         final Long time;
 
@@ -29,14 +29,17 @@ public class TimeMachineCommands implements Serializable {
             this.time = time;
         }
 
+        public Long getTime() {
+            return time;
+        }
     }
 
     /**
      * Adds new line to document.
      */
-    public class AddNewLineCmd extends TimeMachineBaseCmd {
+    public static class AddNewLineCmd extends TimeMachineBaseCmd {
 
-        protected AddNewLineCmd(String caption, Long time) {
+        public AddNewLineCmd(String caption, Long time) {
             super(caption, time);
         }
 
@@ -62,11 +65,11 @@ public class TimeMachineCommands implements Serializable {
     /**
      * Adds string of text to document.
      */
-    public class AddTextCmd extends TimeMachineBaseCmd {
+    public static class AddTextCmd extends TimeMachineBaseCmd {
 
         private String text;
 
-        protected AddTextCmd(String caption, Long time, String text) {
+        public AddTextCmd(String caption, Long time, String text) {
             super(caption, time);
             this.text = text;
         }

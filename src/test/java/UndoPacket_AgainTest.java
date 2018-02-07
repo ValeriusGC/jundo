@@ -74,32 +74,32 @@ public class UndoPacket_AgainTest {
     @Test
     public void testNullCandidate() {
         UndoPacket.Peeker peeker = UndoPacket.peek(null, null);
-        assertEquals(peeker.result.result, UPR_WrongCandidate);
+        assertEquals(peeker.result.code, UPR_WrongCandidate);
         assertEquals(peeker.result.msg, "is null");
     }
 
     @Test
     public void testShortCandidate() {
         UndoPacket.Peeker peeker = UndoPacket.peek("short", null);
-        assertEquals(peeker.result.result, UPR_WrongCandidate);
+        assertEquals(peeker.result.code, UPR_WrongCandidate);
         assertEquals(peeker.result.msg, "too small size");
     }
 
     @Test
     public void testBadSubjInfo() {
         UndoPacket.Peeker peeker = UndoPacket.peek("0ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ", null);
-        assertEquals(peeker.result.result, UPR_WrongCandidate);
+        assertEquals(peeker.result.code, UPR_WrongCandidate);
     }
 
     @Test
     public void testPeeker() throws Exception {
         String s = UndoPacket.make(stack, "stack", 1).store();
         UndoPacket.Peeker peeker = UndoPacket.peek(s, null);
-        assertEquals(peeker.result.result, UPR_Success);
+        assertEquals(peeker.result.code, UPR_Success);
         assertEquals(peeker.result.msg, null);
 
         peeker = UndoPacket.peek(s, it -> false);
-        assertEquals(peeker.result.result, UPR_PeekRefused);
+        assertEquals(peeker.result.code, UPR_PeekRefused);
         assertEquals(peeker.result.msg, null);
     }
 
@@ -128,7 +128,7 @@ public class UndoPacket_AgainTest {
                 .restore((processedSubj, subjInfo) -> null, () -> stack);
 
         assertNull(packet.subjInfo);
-        assertEquals(UPR_NewStack, packet.result.result);
+        assertEquals(UPR_NewStack, packet.result.code);
     }
 
 
@@ -335,7 +335,7 @@ public class UndoPacket_AgainTest {
         UndoStack stack1 = UndoPacket
                 .peek(str, it -> it.id.equals("abc"))
                 .restore((processedSubj, it) -> "", () -> new UndoStack(pt))
-                .stack((s, si) -> {
+                .stack((s, si, r) -> {
                     if (si != null && si.version == 2) {
                         s.getLocalContexts().put("a", "aa");
                         s.getLocalContexts().put("b", "bb");

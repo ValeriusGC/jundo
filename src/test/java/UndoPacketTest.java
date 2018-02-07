@@ -387,7 +387,7 @@ public class UndoPacketTest implements Serializable {
                         }
                         return new Factory().toSubj((String) processedSubj);
                     }, null)
-                    .stack((stack2, subjInfo) -> {
+                    .stack((stack2, subjInfo, result) -> {
                         // Good place to restore local contexts.
                         stack2.getLocalContexts().put("resources", new LocalContext1());
                     });
@@ -434,7 +434,7 @@ public class UndoPacketTest implements Serializable {
                         }
                         return new Factory().toSubj((String) processedSubj);
                     }, null)
-                    .stack((stack2, subjInfo) -> {
+                    .stack((stack2, subjInfo, result) -> {
                         // Good place to restore local contexts.
                         stack2.getLocalContexts().put("resources", new LocalContext1());
                     });

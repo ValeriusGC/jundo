@@ -147,6 +147,8 @@ public class UndoStack implements Serializable {
      * been executed will almost always lead to corruption of the document's state.
      *
      * @param cmd new command to execute. Required.
+     * @return Object itself for 'chain' call.
+     * @throws Exception If something goes wrong.
      */
     public UndoStack push(UndoCommand cmd) throws Exception {
 

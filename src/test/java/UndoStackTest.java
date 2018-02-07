@@ -923,10 +923,10 @@ public class UndoStackTest implements Serializable {
         UndoStack stack1 = UndoPacket
                 .peek(pack, null)
                 .restore((processedSubj, subjInfo) -> {
-                    // Always return null for unexpected result.
+                    // Always return null for unexpected code.
                     return SUBJ_ID.equals(subjInfo.id) ? (ArrayList<String>) processedSubj : null;
                 }, null)
-                .stack((stack2, subjInfo) -> {
+                .stack((stack2, subjInfo, result) -> {
                     stack2.getLocalContexts().put(TextSampleCommands.TEXT_CTX_KEY, subj1);
                     subj1.clear();
                     subj1.text.addAll((ArrayList<String>) stack2.getSubj());

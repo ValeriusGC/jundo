@@ -38,7 +38,7 @@ public class TextSample {
      * Adds new line
      */
     public void addLine() {
-        text.add("" + text.size() + ": ");
+        text.add("" + (text.size() + 1) + ": ");
     }
 
     public void removeLine() {
@@ -47,6 +47,11 @@ public class TextSample {
 
     public void clear() {
         text.clear();
+    }
+
+    public void reset(List<String> value) {
+        text.clear();
+        text.addAll(value);
     }
 
     /**
