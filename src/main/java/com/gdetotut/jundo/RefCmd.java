@@ -1,7 +1,6 @@
 package com.gdetotut.jundo;
 
 import java.io.Serializable;
-import java.util.Objects;
 
 /**
  * Simple command with access via getter/setter references.

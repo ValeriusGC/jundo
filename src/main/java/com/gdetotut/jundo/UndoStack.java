@@ -585,11 +585,34 @@ public class UndoStack implements Serializable {
         }
     }
 
+    // TODO: 08.02.18 Комментарии и тесты для новых методов!
+
     /**
-     * @return List of macros.
+     * @return Macro by index if exists; otherwise null.
      */
-    public List<UndoCommand> getMacros() {
-        return macros;
+    public UndoCommand getMacro(int idx) {
+        UndoCommand macro = null;
+        if(macros != null && (idx > -1 && idx < macros.size())) {
+            macro = macros.get(idx);
+        }
+        return macro;
+    }
+
+    public int getMacroCount() {
+        return macros != null ? macros.size() : 0;
+    }
+
+    public void removeMacro(int idx) {
+        if(macros != null && (idx > -1 && idx < macros.size())) {
+            macros.remove(idx);
+        }
+    }
+
+    public void clearMacros() {
+        if(macros != null) {
+            macros.clear();
+            macros = null;
+        }
     }
 
     /**
