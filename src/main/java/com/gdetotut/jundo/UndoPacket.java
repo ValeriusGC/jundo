@@ -435,7 +435,7 @@ public class UndoPacket {
      * @param handler if not null user can tune finally stack (e.g. set local contexts).
      * @return UndoStack instance.
      */
-    public UndoStack stack(OnPrepareStack handler) {
+    public UndoStack prepare(OnPrepareStack handler) {
         if (null != handler) {
             handler.apply(stack, subjInfo, result);
         }

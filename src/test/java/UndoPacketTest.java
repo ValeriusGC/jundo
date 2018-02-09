@@ -107,7 +107,7 @@ public class UndoPacketTest implements Serializable {
                 }, null);
         UndoStack stack2 = packetBack
                 // When we have no handler, we still need to specify it explicitly.
-                .stack(null);
+                .prepare(null);
 
         Circle circle1 = (Circle) stack2.getSubj();
         assertEquals(count, stack2.count());
@@ -383,7 +383,7 @@ public class UndoPacketTest implements Serializable {
                         }
                         return new Factory().toSubj((String) processedSubj);
                     }, null)
-                    .stack((stack2, subjInfo, result) -> {
+                    .prepare((stack2, subjInfo, result) -> {
                         // Good place to restore local contexts.
                         stack2.getLocalContexts().put("resources", new LocalContext1());
                     });
@@ -430,7 +430,7 @@ public class UndoPacketTest implements Serializable {
                         }
                         return new Factory().toSubj((String) processedSubj);
                     }, null)
-                    .stack((stack2, subjInfo, result) -> {
+                    .prepare((stack2, subjInfo, result) -> {
                         // Good place to restore local contexts.
                         stack2.getLocalContexts().put("resources", new LocalContext1());
                     });

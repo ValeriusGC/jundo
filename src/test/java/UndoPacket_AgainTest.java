@@ -113,7 +113,7 @@ public class UndoPacket_AgainTest {
         // Need subj handler, cause was onStore
         UndoPacket.peek(s, null)
                 .restore(null, null)
-                .stack(null);
+                .prepare(null);
         thrown = ExpectedException.none();
     }
 
@@ -192,7 +192,7 @@ public class UndoPacket_AgainTest {
         assertEquals(2, subjInfo.extras.size());
 
         // Раз стек ожидаемого типа, можно смело распаковывать остальное
-        UndoStack stack1 = packet.stack(null);
+        UndoStack stack1 = packet.prepare(null);
         // Это логично - стек, воссозданный заново ничего общего не имеет с текущим по адресному пространству
         assertNotEquals(stack, stack1);
         // Зато это должно быть одинаково
@@ -335,7 +335,7 @@ public class UndoPacket_AgainTest {
         UndoStack stack1 = UndoPacket
                 .peek(str, it -> it.id.equals("abc"))
                 .restore((processedSubj, it) -> "", () -> new UndoStack(pt))
-                .stack((s, si, r) -> {
+                .prepare((s, si, r) -> {
                     if (si != null && si.version == 2) {
                         s.getLocalContexts().put("a", "aa");
                         s.getLocalContexts().put("b", "bb");
