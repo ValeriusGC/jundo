@@ -1,6 +1,4 @@
 import com.gdetotut.jundo.*;
-import com.gdetotut.jundo.UndoPacket.SubjInfo;
-import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -8,7 +6,6 @@ import some.*;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 
 import static org.junit.Assert.assertEquals;
@@ -269,15 +266,6 @@ public class UndoStackTest implements Serializable {
     public void testException2() throws Exception {
         thrown.expect(NullPointerException.class);
         new UndoStack(new Point(1, 1)).push(null);
-        thrown = ExpectedException.none();
-    }
-
-    // null subject 2
-    @Test
-    public void testException3() throws Exception {
-        UndoStack stack = new UndoStack(new Point(0, 0));
-        thrown.expect(Exception.class);
-        stack.clone(null);
         thrown = ExpectedException.none();
     }
 
@@ -893,7 +881,7 @@ public class UndoStackTest implements Serializable {
         stack.push(new TextSampleCommands.AddLine("new line"));
         testText.addLine();
         assertEquals(subj, testText);
-        UndoCommand macro = stack.clone(stack.getMacros().get(0));
+        UndoCommand macro = stack.cloneMacro(0);
         stack.push(macro);
         testText.add(s2);
         assertEquals(subj, testText);
@@ -959,7 +947,7 @@ public class UndoStackTest implements Serializable {
         stack1.push(new TextSampleCommands.AddLine("new line"));
         testText.addLine();
         assertEquals(subj1, testText);
-        UndoCommand macro1 = stack1.clone(stack1.getMacros().get(0));
+        UndoCommand macro1 = stack1.cloneMacro(0);
         stack1.push(macro1);
         testText.add(s2);
         assertEquals(subj1, testText);
@@ -980,14 +968,14 @@ public class UndoStackTest implements Serializable {
 
     // for 100% test coverage
     @Test
-    public void testMacros2() {
+    public void testMacros2() throws Exception {
         final Point pt = new Point(1, 1);
         UndoStack stack = new UndoStack(pt);
         stack.setWatcher(new SimpleUndoWatcher());
-        assertEquals(null, stack.getMacros());
+        assertEquals(null, stack.cloneMacro(0));
         stack.beginMacro("macro 1");
         stack.endMacro();
-        assertEquals(1, stack.getMacros().size());
+        assertEquals(1, stack.getMacroCount());
 
         // for 100% code coverage
         stack.endMacro();

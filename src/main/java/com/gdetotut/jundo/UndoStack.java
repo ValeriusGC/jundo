@@ -588,12 +588,12 @@ public class UndoStack implements Serializable {
     // TODO: 08.02.18 Комментарии и тесты для новых методов!
 
     /**
-     * @return Macro by index if exists; otherwise null.
+     * @return Clones macro by index if exists; otherwise null.
      */
-    public UndoCommand getMacro(int idx) {
+    public UndoCommand cloneMacro(int idx) throws Exception {
         UndoCommand macro = null;
         if(macros != null && (idx > -1 && idx < macros.size())) {
-            macro = macros.get(idx);
+            macro = clone(macros.get(idx));
         }
         return macro;
     }
@@ -632,13 +632,37 @@ public class UndoStack implements Serializable {
     }
 
     /**
+     * We use <b>getSubj() == stack.getSubj()</b> instead of <b>Objects.equals(getSubj(), stack.getSubj())</b>
+     * because semantic of <b>2 stack differs when they have different addresses in memory.</b>
+     */
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        UndoStack stack = (UndoStack) o;
+
+        return getIdx() == stack.getIdx() &&
+                getCleanIdx() == stack.getCleanIdx() &&
+                getUndoLimit() == stack.getUndoLimit() &&
+                suspend == stack.suspend &&
+                getSubj() == stack.getSubj() &&
+                Objects.equals(commands, stack.commands) &&
+                Objects.equals(macroCmd, stack.macroCmd);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(getSubj());
+    }
+
+    /**
      * Clones command. Use it for clone macro only!
      *
      * @param cmd macro for clone.
      * @return Cloned command.
      * @throws Exception If something goes wrong.
      */
-    public UndoCommand clone(UndoCommand cmd) throws Exception {
+    private UndoCommand clone(UndoCommand cmd) throws Exception {
 
         if (null == cmd) {
             throw new NullPointerException("cmd");
@@ -661,30 +685,6 @@ public class UndoStack implements Serializable {
             }
             return cmdClone;
         }
-    }
-
-    /**
-     * We use <b>getSubj() == stack.getSubj()</b> instead of <b>Objects.equals(getSubj(), stack.getSubj())</b>
-     * because semantic of <b>2 stack differs when they have different addresses in memory.</b>
-     */
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        UndoStack stack = (UndoStack) o;
-
-        return getIdx() == stack.getIdx() &&
-                getCleanIdx() == stack.getCleanIdx() &&
-                getUndoLimit() == stack.getUndoLimit() &&
-                suspend == stack.suspend &&
-                getSubj() == stack.getSubj() &&
-                Objects.equals(commands, stack.commands) &&
-                Objects.equals(macroCmd, stack.macroCmd);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(getSubj());
     }
 
     /**

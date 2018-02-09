@@ -34,7 +34,6 @@ public class UndoCommand implements Serializable {
      *
      * Not should be created standalone!
      *
-     *
      * @param caption a short string describing what this command does. Optional.
      */
     protected UndoCommand(String caption) {
