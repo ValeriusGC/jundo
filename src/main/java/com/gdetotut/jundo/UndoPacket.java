@@ -9,6 +9,9 @@ import java.util.function.Predicate;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
+import static com.gdetotut.jundo.UndoPacket.UnpackResult.UPR_NewStack;
+import static com.gdetotut.jundo.UndoPacket.UnpackResult.UPR_Success;
+
 /**
  * Class for control storing and restoring UndoStack's instances.
  * <p>Has features to tune these processes for various types of subject:
@@ -336,10 +339,12 @@ public class UndoPacket {
             UndoPacket packet;
             UndoStack stack;
 
-            if(result.code != UnpackResult.UPR_Success) {
+            if(result.code != UPR_Success) {
                 stack = createNew(creator, result);
                 // When is new, subjInfo is null
-                packet = new UndoPacket(stack, null, new Result(UnpackResult.UPR_NewStack, result.msg));
+                packet = new UndoPacket(stack, null,
+                        new Result(UPR_NewStack,
+                                result.msg == null ? result.code.name() : result.msg));
             } else{
 
 
@@ -372,7 +377,7 @@ public class UndoPacket {
 
                 } catch (Exception e) {
                     subjInfo = null;
-                    result = new Result(UnpackResult.UPR_NewStack, e.getLocalizedMessage());
+                    result = new Result(UPR_NewStack, e.getLocalizedMessage());
                     stack = createNew(creator, result);
                 }
 
@@ -394,7 +399,7 @@ public class UndoPacket {
      */
     public static Peeker peek(String candidate, Predicate<SubjInfo> p) {
 
-        UndoPacket.Result result = new Result(UnpackResult.UPR_Success, null);
+        UndoPacket.Result result = new Result(UPR_Success, null);
 
         if (null == candidate) {
             result = new Result(UnpackResult.UPR_WrongCandidate, "is null");
@@ -404,7 +409,7 @@ public class UndoPacket {
 
         SubjInfo obj = null;
 
-        if(result.code == UnpackResult.UPR_Success) {
+        if(result.code == UPR_Success) {
             String lenPart = candidate.substring(0, Builder.HEADER_SIZE);
             lenPart = lenPart.substring(0, lenPart.indexOf(Builder.HEADER_FILLER));
             long len = Long.valueOf(lenPart);
@@ -418,7 +423,7 @@ public class UndoPacket {
             }
 
 
-            if(result.code == UnpackResult.UPR_Success) {
+            if(result.code == UPR_Success) {
                 if(p != null && !p.test(obj)) {
                     result = new Result(UnpackResult.UPR_PeekRefused, null);
                 }
@@ -456,7 +461,6 @@ public class UndoPacket {
                 ? new ObjectInputStream(new GZIPInputStream(new ByteArrayInputStream(data)))
                 : new ObjectInputStream(new ByteArrayInputStream(data))) {
 
-            boolean isExp = true;
             Object obj = ois.readObject();
             return obj;
         }
