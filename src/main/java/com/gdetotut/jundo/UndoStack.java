@@ -44,7 +44,7 @@ public class UndoStack implements Serializable {
     /**
      * List of macros.
      */
-    private List<UndoCommand> macros;
+    private List<UndoMacro> macros;
 
     /**
      * Limit for command's stack.
@@ -133,6 +133,21 @@ public class UndoStack implements Serializable {
     }
 
     /**
+     * Макро не должен создавать другого макро.
+     *
+     * @param macro
+     * @return
+     * @throws Exception
+     */
+    public UndoStack push(UndoMacro macro) throws Exception {
+        if(macro == null) {
+            throw new NullPointerException("macro");
+        }
+        UndoCommand cmd = clone(macro.cmd);
+        return push(cmd);
+    }
+
+    /**
      * Pushes cmd on the stack or merges it with the most recently executed command.
      * In either case, executes cmd by calling its {@link UndoCommand#redo} function.
      * <p>If cmd's id is not {@link UndoCommand#NO_MERGING}, and if the id is the same
@@ -157,6 +172,12 @@ public class UndoStack implements Serializable {
         } else if (!suspend) {
 
             cmd.setOwner(this);
+            if(cmd.children != null) {
+                for (UndoCommand child : cmd.children) {
+                    child.setOwner(this);
+                }
+            }
+
             UndoCommand copy = clone(cmd);
 
             cmd.redo();
@@ -410,7 +431,7 @@ public class UndoStack implements Serializable {
      *
      * @param caption description for this macro. Optional.
      */
-    public void beginMacro(String caption) {
+    public void beginMacro(String caption) throws Exception {
 
         if (null != macroCmd) {
             System.err.println("UndoStack.beginMacro(): cannot set new beginMacro in the middle of a macro");
@@ -454,14 +475,21 @@ public class UndoStack implements Serializable {
      * <p>If this is the outermost macro in a set nested macros, this function
      * emits {@link UndoWatcher#indexChanged} once for the entire macro command.
      */
-    public void endMacro() {
+    public void endMacro() throws Exception {
         if (null == macroCmd) {
             System.err.println("UndoStack.endMacro(): no matching beginMacro()");
+            return;
         }
         if (null == macros) {
             macros = new ArrayList<>();
         }
-        macros.add(macroCmd);
+
+        // We don't know what client will use this macro.
+//        for (UndoCommand child : macroCmd.children) {
+//            child.setOwner(null);
+//        }
+//        macroCmd.setOwner(null);
+        macros.add(new UndoMacro(clone(macroCmd)));
         macroCmd = null;
         if (null != watcher) {
             watcher.macroChanged(false);
@@ -590,12 +618,20 @@ public class UndoStack implements Serializable {
     /**
      * @return Clones macro by index if exists; otherwise null.
      */
-    public UndoCommand cloneMacro(int idx) throws Exception {
-        UndoCommand macro = null;
+//    public UndoCommand cloneMacro(int idx) throws Exception {
+//        UndoCommand macro = null;
+//        if(macros != null && (idx > -1 && idx < macros.size())) {
+//            macro = clone(macros.get(idx));
+//        }
+//        return macro;
+//    }
+
+    public UndoMacro getMacro(int idx) throws Exception {
         if(macros != null && (idx > -1 && idx < macros.size())) {
-            macro = clone(macros.get(idx));
+            UndoMacro macro = new UndoMacro(clone(macros.get(idx).cmd));
+            return macro;
         }
-        return macro;
+        return null;
     }
 
     public int getMacroCount() {
@@ -677,10 +713,10 @@ public class UndoStack implements Serializable {
             UndoCommand cmdClone = (UndoCommand) ois.readObject();
             // THe fact is new Owner is not the same because it recreated as new from stream.
             // and we should reset it...
-            cmdClone.setOwner(cmd.getOwner());
+            cmdClone.setOwner(this);
             if (null != cmdClone.children) {
                 for (UndoCommand uc : cmdClone.children) {
-                    uc.setOwner(cmd.getOwner());
+                    uc.setOwner(this);
                 }
             }
             return cmdClone;
