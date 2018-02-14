@@ -145,8 +145,8 @@ public class UndoCommand implements Serializable {
      */
     public final void undo() {
         if (null != children && children.size() > 0) {
-            for (UndoCommand cmd : children) {
-                cmd.undo();
+            for (int i = children.size() - 1; i > -1; --i) {
+                children.get(i).undo();
             }
         } else {
             doUndo();
