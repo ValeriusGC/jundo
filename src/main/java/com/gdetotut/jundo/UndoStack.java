@@ -510,8 +510,9 @@ public class UndoStack implements Serializable {
      * Returns a reference to the command at idx.
      * <p>Be aware to modify it because modifying a command, once it has been pushed onto the stack and executed,
      * almost always causes corruption of the state of the document, if the command is later undone or redone.
+     * <p>Use this method only to get additional information or properties on {@link UndoCommand} descendants.
      *
-     * @param idx the index of command has been retrieved.
+     * @param idx the index of command whose is retrieved.
      * @return Command or null.
      */
     public UndoCommand getCommand(int idx) {
