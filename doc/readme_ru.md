@@ -81,7 +81,7 @@ String store = UndoPacket
     // Упаковка строки в gzip
     .zipped(true)
     // NonTrivialClass имплементирует Serializable, ручной упаковки не требуется.
-    //.onStore(...)
+    //.onStoreManually(...)
     .store();
 ```
 *`SimpleUndoWatcher` отвязывается автоматически.*
@@ -240,7 +240,7 @@ private void serialize() throws IOException {
     try {
         String store = UndoPacket
             .make(stack, IDS_STACK, 1)
-            .onStore(new UndoPacket.OnStore() {
+            .onStoreManually(new UndoPacket.OnStore() {
                 @Override
                 public Serializable handle(Object subj) {
                     Map<String, Object> props = new HashMap<>();
@@ -365,7 +365,7 @@ stack.setWatcher(this);
 
 Под капотом библиотеки - работа с методами ObjectOutputStream, причем не только при сохранении/восстановлении. При работе стека с макросами тоже применяется сериализация.
 Поэтому при проектировании команд не следует сохранять в полях несериализуемые типы, так как нет способа их обработать - следует использовать динамическое обращение к ним в методах doUndo/doRedo и так далее через обращения к локальным контекстам стека (свойство UndoCommand#owner).
-Несериализуемые субъекты следует вручную преобразовывать в строки или другой Serializable тип в методах onStore()/restore().
+Несериализуемые субъекты следует вручную преобразовывать в строки или другой Serializable тип в методах onStoreManually()/restore().
 
 ### Все что привязано к адресам в памяти - через локальные контексты
 

@@ -51,12 +51,12 @@ public class UndoStackTest implements Serializable {
     public <V extends Serializable> void makeTestSimple() throws Exception {
 
         String store = UndoPacket
-                .make(stack, "not_used", 333)
+                .prepare(stack, "not_used", 333)
                 .store();
         UndoStack stackBack = UndoPacket
                 .peek(store, null)
                 .restore(null, null)
-                .prepare(null);
+                .process(null);
 
         // Here we can not compare stacks themselves 'cause of stack's comparison principle
         assertEquals(stack.getSubj(), stackBack.getSubj());
@@ -234,13 +234,13 @@ public class UndoStackTest implements Serializable {
 
         String store = UndoPacket
                 // It is a good idea always store smth like subject class identifier.
-                .make(stack, "sample.Point", 1)
+                .prepare(stack, "sample.Point", 1)
                 .store();
         UndoStack stackBack = UndoPacket
                 // When we have no handler, we need to specify it explicitly.
                 .peek(store, null)
                 .restore(null, null)
-                .prepare(null);
+                .process(null);
 
         Point ptBack = (Point) stackBack.getSubj();
         assertEquals(pt, ptBack);
@@ -627,13 +627,13 @@ public class UndoStackTest implements Serializable {
 
             String store = UndoPacket
                     // It's a good practice always specify id.
-                    .make(stack, "NonTrivialClass", 1)
+                    .prepare(stack, "NonTrivialClass", 1)
                     .store();
             UndoStack stackBack = UndoPacket
                     // When we have no handlers, we still need to specify it explicitly.
                     .peek(store, null)
                     .restore(null, null)
-                    .prepare(null);
+                    .process(null);
 
 
 //            assertEquals(stack, stackBack);
@@ -732,13 +732,13 @@ public class UndoStackTest implements Serializable {
             // Serialize
             String store = UndoPacket
                     // It's a good practice always specify id.
-                    .make(stack, "some.NonTrivialClass", 1)
+                    .prepare(stack, "some.NonTrivialClass", 1)
                     .store();
             UndoStack stackBack = UndoPacket
                     // When we have no handlers, we still need to specify it explicitly.
                     .peek(store, null)
                     .restore(null, null)
-                    .prepare(null);
+                    .process(null);
 
             NonTrivialClass objBack = (NonTrivialClass) stackBack.getSubj();
 
@@ -917,12 +917,12 @@ public class UndoStackTest implements Serializable {
         }
 
         String pack = UndoPacket
-                .make(stack, SUBJ_ID, 1)
+                .prepare(stack, SUBJ_ID, 1)
 //                .onStore(o -> {
 //                    // Here it is redundant
 //                    return (String)o;
 //                })
-                .extra("macros", macros)
+                .addExtra("macros", macros)
                 .store();
 
         // Let's emulate new local context
@@ -936,7 +936,7 @@ public class UndoStackTest implements Serializable {
                     // Always return null for unexpected code.
                     return SUBJ_ID.equals(subjInfo.id) ? (ArrayList<String>) processedSubj : null;
                 }, null)
-                .prepare((stack2, subjInfo, result) -> {
+                .process((stack2, subjInfo, result) -> {
                     macros1[0] = (Macros) subjInfo.extras.get("macros");
                     stack2.getLocalContexts().put(TextSampleCommands.TEXT_CTX_KEY, subj1);
                     subj1.clear();

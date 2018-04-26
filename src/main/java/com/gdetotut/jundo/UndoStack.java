@@ -85,6 +85,11 @@ public class UndoStack implements Serializable {
         }
     }
 
+    /**
+     * Constructs an empty undo stack (secondary CTR) without {@link #group}
+     * @param subj the object for whom this stack was made. Can be null if no way to prepare it serializable. Required.
+     * @see #UndoStack(Object, UndoGroup)
+     */
     public UndoStack(Object subj) {
         this(subj, null);
     }

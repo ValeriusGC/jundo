@@ -87,10 +87,10 @@ public class UndoPacketTest implements Serializable {
 
         String store = UndoPacket
                 // It's a good practice always specify id.
-                .make(stack, "javafx.scene.shape.Circle", 1)
-                // Circle is not serializable so we have to make it by hands.
+                .prepare(stack, "javafx.scene.shape.Circle", 1)
+                // Circle is not serializable so we have to prepare it by hands.
                 .onStore(subj -> new Util().circleToString((Circle) subj))
-                .zipped(true) // why not?
+                .zip() // why not?
                 .store();
         UndoPacket packetBack = UndoPacket
                 // When we have no handlers, we still need to specify it explicitly.
@@ -107,7 +107,7 @@ public class UndoPacketTest implements Serializable {
                 }, null);
         UndoStack stack2 = packetBack
                 // When we have no handler, we still need to specify it explicitly.
-                .prepare(null);
+                .process(null);
 
         Circle circle1 = (Circle) stack2.getSubj();
         assertEquals(count, stack2.count());
@@ -366,10 +366,10 @@ public class UndoPacketTest implements Serializable {
         {
             String store = UndoPacket
                     // It's a good practice always specify id.
-                    .make(stack, "local.Canvas", 2)
+                    .prepare(stack, "local.Canvas", 2)
                     // We need convert non-serializable subject by hand.
                     .onStore(subj -> new Factory().toStr((Canvas) subj))
-                    .zipped(true) //
+                    .zip() //
                     .store();
             UndoStack stack1 = UndoPacket
                     // When we have no handlers, we still need to specify it explicitly.
@@ -383,7 +383,7 @@ public class UndoPacketTest implements Serializable {
                         }
                         return new Factory().toSubj((String) processedSubj);
                     }, null)
-                    .prepare((stack2, subjInfo, result) -> {
+                    .process((stack2, subjInfo, result) -> {
                         // Good place to restore local contexts.
                         stack2.getLocalContexts().put("resources", new LocalContext1());
                     });
@@ -413,10 +413,10 @@ public class UndoPacketTest implements Serializable {
         {
             String store = UndoPacket
                     // It's a good practice always specify id.
-                    .make(stack, "local.Canvas", 2)
+                    .prepare(stack, "local.Canvas", 2)
                     // We need convert non-serializable subject by hand.
                     .onStore(subj -> new Factory().toStr((Canvas) subj))
-                    .zipped(true) //
+                    .zip() //
                     .store();
             UndoStack stack1 = UndoPacket
                     // When we have no handlers, we still need to specify it explicitly.
@@ -430,7 +430,7 @@ public class UndoPacketTest implements Serializable {
                         }
                         return new Factory().toSubj((String) processedSubj);
                     }, null)
-                    .prepare((stack2, subjInfo, result) -> {
+                    .process((stack2, subjInfo, result) -> {
                         // Good place to restore local contexts.
                         stack2.getLocalContexts().put("resources", new LocalContext1());
                     });

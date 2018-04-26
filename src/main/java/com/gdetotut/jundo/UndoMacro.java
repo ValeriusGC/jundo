@@ -17,6 +17,9 @@ public class UndoMacro implements Serializable {
 
     /**
      * Creates object with command inside.
+     *
+     * Macro command and its children hasn't an owner.
+     *
      * @param cmd wrapped command.
      */
     UndoMacro(UndoCommand cmd) {

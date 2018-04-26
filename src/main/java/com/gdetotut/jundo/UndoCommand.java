@@ -12,7 +12,7 @@ public class UndoCommand implements Serializable {
     /**
      * Default value for {@link #id}.
      */
-    public static int NO_MERGING = -1;
+    static int NO_MERGING = -1;
 
     /**
      * Command's caption. Identifies command in the list of ones. Optional.
@@ -40,16 +40,22 @@ public class UndoCommand implements Serializable {
         setCaption(caption);
     }
 
+    /**
+     * Setting an owner to the command.
+     *
+     * Macros should not have an owner, while simple commands should.
+     *
+     * @param owner stack as an owner.
+     * @return Object itself.
+     */
     UndoCommand setOwner(UndoStack owner) {
-//      It is checked for null everywhere when is called.
-//        if (owner == null) {
-//            throw new NullPointerException("owner");
-//        }
-
         this.owner = owner;
         return this;
     }
 
+    /**
+     * @return The owner of object.
+     */
     public UndoStack getOwner() {
         return owner;
     }

@@ -43,7 +43,7 @@ public class UndoGroup implements Serializable {
     }
 
     /**
-     * Adds {@link UndoStack} to this group.
+     * Adds {@link UndoStack} to this group if it not exists here.
      *
      * @param stack stack to be added. Required.
      */

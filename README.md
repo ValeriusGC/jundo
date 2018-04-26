@@ -56,7 +56,7 @@ stack.redo();
 String store = UndoPacket
     .make(stack, "some.SomeClass", 1) // use id and version (good practice)
     .zipped(true) // packing (optional)
-    .onStore(-> Utils::store) // manual tune for subject storing (required for non-serializable subject) 
+    .onStoreManually(-> Utils::store) // manual tune for subject storing (required for non-serializable subject)
     .store(); // terminal method for the storing (required)
 ```
 
@@ -173,7 +173,7 @@ If commands do not totally control property change - they do not control it at a
 
 #### Store/restore non-serializable subjects only via OnStore/OnRestore event handlers
 
-If subject does not implements Serializable it should be manually tuned in the `onStore(OnStore handler)` when storing and in the `restore(OnRestore handler)` when restoring.
+If subject does not implements Serializable it should be manually tuned in the `onStoreManually(OnStore handler)` when storing and in the `restore(OnRestore handler)` when restoring.
 
 The fact is under the hood the library uses ObjectOutputStream methods as when storing/restoring so when macros create. And the following restriction follows from here -
 
@@ -315,7 +315,7 @@ private void serialize() throws IOException {
     try {
         String store = UndoPacket
             .make(stack, IDS_STACK, 1)
-            .onStore(new UndoPacket.OnStore() {
+            .onStoreManually(new UndoPacket.OnStore() {
                 @Override
                 public Serializable handle(Object subj) {
                     Map<String, Object> props = new HashMap<>();

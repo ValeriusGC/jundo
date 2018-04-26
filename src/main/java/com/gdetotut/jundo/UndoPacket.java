@@ -1,23 +1,19 @@
 package com.gdetotut.jundo;
 
 import java.io.*;
-import java.util.Arrays;
-import java.util.Base64;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.*;
 import java.util.function.Predicate;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
-import static com.gdetotut.jundo.UndoPacket.UnpackResult.UPR_NewStack;
-import static com.gdetotut.jundo.UndoPacket.UnpackResult.UPR_Success;
+import static com.gdetotut.jundo.UndoPacket.Result.Code.*;
 
 /**
  * Class for control storing and restoring UndoStack's instances.
  * <p>Has features to tune these processes for various types of subject:
  * <ul>
  *     <li>parameters {@link SubjInfo#id} and {@link SubjInfo#version} helps restore subject correctly
- *     <li>function {@link Builder#onStore} helps manually tune the storing process for non-serializable subjects
+ *     <li>function {@link Builder#onStoreManually} helps manually tune the storing process for non-serializable subjects
  *     <li>function {@link #peek} helps to check whether this string has needed type for restore
  *     <li>function {@link Peeker#restore} helps manually tune the restore process for non-serializable subjects
  * </ul>
@@ -25,29 +21,33 @@ import static com.gdetotut.jundo.UndoPacket.UnpackResult.UPR_Success;
 public class UndoPacket {
 
     /**
-     * Implement this interface in {@link Builder#onStore} to manually tune the storing process for non-serializable subjects.
+     * Implement this interface in {@link Builder#onStoreManually} to manually tune the storing process
+     * for non-serializable subjects.
      */
     @FunctionalInterface
-    public interface OnStore {
+    public interface OnStoreManually {
 
         /**
-         * Used in {@link Builder#onStore} for manually convert {@link UndoStack#subj} to {@link Serializable} form if required.
+         * Used in {@link Builder#onStoreManually} for manually convert {@link UndoStack#subj} to {@link Serializable} form
+         * if required.
          * @param subj {@link UndoStack#subj}
          * @return Converted {@link UndoStack#subj}
-         * @see Builder#onStore
+         * @see Builder#onStoreManually
          */
         Serializable handle(Object subj);
     }
 
     /**
-     * Implement this interface in {@link Peeker#restore} to manually tune the restoring process for non-serializable subjects.
+     * Implement this interface in {@link Peeker#restore} to manually tune the restoring process
+     * for non-serializable subjects.
      */
     @FunctionalInterface
-    public interface OnRestore {
+    public interface OnRestoreManually {
 
         /**
          *
-         * @param processedSubj {@link UndoStack#subj} in the Serializable form that earlier processed in the {@link Builder#onStore}.
+         * @param processedSubj {@link UndoStack#subj} in the Serializable form that earlier processed
+         *                                            in the {@link Builder#onStoreManually}.
          * @param subjInfo additional information stored with the stack
          * @return Restored {@link UndoStack#subj}.
          * @throws Exception If something goes wrong.
@@ -59,7 +59,7 @@ public class UndoPacket {
      * Creator for new UndoStack. Is used when was error at restore.
      */
     @FunctionalInterface
-    public interface OnCreate {
+    public interface OnUndoStackCreator {
         UndoStack createNew();
     }
 
@@ -67,7 +67,7 @@ public class UndoPacket {
      * Implement this interface in {@link #stack} to tune restored stack (i.e. to set local contexts).
      */
     @FunctionalInterface
-    public interface OnPrepareStack {
+    public interface OnProcessStack {
 
         /**
          * @param stack restored stack.
@@ -119,8 +119,8 @@ public class UndoPacket {
         private final String id;
         private final int version;
         private Map<String, Serializable> extras = null;
-        private boolean zipped = false;
-        private OnStore onStore = null;
+        private boolean zip = false;
+        private OnStoreManually onStoreManually = null;
 
         /**
          * Adds key-value pair to map of additional information.
@@ -130,7 +130,7 @@ public class UndoPacket {
          * @param value value of additional parameter.
          * @return Instance of Builder.
          */
-        public Builder extra(String key, Serializable value) {
+        public Builder addExtra(String key, Serializable value) {
             if (key == null) {
                 throw new NullPointerException("key");
             }
@@ -143,23 +143,21 @@ public class UndoPacket {
 
         /**
          * Sets flag for gzip when store.
-         *
-         * @param value true if wanna to gzip; otherwise pass false.
          * @return Instance of Builder.
          */
-        public Builder zipped(boolean value) {
-            this.zipped = value;
+        public Builder zip() {
+            this.zip = true;
             return this;
         }
 
         /**
          * Sets event handler for manual tune to store non-serializable subject.
          *
-         * @param onStore if not null user can manually convert non-serializable subject to {@link Serializable} form.
+         * @param onStoreManually if not null user can manually convert non-serializable subject to {@link Serializable} form.
          * @return Instance of Builder.
          */
-        public Builder onStore(OnStore onStore) {
-            this.onStore = onStore;
+        public Builder onStore(OnStoreManually onStoreManually) {
+            this.onStoreManually = onStoreManually;
             return this;
         }
 
@@ -171,20 +169,20 @@ public class UndoPacket {
          */
         public String store() throws Exception {
 
-            Data data = new Data();
+            InnerData data = new InnerData();
             data.stack = stack;
 
             // Обработчик есть: обрабатываем в строку
             //  иначе если не сериализуется ошибка
             //  иначе назначаем напрямую
-            if (null != onStore) {
-                data.subj = onStore.handle(stack.getSubj());
-                data.subjHandled = true;
+            if (null != onStoreManually) {
+                data.subj = onStoreManually.handle(stack.getSubj());
+                data.storedManually = true;
             } else if (!(stack.getSubj() instanceof Serializable)) {
                 throw new Exception("UndoStack's subject not serializable");
             } else {
                 data.subj = (Serializable) stack.getSubj();
-                data.subjHandled = false;
+                data.storedManually = false;
             }
             //~
 
@@ -197,8 +195,7 @@ public class UndoPacket {
             char[] caAddon = new char[HEADER_SIZE - ca.length];
             Arrays.fill(caAddon, HEADER_FILLER);
             String headerLenAsStr = new String(ca) + new String(caAddon);
-            String res = headerLenAsStr + subjInfoPart + dataPart;
-            return res;
+            return headerLenAsStr + subjInfoPart + dataPart;
         }
 
         private Builder(UndoStack stack, String id, int version) {
@@ -216,7 +213,7 @@ public class UndoPacket {
                 oos.writeObject(value);
             }
 
-            if (zipped) {
+            if (zip) {
                 final ByteArrayOutputStream zippedBaos = new ByteArrayOutputStream();
                 try (GZIPOutputStream gzip = new GZIPOutputStream(zippedBaos)) {
                     gzip.write(baos.toByteArray());
@@ -233,19 +230,29 @@ public class UndoPacket {
     /**
      * Helper structure to store {@link UndoStack}
      */
-    private static class Data implements Serializable {
+    private static class InnerData implements Serializable {
         UndoStack stack;
         Serializable subj;
         // True if subj handled via handler; otherwise false.
-        boolean subjHandled;
+        boolean storedManually;
     }
 
-
+    /**
+     * Unpacking result.
+     */
     public static class Result {
-        public final UndoPacket.UnpackResult code;
+
+        public enum Code {
+            RC_Success,        // unpack was successful
+            RC_WrongCandidate, // Input string (candidate) was wrong
+            RC_PeekRefused,    // Refusing on peek stage
+            RC_NewStack        // Error at the restore step, the stack is created manually
+        }
+
+        public final Code code;
         public final String msg;
 
-        public Result(UndoPacket.UnpackResult code, String msg) {
+        Result(Code code, String msg) {
             this.code = code;
             this.msg = msg;
         }
@@ -253,26 +260,18 @@ public class UndoPacket {
 
     //-------------------------------------------------------------------------------------------------
 
-    // TODO: 01.02.18 Рассортировать, убрать лишнее
-    public enum UnpackResult {
-        UPR_Success,        // unpack was successful
-        UPR_WrongCandidate, // Input string (candidate) was wrong
-        UPR_PeekRefused,    // Refusing on peek stage
-        UPR_NewStack        // Error at restore step
-    }
-
     public final Result result;
 
     /**
      * Additional information about {@link UndoStack#subj}.
-     * Can be null if {@link Result} is UPR_NewStack
+     * Can be null if {@link Result} is RC_NewStack
      */
     public final SubjInfo subjInfo;
 
     /**
-     * {@link UndoStack} itself. Available only through {@link UndoPacket#stack} method.
+     * {@link UndoStack} itself.
      */
-    private final UndoStack stack;
+    public final UndoStack stack;
 
     //-------------------------------------------------------------------------------------------------
 
@@ -283,35 +282,37 @@ public class UndoPacket {
      * @param version subject version. Highly recommend because allows migration in restore process.
      * @return {@link Builder} instance.
      */
-    public static Builder make(UndoStack stack, String id, int version) {
+    public static Builder prepare(UndoStack stack, String id, int version) {
         return new Builder(stack, id, version);
     }
 
     /**
      * Helper class to provide chain of restore methods.
+     *
+     *
      */
     public static class Peeker {
 
         public SubjInfo subjInfo;
         public final String candidate;
-        public UndoPacket.Result result;
+        public Result result;
 
-        Peeker(String candidate, SubjInfo subjInfo, UndoPacket.Result result) {
+        Peeker(String candidate, SubjInfo subjInfo, Result result) {
             this.candidate = candidate;
             this.subjInfo = subjInfo;
             this.result = result;
         }
 
         /**
-         * Calls when is some error on restore state.
-         * @param creator
-         * @return
+         * Calls when some error occurs while automatic restoring process.
+         * @param creator callback function to create stack manually if error occurs while automatic restoring process.
+         * @return manually restored stack.
          * @throws CreatorException
          */
-        private UndoStack createNew(OnCreate creator, UndoPacket.Result reason) throws CreatorException {
+        private UndoStack createNew(OnUndoStackCreator creator, Result result) throws CreatorException {
             UndoStack stack;
             if(creator == null) {
-                throw new CreatorException(reason.msg);
+                throw new CreatorException(result.msg);
             }else {
                 stack = creator.createNew();
                 if(stack == null) {
@@ -334,20 +335,18 @@ public class UndoPacket {
          * @return UndoPacket
          * @throws CreatorException Occurs when both restoring and creating failed.
          */
-        public UndoPacket restore(OnRestore handler, OnCreate creator) throws CreatorException {
+        public UndoPacket restore(OnRestoreManually handler, OnUndoStackCreator creator) throws CreatorException {
 
             UndoPacket packet;
             UndoStack stack;
 
-            if(result.code != UPR_Success) {
+            if(result.code != RC_Success) {
                 stack = createNew(creator, result);
                 // When is new, subjInfo is null
                 packet = new UndoPacket(stack, null,
-                        new Result(UPR_NewStack,
+                        new Result(RC_NewStack,
                                 result.msg == null ? result.code.name() : result.msg));
             } else{
-
-
                 String lenPart = candidate.substring(0, Builder.HEADER_SIZE);
                 lenPart = lenPart.substring(0, lenPart.indexOf(Builder.HEADER_FILLER));
                 long len = Long.valueOf(lenPart);
@@ -362,14 +361,14 @@ public class UndoPacket {
                         ? new ObjectInputStream(new GZIPInputStream(new ByteArrayInputStream(arr)))
                         : new ObjectInputStream(new ByteArrayInputStream(arr))) {
 
-                    Data data = (Data) ois.readObject();
+                    InnerData data = (InnerData) ois.readObject();
                     stack = data.stack;
                     Object subj = data.subj;
 
                     // Если хендлер назначен, надо его использовать
                     if (null != handler) {
                         subj = handler.handle(data.subj, subjInfo);
-                    } else if (data.subjHandled) {
+                    } else if (data.storedManually) {
                         throw new Exception("when storing was handled then restoring need handler too");
                     }
 
@@ -377,7 +376,7 @@ public class UndoPacket {
 
                 } catch (Exception e) {
                     subjInfo = null;
-                    result = new Result(UPR_NewStack, e.getLocalizedMessage());
+                    result = new Result(RC_NewStack, e.getLocalizedMessage());
                     stack = createNew(creator, result);
                 }
 
@@ -399,48 +398,47 @@ public class UndoPacket {
      */
     public static Peeker peek(String candidate, Predicate<SubjInfo> p) {
 
-        UndoPacket.Result result = new Result(UPR_Success, null);
+        Result result = new Result(RC_Success, null);
 
         if (null == candidate) {
-            result = new Result(UnpackResult.UPR_WrongCandidate, "is null");
+            result = new Result(RC_WrongCandidate, "is null");
         } else if (candidate.length() < Builder.HEADER_SIZE ){
-            result = new Result(UnpackResult.UPR_WrongCandidate, "too small size");
+            result = new Result(RC_WrongCandidate, "too small size");
         }
 
-        SubjInfo obj = null;
+        SubjInfo si = null;
 
-        if(result.code == UPR_Success) {
-            String lenPart = candidate.substring(0, Builder.HEADER_SIZE);
+        if(result.code == RC_Success) {
+            String lenPart = Objects.requireNonNull(candidate).substring(0, Builder.HEADER_SIZE);
             lenPart = lenPart.substring(0, lenPart.indexOf(Builder.HEADER_FILLER));
             long len = Long.valueOf(lenPart);
             String subjInfoCandidate = candidate.substring(Builder.HEADER_SIZE, (int) (Builder.HEADER_SIZE + len));
 
             // This show if candidate has UndoStack inside it.
             try {
-                obj = (SubjInfo) fromBase64(subjInfoCandidate);
+                si = (SubjInfo) fromBase64(subjInfoCandidate);
             }catch (Exception e) {
-                result = new Result(UnpackResult.UPR_WrongCandidate, e.getLocalizedMessage());
+                result = new Result(RC_WrongCandidate, e.getLocalizedMessage());
             }
 
-
-            if(result.code == UPR_Success) {
-                if(p != null && !p.test(obj)) {
-                    result = new Result(UnpackResult.UPR_PeekRefused, null);
+            if(result.code == RC_Success) {
+                if(p != null && !p.test(si)) {
+                    result = new Result(RC_PeekRefused, null);
                 }
             }
 
         }
 
         // Here code is signal of whether candidate and obj are good or bad
-        return new Peeker(candidate, obj, result);
+        return new Peeker(candidate, si, result);
     }
 
     /**
-     * Terminal method in restore chain.
+     * Terminal optional method in restore chain.
      * @param handler if not null user can tune finally stack (e.g. set local contexts).
      * @return UndoStack instance.
      */
-    public UndoStack prepare(OnPrepareStack handler) {
+    public UndoStack process(OnProcessStack handler) {
         if (null != handler) {
             handler.apply(stack, subjInfo, result);
         }
@@ -448,10 +446,6 @@ public class UndoPacket {
     }
 
     private static Object fromBase64(String candidate) throws IOException, ClassNotFoundException {
-//      It can not be null because chacked when called
-//        if (null == candidate) {
-//            throw new NullPointerException("candidate");
-//        }
 
         final byte[] data = Base64.getUrlDecoder().decode(candidate);
         final boolean zipped = (data[0] == (byte) (GZIPInputStream.GZIP_MAGIC))
@@ -467,7 +461,7 @@ public class UndoPacket {
 
     }
 
-    private UndoPacket(UndoStack stack, SubjInfo subjInfo, UndoPacket.Result result) {
+    private UndoPacket(UndoStack stack, SubjInfo subjInfo, Result result) {
         this.stack = stack;
         this.subjInfo = subjInfo;
         this.result = result;

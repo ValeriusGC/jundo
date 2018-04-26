@@ -1,5 +1,4 @@
 import com.gdetotut.jundo.UndoPacket;
-import com.gdetotut.jundo.UndoPacket.UnpackResult;
 import com.gdetotut.jundo.UndoStack;
 import org.junit.Test;
 import some.TextSample;
@@ -11,6 +10,8 @@ import some.TimeMachineCommands.TimeMachineBaseCmd;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
+import static com.gdetotut.jundo.UndoPacket.Result.Code.*;
 
 import static org.junit.Assert.assertEquals;
 
@@ -107,7 +108,7 @@ public class UseCasesTest {
         //----------------
         // Make repacking for fun
         String pack = UndoPacket
-                .make(stack, TimeMachineCommands.SUBJ_ID, 1)
+                .prepare(stack, TimeMachineCommands.SUBJ_ID, 1)
                 // As TextSample is not serializable, we do it by hands.
                 .onStore(subj -> String.join("!!!!", ((TextSample)subj).text))
                 .store();
@@ -122,8 +123,8 @@ public class UseCasesTest {
                     return textSample;
                 }, () -> new UndoStack(new TextSample())) // Very recommend to provide default UndoStack creator!
                 // Good practice to check code and make smth when it is error.
-                .prepare((stack2, subjInfo, result) -> {
-                    if(result.code != UnpackResult.UPR_Success) {
+                .process((stack2, subjInfo, result) -> {
+                    if(result.code != RC_Success) {
                         System.err.println(result.msg);
                     }
                 });
