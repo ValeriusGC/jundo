@@ -106,11 +106,11 @@ public class UndoPacket_AgainTest {
     @Test
     public void testHandlerEx() throws Exception {
         String s = UndoPacket.prepare(stack, "", 1)
-                .onStore(subj -> "")
+                .onStoreManually(subj -> "")
                 .store();
 
         thrown.expect(Exception.class);
-        // Need subj handler, cause was onStore
+        // Need subj handler, cause was onStoreManually
         UndoPacket.peek(s, null)
                 .restore(null, null)
                 .process(null);
@@ -120,7 +120,7 @@ public class UndoPacket_AgainTest {
     @Test
     public void testHandlerEx2() throws Exception {
         String s = UndoPacket.prepare(stack, "", 1)
-                .onStore(subj -> "")
+                .onStoreManually(subj -> "")
                 .store();
 
         UndoPacket packet = UndoPacket
@@ -252,7 +252,7 @@ public class UndoPacket_AgainTest {
             UndoStack stack = new UndoStack(color);
             String str = UndoPacket
                     .prepare(stack, "", 1)
-                    .onStore(subj -> "RED")
+                    .onStoreManually(subj -> "RED")
                     .store();
             // We need handler here 'cause we store with handler
             UndoPacket
@@ -274,9 +274,9 @@ public class UndoPacket_AgainTest {
             UndoStack stack = new UndoStack(color);
             String str = UndoPacket
                     .prepare(stack, "", 1)
-                    .onStore(new UndoPacket.OnStoreManually() {
+                    .onStoreManually(new UndoPacket.OnStoreManually() {
                         @Override
-                        public String handle(Object subj) {
+                        public String store(Object subj) {
                             return "RED";
                         }
                     })
@@ -302,9 +302,9 @@ public class UndoPacket_AgainTest {
             // Here handler is redundant, only for illustrating pair OnStoreManually/OnRestoreManually
             String str = UndoPacket
                     .prepare(stack, "", 1)
-                    .onStore(new UndoPacket.OnStoreManually() {
+                    .onStoreManually(new UndoPacket.OnStoreManually() {
                         @Override
-                        public String handle(Object subj) {
+                        public String store(Object subj) {
                             return "Point";
                         }
                     })
@@ -325,7 +325,7 @@ public class UndoPacket_AgainTest {
         // Here handler is redundant, only for illustrating pair OnStoreManually/OnRestoreManually
         String str = UndoPacket
                 .prepare(stack, "", 1)
-                .onStore(subj -> "Point")
+                .onStoreManually(subj -> "Point")
                 .store();
 
         SubjInfo subjInfo = UndoPacket.peek(str, p -> p.id.equals("abc")).subjInfo;

@@ -918,7 +918,7 @@ public class UndoStackTest implements Serializable {
 
         String pack = UndoPacket
                 .prepare(stack, SUBJ_ID, 1)
-//                .onStore(o -> {
+//                .onStoreManually(o -> {
 //                    // Here it is redundant
 //                    return (String)o;
 //                })

@@ -31,7 +31,7 @@ public class UndoCommand implements Serializable {
 
     /**
      * Constructs an UndoCommand object with the given caption.
-     *
+     * <p>
      * Not should be created standalone!
      *
      * @param caption a short string describing what this command does. Optional.
@@ -42,7 +42,7 @@ public class UndoCommand implements Serializable {
 
     /**
      * Setting an owner to the command.
-     *
+     * <p>
      * Macros should not have an owner, while simple commands should.
      *
      * @param owner stack as an owner.
@@ -120,6 +120,7 @@ public class UndoCommand implements Serializable {
 
     /**
      * Adds cmd as a child in the children list.
+     *
      * @param cmd command to be added. Required.
      */
     public void addChild(UndoCommand cmd) {
@@ -127,7 +128,7 @@ public class UndoCommand implements Serializable {
             throw new NullPointerException("cmd");
         }
 
-        if(children == null) {
+        if (children == null) {
             children = new ArrayList<>();
         }
         children.add(cmd);

@@ -110,7 +110,7 @@ public class UseCasesTest {
         String pack = UndoPacket
                 .prepare(stack, TimeMachineCommands.SUBJ_ID, 1)
                 // As TextSample is not serializable, we do it by hands.
-                .onStore(subj -> String.join("!!!!", ((TextSample)subj).text))
+                .onStoreManually(subj -> String.join("!!!!", ((TextSample)subj).text))
                 .store();
         UndoStack stack1 = UndoPacket
                 .peek(pack, si -> si.id.equals(TimeMachineCommands.SUBJ_ID))

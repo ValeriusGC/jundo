@@ -17,18 +17,18 @@ public class UndoMacro implements Serializable {
 
     /**
      * Creates object with command inside.
-     *
+     * <p>
      * Macro command and its children hasn't an owner.
      *
      * @param cmd wrapped command.
      */
     UndoMacro(UndoCommand cmd) {
 
-        if(cmd == null) {
+        if (cmd == null) {
             throw new NullPointerException("cmd");
         }
 
-        if(cmd.children != null) {
+        if (cmd.children != null) {
             for (UndoCommand child : cmd.children) {
                 child.setOwner(null);
             }

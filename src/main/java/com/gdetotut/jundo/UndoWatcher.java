@@ -15,6 +15,7 @@ public interface UndoWatcher {
 
     /**
      * This event fires when undo/redo operation cross {@link UndoStack#cleanIdx} point.
+     *
      * @param clean true when we go into clean state; false when out.
      */
     default void cleanChanged(boolean clean) {

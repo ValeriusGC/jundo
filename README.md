@@ -317,7 +317,7 @@ private void serialize() throws IOException {
             .make(stack, IDS_STACK, 1)
             .onStoreManually(new UndoPacket.OnStore() {
                 @Override
-                public Serializable handle(Object subj) {
+                public Serializable store(Object subj) {
                     Map<String, Object> props = new HashMap<>();
                         Gson fxGson = FxGson.createWithExtras();
                         props.put("color", FxGson.createWithExtras().toJson(tab.shape.getFill()));

@@ -89,7 +89,7 @@ public class UndoPacketTest implements Serializable {
                 // It's a good practice always specify id.
                 .prepare(stack, "javafx.scene.shape.Circle", 1)
                 // Circle is not serializable so we have to prepare it by hands.
-                .onStore(subj -> new Util().circleToString((Circle) subj))
+                .onStoreManually(subj -> new Util().circleToString((Circle) subj))
                 .zip() // why not?
                 .store();
         UndoPacket packetBack = UndoPacket
@@ -368,7 +368,7 @@ public class UndoPacketTest implements Serializable {
                     // It's a good practice always specify id.
                     .prepare(stack, "local.Canvas", 2)
                     // We need convert non-serializable subject by hand.
-                    .onStore(subj -> new Factory().toStr((Canvas) subj))
+                    .onStoreManually(subj -> new Factory().toStr((Canvas) subj))
                     .zip() //
                     .store();
             UndoStack stack1 = UndoPacket
@@ -415,7 +415,7 @@ public class UndoPacketTest implements Serializable {
                     // It's a good practice always specify id.
                     .prepare(stack, "local.Canvas", 2)
                     // We need convert non-serializable subject by hand.
-                    .onStore(subj -> new Factory().toStr((Canvas) subj))
+                    .onStoreManually(subj -> new Factory().toStr((Canvas) subj))
                     .zip() //
                     .store();
             UndoStack stack1 = UndoPacket

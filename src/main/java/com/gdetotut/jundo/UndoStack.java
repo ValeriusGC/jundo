@@ -87,6 +87,7 @@ public class UndoStack implements Serializable {
 
     /**
      * Constructs an empty undo stack (secondary CTR) without {@link #group}
+     *
      * @param subj the object for whom this stack was made. Can be null if no way to prepare it serializable. Required.
      * @see #UndoStack(Object, UndoGroup)
      */
@@ -138,14 +139,14 @@ public class UndoStack implements Serializable {
     }
 
     /**
-     * Макро не должен создавать другого макро.
+     * Pushes cloned command from this macro.
      *
-     * @param macro
-     * @return
-     * @throws Exception
+     * @param macro source of command. Required.
+     * @return UndoStack itself
+     * @throws Exception when something goes wrong
      */
     public UndoStack push(UndoMacro macro) throws Exception {
-        if(macro == null) {
+        if (macro == null) {
             throw new NullPointerException("macro");
         }
         UndoCommand cmd = clone(macro.cmd);
@@ -177,7 +178,7 @@ public class UndoStack implements Serializable {
         } else if (!suspend) {
 
             cmd.setOwner(this);
-            if(cmd.children != null) {
+            if (cmd.children != null) {
                 for (UndoCommand child : cmd.children) {
                     child.setOwner(this);
                 }
@@ -220,7 +221,7 @@ public class UndoStack implements Serializable {
                 if (onMacro) {
                     macroCmd.addChild(copy);
 
-                    if(cur != null) // cur can not be null but do this to get rid of warning
+                    if (cur != null) // cur can not be null but do this to get rid of warning
                         cur.addChild(cmd);
 
                 } else {
@@ -447,7 +448,7 @@ public class UndoStack implements Serializable {
 
         try {
             macroCmd = clone(startMacro);
-        } catch (Exception  e) {
+        } catch (Exception e) {
             System.err.println(e.getLocalizedMessage());
             endMacro();
         }
@@ -489,11 +490,6 @@ public class UndoStack implements Serializable {
             macros = new ArrayList<>();
         }
 
-        // We don't know what client will use this macro.
-//        for (UndoCommand child : macroCmd.children) {
-//            child.setOwner(null);
-//        }
-//        macroCmd.setOwner(null);
         macros.add(new UndoMacro(clone(macroCmd)));
         macroCmd = null;
         if (null != watcher) {
@@ -622,36 +618,42 @@ public class UndoStack implements Serializable {
     // TODO: 08.02.18 Комментарии и тесты для новых методов!
 
     /**
-     * @return Clones macro by index if exists; otherwise null.
+     * Gets copy of the macro by its index.
+     *
+     * @param idx index in macro list
+     * @return Macro or null.
+     * @throws Exception if something goes wrong.
      */
-//    public UndoCommand cloneMacro(int idx) throws Exception {
-//        UndoCommand macro = null;
-//        if(macros != null && (idx > -1 && idx < macros.size())) {
-//            macro = clone(macros.get(idx));
-//        }
-//        return macro;
-//    }
-
     public UndoMacro getMacro(int idx) throws Exception {
-        if(macros != null && (idx > -1 && idx < macros.size())) {
-            UndoMacro macro = new UndoMacro(clone(macros.get(idx).cmd));
-            return macro;
+        if (macros != null && (idx > -1 && idx < macros.size())) {
+            return new UndoMacro(clone(macros.get(idx).cmd));
         }
         return null;
     }
 
+    /**
+     * @return Count of macros.
+     */
     public int getMacroCount() {
         return macros != null ? macros.size() : 0;
     }
 
+    /**
+     * Remove macro by its index.
+     *
+     * @param idx index to remove.
+     */
     public void removeMacro(int idx) {
-        if(macros != null && (idx > -1 && idx < macros.size())) {
+        if (macros != null && (idx > -1 && idx < macros.size())) {
             macros.remove(idx);
         }
     }
 
+    /**
+     * Clears macro list
+     */
     public void clearMacros() {
-        if(macros != null) {
+        if (macros != null) {
             macros.clear();
             macros = null;
         }

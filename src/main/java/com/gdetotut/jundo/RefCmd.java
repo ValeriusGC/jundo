@@ -16,7 +16,7 @@ public final class RefCmd<V extends Serializable> extends UndoCommand {
     /**
      * Constructs object.
      *
-     * @param caption a short string describing what this command does. Optional.
+     * @param caption  a short string describing what this command does. Optional.
      * @param getter   a reference to getter-method for this value. Getter shouldn't has parameters
      *                 and should return value of the V type. Required.
      * @param setter   a reference to setter-method for this value. Getter should has parameter
