@@ -18,7 +18,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * Realistic use cases.
  *
- * <p>testTimeMachine shows mechanizm to turn back for some time.
+ * <p>testTimeMachine shows mechanism to turn back for some time.
  *
  * <p>@see SNAPSHOT on <a href="https://github.com/ValeriusGC/jundo/tree/feat_ver2">https://github.com/ValeriusGC/jundo/tree/feat_ver2</a>
  */
