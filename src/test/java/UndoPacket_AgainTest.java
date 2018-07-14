@@ -1,8 +1,5 @@
-import com.gdetotut.jundo.CreatorException;
-import com.gdetotut.jundo.RefCmd;
-import com.gdetotut.jundo.UndoPacket;
+import com.gdetotut.jundo.*;
 import com.gdetotut.jundo.UndoPacket.SubjInfo;
-import com.gdetotut.jundo.UndoStack;
 import javafx.scene.paint.Color;
 import org.junit.Before;
 import org.junit.Rule;
@@ -24,7 +21,7 @@ public class UndoPacket_AgainTest {
     @Before
     public void prepare() {
         subj = new Point(1, 1);
-        stack = new UndoStack(subj);
+        stack = new UndoStackImpl(subj);
     }
 
     @Test
@@ -144,7 +141,7 @@ public class UndoPacket_AgainTest {
         assertEquals(-30, pt.getX());
         assertEquals(-40, pt.getY());
 
-        UndoStack stack = new UndoStack(pt);
+        UndoStack stack = new UndoStackImpl(pt);
         stack.push(new RefCmd<>("Change x", pt::getX, pt::setX, 10));
         stack.push(new RefCmd<>("Change y", pt::getY, pt::setY, 20));
 
@@ -232,7 +229,7 @@ public class UndoPacket_AgainTest {
     public void testNonSerializableException() throws Exception {
 
         Color color = Color.RED;
-        UndoStack stack = new UndoStack(color);
+        UndoStack stack = new UndoStackImpl(color);
         thrown.expect(Exception.class);
         UndoPacket
                 .prepare(stack, "", 1)
@@ -249,7 +246,7 @@ public class UndoPacket_AgainTest {
 
         {
             Color color = Color.RED;
-            UndoStack stack = new UndoStack(color);
+            UndoStack stack = new UndoStackImpl(color);
             String str = UndoPacket
                     .prepare(stack, "", 1)
                     .onStoreManually(subj -> "RED")
@@ -271,7 +268,7 @@ public class UndoPacket_AgainTest {
 
         {
             Color color = Color.RED;
-            UndoStack stack = new UndoStack(color);
+            UndoStack stack = new UndoStackImpl(color);
             String str = UndoPacket
                     .prepare(stack, "", 1)
                     .onStoreManually(new UndoPacket.OnStoreManually() {
@@ -298,7 +295,7 @@ public class UndoPacket_AgainTest {
 
         {
             Point pt = new Point(1, 2);
-            UndoStack stack = new UndoStack(pt);
+            UndoStack stack = new UndoStackImpl(pt);
             // Here handler is redundant, only for illustrating pair OnStoreManually/OnRestoreManually
             String str = UndoPacket
                     .prepare(stack, "", 1)
@@ -321,7 +318,7 @@ public class UndoPacket_AgainTest {
     public void testNew() throws Exception {
 
         Point pt = new Point(1, 2);
-        UndoStack stack = new UndoStack(pt);
+        UndoStack stack = new UndoStackImpl(pt);
         // Here handler is redundant, only for illustrating pair OnStoreManually/OnRestoreManually
         String str = UndoPacket
                 .prepare(stack, "", 1)
@@ -331,11 +328,11 @@ public class UndoPacket_AgainTest {
         SubjInfo subjInfo = UndoPacket.peek(str, p -> p.id.equals("abc")).subjInfo;
         UndoPacket packet = UndoPacket
                 .peek(str, it -> it.id.equals("abc"))
-                .restore((processedSubj, it) -> "", () -> new UndoStack(pt));
+                .restore((processedSubj, it) -> "", () -> new UndoStackImpl(pt));
 
         UndoStack stack1 = UndoPacket
                 .peek(str, it -> it.id.equals("abc"))
-                .restore((processedSubj, it) -> "", () -> new UndoStack(pt))
+                .restore((processedSubj, it) -> "", () -> new UndoStackImpl(pt))
                 .process((s, si, r) -> {
                     if (si != null && si.version == 2) {
                         s.getLocalContexts().put("a", "aa");

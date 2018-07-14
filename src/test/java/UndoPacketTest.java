@@ -1,6 +1,7 @@
 import com.gdetotut.jundo.UndoCommand;
 import com.gdetotut.jundo.UndoPacket;
 import com.gdetotut.jundo.UndoStack;
+import com.gdetotut.jundo.UndoStackImpl;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Rectangle;
@@ -72,7 +73,7 @@ public class UndoPacketTest implements Serializable {
 
         Circle circle = new Circle(20.0, Color.RED);
         // Circle is non-serializable subject.
-        UndoStack stack = new UndoStack(circle);
+        UndoStack stack = new UndoStackImpl(circle);
         stack.setWatcher(new SimpleUndoWatcher());
         for (int i = 0; i < count; ++i) {
             stack.push(new CircleRadiusUndoCmd(circle, i * 2.0));
@@ -321,7 +322,7 @@ public class UndoPacketTest implements Serializable {
         // First only add/remove
         Canvas canvas = new Canvas();
         // Use non-serializable subject.
-        UndoStack stack = new UndoStack(canvas);
+        UndoStack stack = new UndoStackImpl(canvas);
         // Use local context.
         stack.getLocalContexts().put("resources", new LocalContext());
         stack.push(new CanvasCmdCtrl().new Add(Canvas.CT_Circle));

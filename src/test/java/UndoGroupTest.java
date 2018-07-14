@@ -1,4 +1,5 @@
 import com.gdetotut.jundo.RefCmd;
+import com.gdetotut.jundo.UndoStackImpl;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -23,23 +24,23 @@ public class UndoGroupTest {
     public void testOneGroupOneObject() {
         SimpleClass<Integer> subj = new SimpleClass<>(Integer.class);
         UndoGroup group = new UndoGroup();
-        new UndoStack(subj, group);
+        new UndoStackImpl(subj, group);
         assertEquals(1, group.getStacks().size());
-        new UndoStack(subj, group);
+        new UndoStackImpl(subj, group);
         // See that 2nd stack with the same subject is not added to the group...
         assertEquals(1, group.getStacks().size());
 
         SimpleClass<Integer> subj2 = new SimpleClass<>(Integer.class);
         // ...And with another one is added.
-        new UndoStack(subj2, group);
+        new UndoStackImpl(subj2, group);
         assertEquals(2, group.getStacks().size());
     }
 
     @Test
     public void testClear() {
         UndoGroup group = new UndoGroup();
-        new UndoStack(new Point(1,1), group);
-        new UndoStack(new Point(1,1), group);
+        new UndoStackImpl(new Point(1,1), group);
+        new UndoStackImpl(new Point(1,1), group);
         assertEquals(2, group.getStacks().size());
         group.clear();
         assertEquals(0, group.getStacks().size());
@@ -48,9 +49,9 @@ public class UndoGroupTest {
     @Test
     public void testAdd() {
         UndoGroup group = new UndoGroup();
-        UndoStack stack = new UndoStack(new Point(1,1));
+        UndoStack stack = new UndoStackImpl(new Point(1,1));
         group.add(stack);
-        group.add(new UndoStack(new Point(1,1)));
+        group.add(new UndoStackImpl(new Point(1,1)));
         assertEquals(2, group.getStacks().size());
 
         UndoGroup group2 = new UndoGroup();
@@ -66,8 +67,8 @@ public class UndoGroupTest {
     @Test
     public void testRemove() {
         UndoGroup group = new UndoGroup();
-        UndoStack stack1 = new UndoStack(new Point(1,1), group);
-        UndoStack stack2 = new UndoStack(new Point(1,1), group);
+        UndoStack stack1 = new UndoStackImpl(new Point(1,1), group);
+        UndoStack stack2 = new UndoStackImpl(new Point(1,1), group);
         group.remove(stack1);
         assertEquals(1, group.getStacks().size());
         group.remove(stack2);
@@ -82,8 +83,8 @@ public class UndoGroupTest {
     @Test
     public void testStacks() {
         UndoGroup group = new UndoGroup();
-        UndoStack stack1 = new UndoStack(new Point(1,1), group);
-        UndoStack stack2 = new UndoStack(new Point(1,1), group);
+        UndoStack stack1 = new UndoStackImpl(new Point(1,1), group);
+        UndoStack stack2 = new UndoStackImpl(new Point(1,1), group);
         List<UndoStack> stacks = group.getStacks();
         assertEquals(2, stacks.size());
         assertEquals(stack1, stacks.get(0));
@@ -93,8 +94,8 @@ public class UndoGroupTest {
     @Test
     public void testActive() {
         UndoGroup group = new UndoGroup();
-        UndoStack stack1 = new UndoStack(new Point(1,1), group);
-        UndoStack stack2 = new UndoStack(new Point(1,1), group);
+        UndoStack stack1 = new UndoStackImpl(new Point(1,1), group);
+        UndoStack stack2 = new UndoStackImpl(new Point(1,1), group);
         assertEquals(null, group.getActive());
         group.setActive(stack1);
         assertEquals(stack1, group.getActive());
@@ -113,7 +114,7 @@ public class UndoGroupTest {
     public void testUndoRedo() throws Exception {
         Point pt = new Point(1, 1);
         UndoGroup group = new UndoGroup();
-        UndoStack stack = new UndoStack(pt, group);
+        UndoStack stack = new UndoStackImpl(pt, group);
         stack.push(new RefCmd<>("1", pt::getY, pt::setY, 2));
         stack.push(new RefCmd<>("2", pt::getY, pt::setY, 4));
 
@@ -137,7 +138,7 @@ public class UndoGroupTest {
     public void testCanUndoRedo() throws Exception {
         Point pt = new Point(1, 1);
         UndoGroup group = new UndoGroup();
-        UndoStack stack = new UndoStack(pt, group);
+        UndoStack stack = new UndoStackImpl(pt, group);
         stack.push(new RefCmd<>("1", pt::getY, pt::setY, 2));
         stack.push(new RefCmd<>("2", pt::getY, pt::setY, 4));
         assertEquals(false, group.canUndo());
@@ -157,7 +158,7 @@ public class UndoGroupTest {
     public void testCaption() throws Exception {
         Point pt = new Point(1, 1);
         UndoGroup group = new UndoGroup();
-        UndoStack stack = new UndoStack(pt, group);
+        UndoStack stack = new UndoStackImpl(pt, group);
         stack.push(new RefCmd<>("1", pt::getY, pt::setY, 2));
         stack.push(new RefCmd<>("2", pt::getY, pt::setY, 4));
         assertEquals("", group.undoCaption());
@@ -177,7 +178,7 @@ public class UndoGroupTest {
     public void testIsClean() throws Exception {
         Point pt = new Point(1, 1);
         UndoGroup group = new UndoGroup();
-        UndoStack stack = new UndoStack(pt, group);
+        UndoStack stack = new UndoStackImpl(pt, group);
         stack.push(new RefCmd<>("1", pt::getY, pt::setY, 2));
         stack.push(new RefCmd<>("2", pt::getY, pt::setY, 4));
         assertEquals(true, group.isClean());

@@ -19,27 +19,27 @@ public class UndoStack implements Serializable {
     /**
      * Keeps the subject for whom {@link #commands} are behave. Required.
      */
-    private transient Object subj;
+    protected transient Object subj;
 
     /**
      * Index of current command that redo.
      */
-    private int idx;
+    protected int idx;
 
     /**
      * Index of clean state command.
      */
-    private int cleanIdx;
+    protected int cleanIdx;
 
     /**
      * List of commands.
      */
-    private List<UndoCommand> commands;
+    protected List<UndoCommand> commands;
 
     /**
      * Macro that is been building at this moment.
      */
-    private UndoCommand macroCmd;
+    protected UndoCommand macroCmd;
 
     /**
      * List of macros.
@@ -49,22 +49,22 @@ public class UndoStack implements Serializable {
     /**
      * Limit for command's stack.
      */
-    private int undoLimit;
+    protected int undoLimit;
 
     /**
      * Client that watching events. Optional.
      */
-    private transient UndoWatcher watcher;
+    protected transient UndoWatcher watcher;
 
     /**
      * List of local contexts. Optional.
      */
-    private transient Map<String, Object> localContexts;
+    protected transient Map<String, Object> localContexts;
 
     /**
      * Flag for get rid of parasite commands.
      */
-    private boolean suspend = false;
+    protected boolean suspend = false;
 
     /**
      * Constructs an empty undo stack. The stack will initially be in the clean state.
@@ -73,7 +73,7 @@ public class UndoStack implements Serializable {
      * @param subj  for whom this stack was made. Can be null if no way to make it serializable. Required.
      * @param group possible group for this {@link UndoStack}.
      */
-    public UndoStack(Object subj, UndoGroup group) {
+    protected UndoStack(Object subj, UndoGroup group) {
         if (subj == null) {
             throw new NullPointerException("subj");
         } else {
@@ -91,7 +91,7 @@ public class UndoStack implements Serializable {
      * @param subj the object for whom this stack was made. Can be null if no way to prepare it serializable. Required.
      * @see #UndoStack(Object, UndoGroup)
      */
-    public UndoStack(Object subj) {
+    protected UndoStack(Object subj) {
         this(subj, null);
     }
 
@@ -706,7 +706,7 @@ public class UndoStack implements Serializable {
      * @return Cloned command.
      * @throws Exception If something goes wrong.
      */
-    private UndoCommand clone(UndoCommand cmd) throws Exception {
+    protected UndoCommand clone(UndoCommand cmd) throws Exception {
 
         if (null == cmd) {
             throw new NullPointerException("cmd");
@@ -738,7 +738,7 @@ public class UndoStack implements Serializable {
      * @param index index to achieve.
      * @param clean flag to set/unset clean state.
      */
-    private void setIndex(int index, boolean clean) {
+    protected void setIndex(int index, boolean clean) {
 
         final boolean wasClean = idx == cleanIdx;
 
@@ -767,7 +767,7 @@ public class UndoStack implements Serializable {
      * If the number of commands on the stack exceeds the undo limit, deletes commands
      * from the bottom of the stack.
      */
-    private void checkUndoLimit() {
+    protected void checkUndoLimit() {
 
         if (undoLimit <= 0
                 || (commands == null)

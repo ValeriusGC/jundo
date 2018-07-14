@@ -1,6 +1,7 @@
 import com.gdetotut.jundo.RefCmd;
 import com.gdetotut.jundo.UndoCommand;
 import com.gdetotut.jundo.UndoStack;
+import com.gdetotut.jundo.UndoStackImpl;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
@@ -23,13 +24,13 @@ public class UndoCommandTest {
     @Before
     public void prepare() {
         subj = new Point(1, 1);
-        stack = new UndoStack(subj);
+        stack = new UndoStackImpl(subj);
     }
 
     @Test
     public void testMergeException() throws Exception {
         thrown.expect(NullPointerException.class);
-        UndoStack stack = new UndoStack("");
+        UndoStack stack = new UndoStackImpl("");
         stack.push(new UndoCmdStub("")).getCommand(0).mergeWith(null);
         thrown = ExpectedException.none();
     }

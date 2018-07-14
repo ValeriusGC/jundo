@@ -1,5 +1,6 @@
 import com.gdetotut.jundo.UndoPacket;
 import com.gdetotut.jundo.UndoStack;
+import com.gdetotut.jundo.UndoStackImpl;
 import org.junit.Test;
 import some.TextSample;
 import some.TimeMachineCommands;
@@ -70,7 +71,7 @@ public class UseCasesTest {
     public void testTimeMachine() throws Exception {
 
         TextSample doc = new TextSample();
-        UndoStack stack = new UndoStack(doc);
+        UndoStack stack = new UndoStackImpl(doc);
         List<String> testDoc = new ArrayList<>();
 
         //--------------------------
@@ -119,9 +120,9 @@ public class UseCasesTest {
                     String s = (String)processedSubj;
                     List<String> text = Arrays.asList(s.split("!!!!"));
                     TextSample textSample = new TextSample();
-                    textSample.reset(text);
+                    textSample.set(text);
                     return textSample;
-                }, () -> new UndoStack(new TextSample())) // Very recommend to provide default UndoStack creator!
+                }, () -> new UndoStackImpl(new TextSample())) // Very recommend to provide default UndoStack creator!
                 // Good practice to check code and make smth when it is error.
                 .process((stack2, subjInfo, result) -> {
                     if(result.code != RC_Success) {

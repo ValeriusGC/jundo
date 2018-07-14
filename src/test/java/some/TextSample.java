@@ -18,7 +18,7 @@ public class TextSample {
      * @param s
      */
     public void add(String s) {
-        String cur = text.remove(text.size() - 1);
+        String cur = text.size() > 0 ? text.remove(text.size() - 1) : "";
         cur += s;
         text.add(cur);
     }
@@ -29,7 +29,8 @@ public class TextSample {
      * @param s
      */
     public void remove(String s) {
-        String cur = text.remove(text.size() - 1);
+        String cur = text.size() > 0 ? text.remove(text.size() - 1) : "";
+//        String cur = text.remove(text.size() - 1);
         cur = cur.substring(0, cur.length() - s.length());
         text.add(cur);
     }
@@ -42,16 +43,23 @@ public class TextSample {
     }
 
     public void removeLine() {
-        text.remove(text.size() - 1);
+        if(text.size() > 0) {
+            text.remove(text.size() - 1);
+        }
     }
 
     public void clear() {
         text.clear();
     }
 
-    public void reset(List<String> value) {
+    public void set(List<String> value) {
         text.clear();
         text.addAll(value);
+    }
+
+    public void set(String value) {
+        text.clear();
+        text.add(value);
     }
 
     /**

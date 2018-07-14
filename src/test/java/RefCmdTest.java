@@ -1,6 +1,7 @@
 import com.gdetotut.jundo.RefCmd;
 import com.gdetotut.jundo.UndoCommand;
 import com.gdetotut.jundo.UndoStack;
+import com.gdetotut.jundo.UndoStackImpl;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
@@ -19,7 +20,7 @@ public class RefCmdTest {
     @Before
     public void prepare() {
         subj = new Point(1, 1);
-        stack = new UndoStack(subj);
+        stack = new UndoStackImpl(subj);
     }
 
     @Test
