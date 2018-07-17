@@ -8,9 +8,10 @@ public interface UndoWatcher {
     /**
      * This event fires when {@link UndoStack#idx} is changed.
      *
-     * @param idx new index of current command.
+     * @param from index of the previous command.
+     * @param to new index of the current command.
      */
-    default void indexChanged(int idx) {
+    default void indexChanged(int from, int to) {
     }
 
     /**

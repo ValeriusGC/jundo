@@ -15,6 +15,7 @@
 import com.gdetotut.jundo.UndoGraph;
 import com.gdetotut.jundo.UndoStack;
 import com.gdetotut.jundo.UndoStackImpl;
+import com.gdetotut.jundo.UndoWatcher;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -47,27 +48,39 @@ public class UndoGraphTest {
          *  MASK
          *
          *
-         *            NULL(-1) --
+         *            NULL(00) --
          *              |        \
-         *             M(00)     G(10) --
-         *              |                \.....
-         *           --A(01)--
-         *          /         \
-         *        S(02)       R(03)
+         *             M(01)     O(11) --
+         *              |                \
+         *           --A(02)--          K(12)--
+         *          /         \                \.....
+         *        S(03)       R(04)
          *       /          /    \
-         *     K(09)      I(04)   C(06)
+         *     K(10)      I(05)   C(07)
          *               /         \
-         *             N(05)        H(07)
+         *             N(06)        H(08)
          *            /
-         *          E(08)
+         *          E(09)
          *
          *  full path: ->M->A->S->R->I->N->C->H->E->K
          *
-         *  history:
+         *  undo-stack:
+         *  00. []
+         *  01. [M]
+         *  02. [MA]
+         *  03. [MAS]
+         *  04. [MAR]
+         *  05. [MARI]
+         *  06. [MARIN]
+         *  07. [MARC]
+         *  08. [MARCH]*
+         *  09. [MARINE]*
+         *  10. [MASK]*
          *
+         *  history:
          *  hist_idx    txt             cmd_idx
          *  ---         ---             ---
-         *  00:         NULL            NA
+         *  00:         ""              -1
          *  01:         M               00
          *  02:         MA              01
          *  03:         MAS             02
@@ -214,8 +227,6 @@ public class UndoGraphTest {
         Assert.assertEquals(Collections.emptyList(), bfs_path(3, 11, graph));
         Assert.assertEquals(Collections.emptyList(), bfs_path(13, 0, graph));
 
-
-
     }
 
     /**
@@ -230,6 +241,43 @@ public class UndoGraphTest {
         final TextSample subj = new TextSample();
         final UndoGraph graph = new UndoGraph(new ArrayList<String>());
         graph.getLocalContexts().put(TextSampleCommands.TEXT_CTX_KEY, subj);
+
+/*        graph.setWatcher(new UndoWatcher() {
+            @Override
+            public void indexChanged(int from, int to) {
+                System.out.println(String.format("indexChanged: %d -> %d", from, to));
+            }
+
+            @Override
+            public void cleanChanged(boolean clean) {
+                System.out.println(String.format("cleanChanged: %s", clean));
+            }
+
+            @Override
+            public void canUndoChanged(boolean canUndo) {
+                System.out.println(String.format("canUndoChanged: %s", canUndo));
+            }
+
+            @Override
+            public void canRedoChanged(boolean canRedo) {
+                System.out.println(String.format("canRedoChanged: %s", canRedo));
+            }
+
+            @Override
+            public void undoTextChanged(String undoCaption) {
+                System.out.println(String.format("undoTextChanged: %s", undoCaption));
+            }
+
+            @Override
+            public void redoTextChanged(String redoCaption) {
+                System.out.println(String.format("redoTextChanged: %s", redoCaption));
+            }
+
+            @Override
+            public void macroChanged(boolean on) {
+                System.out.println(String.format("macroChanged: %s", on));
+            }
+        });*/
         //~
 
         TextSample testText = new TextSample();
@@ -238,9 +286,9 @@ public class UndoGraphTest {
         assertEquals(0, graph.getPrevIdx());
         assertEquals(0, graph.getIdx());
 
+        System.out.println("-----------------------------------------------");
         testText.set("M");
         graph.push(new TextSampleCommands.AddString("M", "M"));
-        System.out.println("graph.getSteps(): " + graph.getSteps());
         assertEquals(1, graph.count());
         assertEquals(0, graph.getPrevIdx());
         assertEquals(1, graph.getIdx());
@@ -249,17 +297,18 @@ public class UndoGraphTest {
 //        graph.setIndex(0);
 //        assertEquals(testText.text, subj.text);
 
+        System.out.println("-----------------------------------------------");
         testText.set("MAS");
         graph.push(new TextSampleCommands.AddString("A", "A"));
-        System.out.println("graph.getSteps(): " + graph.getSteps());
+        System.out.println("-----------------------------------------------");
         graph.push(new TextSampleCommands.AddString("S", "S"));
-        System.out.println("graph.getSteps(): " + graph.getSteps());
         assertEquals(testText.text, subj.text);
         System.out.println(subj.print());
         assertEquals(3, graph.count());
         assertEquals(2, graph.getPrevIdx());
         assertEquals(3, graph.getIdx());
         //
+        System.out.println("-----------------------------------------------");
         testText.set("MA");
         graph.undo();
         assertEquals(testText.text, subj.text);
@@ -269,39 +318,42 @@ public class UndoGraphTest {
         assertEquals(2, graph.getIdx());
         //
         testText.set("MARIN");
+        System.out.println("-----------------------------------------------");
         graph.push(new TextSampleCommands.AddString("R", "R"));
         assertEquals(2, graph.getPrevIdx());
+        System.out.println("-----------------------------------------------");
         graph.push(new TextSampleCommands.AddString("I", "I"));
         assertEquals(4, graph.getPrevIdx());
+        System.out.println("-----------------------------------------------");
         graph.push(new TextSampleCommands.AddString("N", "N"));
         assertEquals(subj, testText);
         System.out.println(subj.print());
         assertEquals(6, graph.count());
         assertEquals(5, graph.getPrevIdx());
         assertEquals(6, graph.getIdx());
-        System.out.println("graph.getSteps(): " + graph.getSteps() + " -> " + subj.text);
-        System.out.println("idx: " + graph.getSteps() + " -> " + subj.text);
         //
         testText.set("MAR");
+        System.out.println("-----------------------------------------------");
         graph.setIndex(4);
-        System.out.println("graph.getSteps(): " + graph.getSteps() + " -> " + subj.text);
         assertEquals(testText.text, subj.text);
         assertEquals(6, graph.count());
         assertEquals(6, graph.getPrevIdx());
         assertEquals(4, graph.getIdx());
         //
         testText.set("MARCH");
+        System.out.println("-----------------------------------------------");
         graph.push(new TextSampleCommands.AddString("C", "C"));
         assertEquals(4, graph.getPrevIdx());
+        System.out.println("-----------------------------------------------");
         graph.push(new TextSampleCommands.AddString("H", "H"));
         assertEquals(7, graph.getPrevIdx());
         assertEquals(testText.text, subj.text);
         assertEquals(8, graph.count());
         assertEquals(8, graph.getIdx());
-        System.out.println("graph.getSteps(): " + graph.getSteps() + " -> " + subj.text);
 
         //
         testText.set("MARIN");
+        System.out.println("-----------------------------------------------");
         graph.setIndex(6);
         assertEquals(testText.text, subj.text);
         assertEquals(8, graph.count());
@@ -309,6 +361,7 @@ public class UndoGraphTest {
         assertEquals(6, graph.getIdx());
         //
         testText.set("MARINE");
+        System.out.println("-----------------------------------------------");
         graph.push(new TextSampleCommands.AddString("E", "E"));
         assertEquals(6, graph.getPrevIdx());
         assertEquals(subj, testText);
@@ -316,6 +369,7 @@ public class UndoGraphTest {
         assertEquals(9, graph.getIdx());
         //
         testText.set("MAS");
+        System.out.println("-----------------------------------------------");
         graph.setIndex(3);
         assertEquals(testText, subj);
         assertEquals(9, graph.count());
@@ -323,24 +377,39 @@ public class UndoGraphTest {
         assertEquals(3, graph.getIdx());
         //
         testText.set("MASK");
+        System.out.println("-----------------------------------------------");
         graph.push(new TextSampleCommands.AddString("K", "K"));
         assertEquals(3, graph.getPrevIdx());
         assertEquals(subj, testText);
         assertEquals(10, graph.count());
         assertEquals(10, graph.getIdx());
         //
+        System.out.println("-----------------------------------------------");
         graph.setIndex(0);
         testText.set("");
         assertEquals(testText.text, subj.text);
 
-        System.out.println("graph.getSteps(): " + graph.getSteps() + " -> " + subj.text);
-//        graph.redo();
-//        System.out.println(subj.text);
-//        graph.redo();
-//        System.out.println(subj.text);
-//        graph.redo();
-//        System.out.println(subj.text);
+        System.out.println(subj.text);
+        System.out.println("up");
+        while (graph.getIdx() < graph.count()){
+            System.out.println("-----------------------------------------------");
+            graph.redo();
+            System.out.println(subj.text);
+        }
+        System.out.println("down");
+        while (graph.getIdx() > 0){
+            System.out.println("-----------------------------------------------");
+            graph.undo();
+            System.out.println(subj.text);
+        }
 
+        /////////////////////
+        System.out.println("-----------------------------------------------");
+        graph.setIndex(0);
+        graph.push(new TextSampleCommands.AddString("O", "O"));
+        graph.push(new TextSampleCommands.AddString("K", "K"));
+        graph.setIndex(0);
+        graph.setWatcher(null);
         while (graph.getIdx() < graph.count()){
             graph.redo();
             System.out.println(subj.text);
@@ -348,6 +417,252 @@ public class UndoGraphTest {
 
 
 
+        /*
+         *            NULL(00) --
+         *              |        \
+         *             M(01)     O(11) --
+         *              |                \
+         *           --A(02)--          K(12)--
+         *          /         \                \.....
+         *        S(03)       R(04)
+         *       /          /    \
+         *     K(10)      I(05)   C(07)
+         *               /         \
+         *             N(06)        H(08)
+         *            /
+         *          E(09)
+
+            cmd            graph
+            ---            ---
+            [Adding M]     00.01
+            [Adding A]     00.01.02
+            [Adding S]     00.01.02.03
+            [Adding R]     00.01.02.03.04
+            [Adding I]     00.01.02.03.04.05
+            [Adding N]     00.01.02.03.04.05.06
+            [Adding C]     00.01.02.03.04.05.06.07
+            [Adding H]     00.01.02.03.04.05.06.07.08
+            [Adding E]     00.01.02.03.04.05.06.07.08.09
+            [Adding K]     00.01.02.03.04.05.06.07.08.09.10
+            [Adding O]     00.01.02.03.04.05.06.07.08.09.10.11
+            [Adding K]     00.01.02.03.04.05.06.07.08.09.10.11.12
+
+            branches
+            ---
+            01.02.04.07.08          MARCH
+            01.02.04.05.06.09       MARINE
+            01.02.03.10             MASK
+            11.12                   OK
+
+            "Постройка веток"
+            1. Старт:
+                - Список веток содержит ветку branch#0 [0]
+            2. Добавляем команду
+                - Строим вектор от 0 до текущего индекса
+                - Находим эту ветку
+                - Переносим в индекс 0 в списке веток
+                - Добавляем новый индекс
+
+            "Удаление снизу"
+            - Удаление команды №1(индекс 0):
+            -- Находим связи 01: 01 ссылается на 00 и 02
+            -- Замыкаем 02 на 00: 00.add(02)
+            -- Удаляем 01
+            -- Обновляем индексы (decrement)
+            - Чистка веток:
+            -- Берем первую ветку
+            -- Удаляем первую команду
+            -- Если не пустая, оставляем в ветках
+            -- Повторяем для каждой
+            -- Обновляем индексы (decrement)
+
+         *            NULL(00) --
+         *              |        \
+         *              |        O(10) --
+         *              |                \
+         *           --A(01)--          K(11)--
+         *          /         \                \.....
+         *        S(02)       R(03)
+         *       /          /    \
+         *     K(09)      I(04)   C(06)
+         *               /         \
+         *             N(05)        H(07)
+         *            /
+         *          E(08)
+
+            cmd            graph
+            ---            ---
+            [Adding A]     00.01
+            [Adding S]     00.01.02
+            [Adding R]     00.01.02.03
+            [Adding I]     00.01.02.03.04
+            [Adding N]     00.01.02.03.04.05
+            [Adding C]     00.01.02.03.04.05.06
+            [Adding H]     00.01.02.03.04.05.06.07
+            [Adding E]     00.01.02.03.04.05.06.07.08
+            [Adding K]     00.01.02.03.04.05.06.07.08.09
+            [Adding O]     00.01.02.03.04.05.06.07.08.09.10
+            [Adding K]     00.01.02.03.04.05.06.07.08.09.10.11
+
+            branches:
+            01.03.06.07         ARCH
+            01.03.04.05.08      ARINE
+            01.02.09            ASK
+            10.11               OK
+
+
+        Next: remove A
+
+         *            NULL(00) --
+         *              |        \
+         *              |        O(09) --
+         *              |                \
+         *           ---------          K(10)--
+         *          /         \                \.....
+         *        S(01)       R(02)
+         *       /          /    \
+         *     K(08)      I(03)   C(05)
+         *               /         \
+         *             N(04)        H(06)
+         *            /
+         *          E(07)
+
+            cmd            graph
+            ---            ---
+            [Adding S]     00.01
+            [Adding R]     00.01.02
+            [Adding I]     00.01.02.03
+            [Adding N]     00.01.02.03.04
+            [Adding C]     00.01.02.03.04.05
+            [Adding H]     00.01.02.03.04.05.06
+            [Adding E]     00.01.02.03.04.05.06.07
+            [Adding K]     00.01.02.03.04.05.06.07.08
+            [Adding O]     00.01.02.03.04.05.06.07.08.09
+            [Adding K]     00.01.02.03.04.05.06.07.08.09.10
+
+            branches:
+            02.05.06         RCH
+            02.03.04.07      RINE
+            01.08            SK
+            09.10            OK
+         */
+
+    }
+
+    /**
+     * Retain only current branch.
+     * @throws Exception
+     */
+    @Test
+    public void testFlatten() throws Exception {
+
+        // TextSample is not serializable so we use context technique.
+        TextSample testText = new TextSample();
+        {
+            final UndoGraph graph = fill(0);
+            assertEquals(12, graph.count());
+            testText.set("MARIN");
+            graph.setIndex(6);
+            assertEquals(testText.text, graph.getSubj());
+            graph.flatten();
+            assertEquals(5, graph.count());
+            assertEquals(5, graph.getPrevIdx());
+            assertEquals(5, graph.getIdx());
+
+            graph.setIndex(0);
+            assertEquals(Collections.singletonList(""), graph.getSubj());
+            graph.setIndex(1);
+            assertEquals(Collections.singletonList("M"), graph.getSubj());
+            graph.setIndex(2);
+            assertEquals(Collections.singletonList("MA"), graph.getSubj());
+            graph.setIndex(3);
+            assertEquals(Collections.singletonList("MAR"), graph.getSubj());
+            graph.setIndex(4);
+            assertEquals(Collections.singletonList("MARI"), graph.getSubj());
+            graph.setIndex(5);
+            assertEquals(Collections.singletonList("MARIN"), graph.getSubj());
+            graph.setIndex(6);
+            assertEquals(Collections.singletonList("MARIN"), graph.getSubj());
+
+        }
+
+
+
+    }
+
+
+    @Test
+    public void testUndoLimit() throws Exception {
+
+//        final String[] texts = {"MARCH", "MARINE", "MASK", "OK"};
+
+        // TextSample is not serializable so we use context technique.
+        TextSample testText = new TextSample();
+
+        {
+            final UndoGraph graph = fill(0);
+            assertEquals(12, graph.count());
+        }
+        {
+            final UndoGraph graph = fill(-1);
+            assertEquals(12, graph.count());
+        }
+        {
+            final UndoGraph graph = fill(10);
+            assertEquals(10, graph.count());
+            testText.set("RCH");
+            graph.setIndex(6);
+            assertEquals(testText.text, graph.getSubj());
+        }
+        {
+            final UndoGraph graph = fill(10);
+            assertEquals(10, graph.count());
+            testText.set("RCH");
+            graph.setIndex(6);
+            assertEquals(testText.text, graph.getSubj());
+            testText.set("RINE");
+            graph.setIndex(7);
+            assertEquals(testText.text, graph.getSubj());
+            testText.set("SK");
+            graph.setIndex(8);
+            assertEquals(testText.text, graph.getSubj());
+            testText.set("OK");
+            graph.setIndex(10);
+            assertEquals(testText.text, graph.getSubj());
+        }
+        {
+            final UndoGraph graph = fill(200);
+            assertEquals(12, graph.count());
+            testText.set("OK");
+            graph.setIndex(30);
+            assertEquals(testText.text, graph.getSubj());
+        }
+
+    }
+
+    private UndoGraph fill(int limit) throws Exception {
+        final TextSample subj = new TextSample();
+        final UndoGraph graph = new UndoGraph(new ArrayList<String>());
+        graph.getLocalContexts().put(TextSampleCommands.TEXT_CTX_KEY, subj);
+        graph.setUndoLimit(limit);
+        graph.push(new TextSampleCommands.AddString("M", "M"));
+        graph.push(new TextSampleCommands.AddString("A", "A"));
+        graph.push(new TextSampleCommands.AddString("S", "S"));
+        graph.undo();
+        graph.push(new TextSampleCommands.AddString("R", "R"));
+        graph.push(new TextSampleCommands.AddString("I", "I"));
+        graph.push(new TextSampleCommands.AddString("N", "N"));
+        graph.setIndex(4);
+        graph.push(new TextSampleCommands.AddString("C", "C"));
+        graph.push(new TextSampleCommands.AddString("H", "H"));
+        graph.setIndex(6);
+        graph.push(new TextSampleCommands.AddString("E", "E"));
+        graph.setIndex(3);
+        graph.push(new TextSampleCommands.AddString("K", "K"));
+        graph.setIndex(0);
+        graph.push(new TextSampleCommands.AddString("O", "O"));
+        graph.push(new TextSampleCommands.AddString("K", "K"));
+        return graph;
     }
 
     private List<Integer> bfs_path(int from, int to, Map<Integer, List<Integer>> graph) {

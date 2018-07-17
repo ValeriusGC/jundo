@@ -123,11 +123,12 @@ public class UndoStack implements Serializable {
             }
         }
         commands.clear();
+        int prevIdx = idx;
         idx = 0;
         cleanIdx = 0;
 
         if (null != watcher) {
-            watcher.indexChanged(0);
+            watcher.indexChanged(prevIdx, idx);
             watcher.canUndoChanged(false);
             watcher.undoTextChanged("");
             watcher.canRedoChanged(false);
@@ -211,7 +212,8 @@ public class UndoStack implements Serializable {
 
             if (canMerge && cur != null && cur.mergeWith(cmd)) {
                 if (!onMacro && null != watcher) {
-                    watcher.indexChanged(idx);
+                    // TODO: 16.07.18 Must check this suspicious event with idx, idx...
+                    watcher.indexChanged(idx, idx);
                     watcher.canUndoChanged(canUndo());
                     watcher.undoTextChanged(undoCaption());
                     watcher.canRedoChanged(canRedo());
@@ -745,7 +747,7 @@ public class UndoStack implements Serializable {
         if (this.idx != index) {
             this.idx = index;
             if (null != watcher) {
-                watcher.indexChanged(idx);
+                watcher.indexChanged(index, idx);
                 watcher.canUndoChanged(canUndo());
                 watcher.undoTextChanged(undoCaption());
                 watcher.canRedoChanged(canRedo());
