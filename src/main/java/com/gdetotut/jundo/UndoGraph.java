@@ -2,27 +2,36 @@ package com.gdetotut.jundo;
 
 import java.util.*;
 import java.util.function.Consumer;
-import java.util.function.Predicate;
 
 /**
- * Stack of entire {@link UndoCommand} chain for subject.
- * <b>Main characteristic of {@link UndoGraph} is that two different stacks should not share one subject.</b>
- * <p>Otherwise {@link UndoGroup} may not add them both, and there will be collision when undoing one subject
- * via different stacks.
+ *
+ * {@link UndoGraph} is a more powered and flexible version of {@link UndoStack}.
+ *
+ * While {@link UndoStack} has only one command vector at a time {@link UndoGraph} can has many ones.
+ *
+ * Practically it means that client can have several variants simultaneously and switch between them.
+ *
+ * It became possible thanks to new command layout as a graph against old plain 'stack' version.
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 public class UndoGraph extends UndoStack {
 
     /**
      * Index of previous command.
      */
-    int prevIdx;
+    private int prevIdx;
 
-    int currCmdIdx;
+    private List<TreeSet<Integer>> graph = new ArrayList<>();
 
-    //Map<Integer, Set<Integer>> graph = new TreeMap<>();
-    List<TreeSet<Integer>> graph = new ArrayList<>();
-
-    List<TreeSet<Integer>> branches = new ArrayList<>();
+    private List<TreeSet<Integer>> branches = new ArrayList<>();
 
     /**
      * Constructs an empty undo stack. The stack will initially be in the clean state.
@@ -33,11 +42,7 @@ public class UndoGraph extends UndoStack {
      */
     public UndoGraph(Object subj, UndoGroup group) {
         super(subj, group);
-        // At this point we has no history
-        prevIdx = 0;
-        idx = 0;
-        // No command at all, no current command, no index
-        currCmdIdx = 0;
+        // Adds 'zero' parent vertex.
         graph.add(new TreeSet<>());
     }
 
@@ -60,10 +65,9 @@ public class UndoGraph extends UndoStack {
      */
     @Override
     public UndoStack push(UndoCommand cmd) throws Exception {
-        //return super.push(cmd);
 
         if (cmd == null) {
-            throw new NullPointerException("cmd");
+            throw new NullPointerException("null cmd at UndoGraph.push");
         } else if (!suspend) {
 
             cmd.setOwner(this);
@@ -83,12 +87,7 @@ public class UndoGraph extends UndoStack {
                 commands = new ArrayList<>();
             }
 
-            UndoCommand cur = currCmdIdx > 0 ? commands.get(currCmdIdx - 1) : null;
-
-//
-//            while (idx < commands.size()) {
-//                commands.remove(commands.size() - 1);
-//            }
+            UndoCommand cur = idx > 0 ? commands.get(idx - 1) : null;
 
             if (cleanIdx > idx) {
                 cleanIdx = -1;
@@ -115,22 +114,9 @@ public class UndoGraph extends UndoStack {
                         cur.addChild(cmd);
 
                 } else {
-
-                    // And last actions
-                    // 1. add cmd
-                    commands.add(cmd);
-                    // 2. to graph
-                    int newCmdIdx = commands.size();
-                    if(graph.size() <= newCmdIdx) {
-                        graph.add(new TreeSet<>());
-                    }
-                    graph.get(currCmdIdx).add(newCmdIdx);
-                    graph.get(newCmdIdx).add(currCmdIdx);
-                    currCmdIdx = newCmdIdx;
-
+                    addCmd(cmd, idx);
                     checkUndoLimit();
-
-                    addStep();
+                    updateBranches();
                     setIndex(commands.size(), false);
                 }
             }
@@ -139,16 +125,16 @@ public class UndoGraph extends UndoStack {
     }
 
     /**
-     * Adding step to history.
+     * Updates terminal command vectors.
      */
-    void addStep() {
+    private void updateBranches() {
         //
-        System.out.println("currCmdIdx: " + currCmdIdx);
-        List<Integer> path = bfs_path(0, idx, graph);
+//        System.out.println("currCmdIdx: " + currCmdIdx);
+        List<Integer> path = bfs(0, idx, graph);
         path.removeIf(integer -> integer == 0);
         TreeSet<Integer> curBranch = new TreeSet<>();
         for (Set<Integer> b: branches) {
-            System.out.println("currCmdIdx: " + currCmdIdx + ", path.toArray: " + path + ", b.toArray: " + b);
+//            System.out.println("currCmdIdx: " + currCmdIdx + ", path.toArray: " + path + ", b.toArray: " + b);
 
             if(Arrays.equals(b.toArray(), path.toArray())){
                 curBranch.addAll(b);
@@ -159,9 +145,9 @@ public class UndoGraph extends UndoStack {
         if(curBranch.size() == 0) {
             curBranch.addAll(path);
         }
-        curBranch.add(currCmdIdx);
+        curBranch.add(idx);
         branches.add(0, curBranch);
-        System.out.println("path: " + path + ", branches: " + branches);
+//        System.out.println("path: " + path + ", branches: " + branches);
     }
 
     @Override
@@ -179,8 +165,6 @@ public class UndoGraph extends UndoStack {
         for (int i = 0; i < delCnt; ++i) {
             if(graph.size() > 1) {
 
-                System.out.println("graph_00: " + graph);
-
                 // Relink. First elem always is `parent`, next ones - `children`.
                 // Link parent to children and vice versa.
                 TreeSet<Integer> links = graph.get(1);
@@ -190,12 +174,8 @@ public class UndoGraph extends UndoStack {
                     graph.get(l).add(parLink);
                 }
 
-                System.out.println("graph_01: " + graph);
-
                 // Remove
                 graph.remove(1);
-
-                System.out.println("graph_02: " + graph);
 
                 // decrem
                 for(int j = 0; j < graph.size(); ++j) {
@@ -209,8 +189,6 @@ public class UndoGraph extends UndoStack {
                 // Remove autolink from
                 graph.get(0).removeIf(integer -> integer == 0);
                 graph.removeIf(TreeSet::isEmpty);
-
-                System.out.println("graph_03: " + graph);
 
                 // remove command
                 commands.remove(0);
@@ -232,8 +210,8 @@ public class UndoGraph extends UndoStack {
                 if(--prevIdx < 0) {
                     prevIdx = 0;
                 }
-                if(--currCmdIdx < 0) {
-                    currCmdIdx = 0;
+                if(--idx < 0) {
+                    idx = 0;
                 }
             }
 
@@ -285,11 +263,7 @@ public class UndoGraph extends UndoStack {
 
         int from = this.idx;
 
-//        System.out.println(String.format(
-//                "this.idx=%d, historyIdx=%d, from=%d, to=%d, steps=%s",
-//                this.idx, to, from, to, steps));
-
-        List<Integer> path = bfs_path(from, to, graph);
+        List<Integer> path = bfs(from, to, graph);
 
         if(path.size() < 2) {
             return;
@@ -307,18 +281,11 @@ public class UndoGraph extends UndoStack {
                 }
                 curr = next;
             }
-            currCmdIdx = curr;
-            //addStep();
         } finally {
             suspend = false;
         }
 
         setIndex(to, false);
-    }
-
-    @Override
-    public boolean canUndo() {
-        return super.canUndo();
     }
 
     /**
@@ -327,12 +294,12 @@ public class UndoGraph extends UndoStack {
      * @param clean flag to set/unset clean state.
      */
     @Override
-    public void setIndex(int to, boolean clean) {
+    protected void setIndex(int to, boolean clean) {
         final boolean wasClean = to == cleanIdx;
 
-        if (this.idx != to) {
-            prevIdx = this.idx;
-            this.idx = to;
+        if (idx != to) {
+            prevIdx = idx;
+            idx = to;
             if (null != watcher) {
                 watcher.indexChanged(prevIdx, to);
                 watcher.canUndoChanged(canUndo());
@@ -354,7 +321,7 @@ public class UndoGraph extends UndoStack {
     }
 
     public void flatten() {
-        List<Integer> path = bfs_path(0, currCmdIdx, graph);
+        List<Integer> path = bfs(0, idx, graph);
         path.removeIf(integer -> integer == 0);
         if(path.size() < 2) {
             return;
@@ -365,29 +332,35 @@ public class UndoGraph extends UndoStack {
             tmpCmd.add(commands.get(ix - 1));
         }
         commands.clear();
-        commands.addAll(tmpCmd);
 
-        List<TreeSet<Integer>> tmpGraph = new ArrayList<>();
-        tmpGraph.add(new TreeSet<>());
-        for(int ix = 0; ix < path.size(); ++ix) {
-            tmpGraph.add(new TreeSet<>());
+        graph = graph.subList(0, 1);
+        graph.get(0).clear();
+        final int[] tmpIdx = {0};
+
+        tmpCmd.forEach(cmd -> addCmd(cmd, tmpIdx[0]++));
+
+        setIndex(commands.size(), false);
+    }
+
+    private void addCmd(UndoCommand cmd, int parentIdx) {
+        commands.add(cmd);
+
+        // 2. to graph
+        int newCmdIdx = commands.size();
+
+        if(graph.size() <= newCmdIdx) {
+            graph.add(new TreeSet<>());
         }
-        for(int ix = 0; ix < tmpGraph.size() - 1; ++ix) {
-            tmpGraph.get(ix).add(ix + 1);
-            tmpGraph.get(ix + 1).add(ix);
-        }
-        graph.clear();
-        graph.addAll(tmpGraph);
-        this.idx = commands.size();
-        currCmdIdx = idx;
-        prevIdx = idx;
+
+        graph.get(parentIdx).add(newCmdIdx);
+        graph.get(newCmdIdx).add(parentIdx);
     }
 
     public int getPrevIdx() {
         return prevIdx;
     }
 
-    private List<Integer> bfs_path(int from, int to, List<TreeSet<Integer>> graph) {
+    private List<Integer> bfs(int from, int to, List<TreeSet<Integer>> graph) {
 
         if(from < 0 || from >= graph.size() || to < 0 || to >= graph.size()) {
             return new ArrayList<>();

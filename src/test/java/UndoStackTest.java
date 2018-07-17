@@ -37,7 +37,7 @@ public class UndoStackTest implements Serializable {
         arr = array;
         subj = new SimpleClass<V>(type);
         stack = new UndoStackImpl(subj);
-        stack.setWatcher(new SimpleUndoWatcher());
+        stack.setWatcher(new SimpleUndoWatcher("initSimple"));
         for (V i : array) {
             stack.push(new RefCmd<>("", ((SimpleClass<V>) subj)::getValue,
                     ((SimpleClass<V>) subj)::setValue, i));
@@ -308,7 +308,7 @@ public class UndoStackTest implements Serializable {
             // Create without group
             Serializable subj = new SimpleClass<>(Integer.class);
             UndoStack stack = new UndoStackImpl(subj);
-            stack.setWatcher(new SimpleUndoWatcher());
+            stack.setWatcher(new SimpleUndoWatcher("testCreation"));
             assertEquals(true, stack.isClean());
             assertEquals(false, stack.canRedo());
             assertEquals(false, stack.canUndo());
@@ -334,7 +334,7 @@ public class UndoStackTest implements Serializable {
             assertEquals(0, group.getStacks().size());
 
             UndoStack stackA = new UndoStackImpl(subjA, group);
-            stackA.setWatcher(new SimpleUndoWatcher());
+            stackA.setWatcher(new SimpleUndoWatcher("testCreation_2"));
             assertEquals(1, group.getStacks().size());
             assertEquals(null, group.getActive());
             assertEquals(false, stackA.isActive());
@@ -359,7 +359,7 @@ public class UndoStackTest implements Serializable {
 
             // Second stack. Do the same
             UndoStack stackB = new UndoStackImpl(subjB, group);
-            stackB.setWatcher(new SimpleUndoWatcher());
+            stackB.setWatcher(new SimpleUndoWatcher("testCreation_3"));
             assertEquals(2, group.getStacks().size());
             assertEquals(null, group.getActive());
             assertEquals(false, stackA.isActive());
@@ -387,7 +387,7 @@ public class UndoStackTest implements Serializable {
         NonTrivialClass scene = new NonTrivialClass();
         UndoGroup group = new UndoGroup();
         UndoStack stack = new UndoStackImpl(scene, group);
-        stack.setWatcher(new SimpleUndoWatcher());
+        stack.setWatcher(new SimpleUndoWatcher("testAddAndClear"));
         group.setActive(stack);
 
         stack.push(new NonTrivialClass.AddCommand(CIRCLE, scene));
@@ -423,7 +423,7 @@ public class UndoStackTest implements Serializable {
         SimpleClass<Integer> subj = new SimpleClass<>(Integer.class);
         UndoGroup group = new UndoGroup();
         UndoStack stack = new UndoStackImpl(subj, group);
-        stack.setWatcher(new SimpleUndoWatcher());
+        stack.setWatcher(new SimpleUndoWatcher("testLimits"));
         stack.setUndoLimit(5);
         // for 100% test cover
         stack.setUndoLimit(5);
@@ -451,7 +451,7 @@ public class UndoStackTest implements Serializable {
         SimpleClass<Integer> subj = new SimpleClass<>(Integer.class);
         UndoGroup group = new UndoGroup();
         UndoStack stack = new UndoStackImpl(subj, group);
-        stack.setWatcher(new SimpleUndoWatcher());
+        stack.setWatcher(new SimpleUndoWatcher("testClean"));
 
         // Without commands not affected
         assertEquals(0, stack.getIdx());
@@ -526,7 +526,7 @@ public class UndoStackTest implements Serializable {
         SimpleClass<Integer> subj = new SimpleClass<>(Integer.class);
         UndoGroup group = new UndoGroup();
         UndoStack stack = new UndoStackImpl(subj, group);
-        stack.setWatcher(new SimpleUndoWatcher());
+        stack.setWatcher(new SimpleUndoWatcher("testAuxProps"));
         assertNotNull(stack.getWatcher());
         group.setActive(stack);
         assertEquals(false, stack.canUndo());
@@ -598,7 +598,7 @@ public class UndoStackTest implements Serializable {
     public void testNonTrivial() throws Exception {
         NonTrivialClass ntc = new NonTrivialClass();
         UndoStack stack = new UndoStackImpl(ntc);
-        stack.setWatcher(new SimpleUndoWatcher());
+        stack.setWatcher(new SimpleUndoWatcher("testNonTrivial"));
         assertEquals(0, ntc.items.size());
 
         {
@@ -1007,7 +1007,7 @@ public class UndoStackTest implements Serializable {
     public void testMacros2() throws Exception {
         final Point pt = new Point(1, 1);
         UndoStack stack = new UndoStackImpl(pt);
-        stack.setWatcher(new SimpleUndoWatcher());
+        stack.setWatcher(new SimpleUndoWatcher("testMacros2"));
         assertEquals(null, stack.getMacro(0));
         stack.beginMacro("macro 1");
         stack.endMacro();

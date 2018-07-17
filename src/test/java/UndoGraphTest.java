@@ -1,24 +1,7 @@
-
-/**
- *                   #0
- *                   |
- *                -- #1---
- *              /         \
- *           - #2 ---      #8
- *         /         \      \
- *        #3         #5     #9
- *       /     \       \
- *    #4       #7      #6
- *
- */
-
 import com.gdetotut.jundo.UndoGraph;
-import com.gdetotut.jundo.UndoStack;
-import com.gdetotut.jundo.UndoStackImpl;
-import com.gdetotut.jundo.UndoWatcher;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
+import some.SimpleUndoWatcher;
 import some.TextSample;
 import some.TextSampleCommands;
 
@@ -230,55 +213,19 @@ public class UndoGraphTest {
     }
 
     /**
-     * We chould get correct texts.
+     * We should get correct texts step by step.
+     * Check also undo/redo.
      */
     @Test
     public void testUndoGraph() throws Exception {
 
-        final String[] texts = {"MARCH", "MARINE", "MASK"};
+        final String[] texts = {"MARCH", "MARINE", "MASK", "OK"};
 
-        // TextSample is not serializable so we use context technique.
         final TextSample subj = new TextSample();
         final UndoGraph graph = new UndoGraph(new ArrayList<String>());
+        // TextSample is not serializable so we use context technique.
         graph.getLocalContexts().put(TextSampleCommands.TEXT_CTX_KEY, subj);
-
-/*        graph.setWatcher(new UndoWatcher() {
-            @Override
-            public void indexChanged(int from, int to) {
-                System.out.println(String.format("indexChanged: %d -> %d", from, to));
-            }
-
-            @Override
-            public void cleanChanged(boolean clean) {
-                System.out.println(String.format("cleanChanged: %s", clean));
-            }
-
-            @Override
-            public void canUndoChanged(boolean canUndo) {
-                System.out.println(String.format("canUndoChanged: %s", canUndo));
-            }
-
-            @Override
-            public void canRedoChanged(boolean canRedo) {
-                System.out.println(String.format("canRedoChanged: %s", canRedo));
-            }
-
-            @Override
-            public void undoTextChanged(String undoCaption) {
-                System.out.println(String.format("undoTextChanged: %s", undoCaption));
-            }
-
-            @Override
-            public void redoTextChanged(String redoCaption) {
-                System.out.println(String.format("redoTextChanged: %s", redoCaption));
-            }
-
-            @Override
-            public void macroChanged(boolean on) {
-                System.out.println(String.format("macroChanged: %s", on));
-            }
-        });*/
-        //~
+        graph.setWatcher(new SimpleUndoWatcher("testUndoGraph"));
 
         TextSample testText = new TextSample();
 
@@ -286,16 +233,13 @@ public class UndoGraphTest {
         assertEquals(0, graph.getPrevIdx());
         assertEquals(0, graph.getIdx());
 
-        System.out.println("-----------------------------------------------");
         testText.set("M");
+        System.out.println("-----------------------------------------------");
         graph.push(new TextSampleCommands.AddString("M", "M"));
         assertEquals(1, graph.count());
         assertEquals(0, graph.getPrevIdx());
         assertEquals(1, graph.getIdx());
         //
-//        testText.set("");
-//        graph.setIndex(0);
-//        assertEquals(testText.text, subj.text);
 
         System.out.println("-----------------------------------------------");
         testText.set("MAS");
@@ -559,14 +503,14 @@ public class UndoGraphTest {
         // TextSample is not serializable so we use context technique.
         TextSample testText = new TextSample();
         {
-            final UndoGraph graph = fill(0);
+            final UndoGraph graph = fillFull(0);
             assertEquals(12, graph.count());
             testText.set("MARIN");
             graph.setIndex(6);
             assertEquals(testText.text, graph.getSubj());
             graph.flatten();
             assertEquals(5, graph.count());
-            assertEquals(5, graph.getPrevIdx());
+            assertEquals(6, graph.getPrevIdx());
             assertEquals(5, graph.getIdx());
 
             graph.setIndex(0);
@@ -586,36 +530,75 @@ public class UndoGraphTest {
 
         }
 
+    }
 
+    @Test
+    public void testJumping() throws Exception {
+        System.out.println(":: testJumping ::");
+
+        final UndoGraph graph = fillFull(0);
+        graph.setWatcher(new SimpleUndoWatcher("testJumping"));
+
+        assertEquals(11, graph.getPrevIdx());
+        assertEquals(12, graph.getIdx());
+        assertEquals(Collections.singletonList("OK"), graph.getSubj());
+        /*
+            01.02.04.07.08          MARCH
+            01.02.04.05.06.09       MARINE
+            01.02.03.10             MASK
+            11.12                   OK
+         */
+        // Jump
+        System.out.println("-> Jump to 8");
+        graph.setIndex(8);
+        assertEquals(12, graph.getPrevIdx());
+        assertEquals(8, graph.getIdx());
+        assertEquals(Collections.singletonList("MARCH"), graph.getSubj());
+        // Jump back
+        System.out.println("-> Jump back from 8 to 12");
+        graph.setIndex(graph.getPrevIdx());
+        assertEquals(8, graph.getPrevIdx());
+        assertEquals(12, graph.getIdx());
+        assertEquals(Collections.singletonList("OK"), graph.getSubj());
+
+        // Jump
+        System.out.println("-> Jump to 9");
+        graph.setIndex(9);
+        assertEquals(12, graph.getPrevIdx());
+        assertEquals(9, graph.getIdx());
+        assertEquals(Collections.singletonList("MARINE"), graph.getSubj());
+        // Jump back
+        System.out.println("-> Jump back from 9 to 12");
+        graph.setIndex(graph.getPrevIdx());
+        assertEquals(9, graph.getPrevIdx());
+        assertEquals(12, graph.getIdx());
+        assertEquals(Collections.singletonList("OK"), graph.getSubj());
 
     }
 
-
-    @Test
+        @Test
     public void testUndoLimit() throws Exception {
-
-//        final String[] texts = {"MARCH", "MARINE", "MASK", "OK"};
 
         // TextSample is not serializable so we use context technique.
         TextSample testText = new TextSample();
 
         {
-            final UndoGraph graph = fill(0);
+            final UndoGraph graph = fillFull(0);
             assertEquals(12, graph.count());
         }
         {
-            final UndoGraph graph = fill(-1);
+            final UndoGraph graph = fillFull(-1);
             assertEquals(12, graph.count());
         }
         {
-            final UndoGraph graph = fill(10);
+            final UndoGraph graph = fillFull(10);
             assertEquals(10, graph.count());
             testText.set("RCH");
             graph.setIndex(6);
             assertEquals(testText.text, graph.getSubj());
         }
         {
-            final UndoGraph graph = fill(10);
+            final UndoGraph graph = fillFull(10);
             assertEquals(10, graph.count());
             testText.set("RCH");
             graph.setIndex(6);
@@ -631,7 +614,7 @@ public class UndoGraphTest {
             assertEquals(testText.text, graph.getSubj());
         }
         {
-            final UndoGraph graph = fill(200);
+            final UndoGraph graph = fillFull(200);
             assertEquals(12, graph.count());
             testText.set("OK");
             graph.setIndex(30);
@@ -640,7 +623,41 @@ public class UndoGraphTest {
 
     }
 
-    private UndoGraph fill(int limit) throws Exception {
+    /**
+     * Fills all the test {@link UndoGraph} according test graph scheme:
+     *
+     *            NULL(00) --
+     *              |        \
+     *             M(01)     O(11) --
+     *              |                \
+     *           --A(02)--          K(12)--
+     *          /         \                \.....
+     *        S(03)       R(04)
+     *       /          /    \
+     *     K(10)      I(05)   C(07)
+     *               /         \
+     *             N(06)        H(08)
+     *            /
+     *          E(09)
+     *
+     *
+     *  With this one we've got 4 branches:
+     *
+     *  branches
+     *  ---
+     *  01.02.04.07.08          MARCH
+     *  01.02.04.05.06.09       MARINE
+     *  01.02.03.10             MASK
+     *  11.12                   OK
+     *
+     *  If the limit parameter has sense, graph may be truncated accordingly.
+     *
+     *
+     * @param limit parameter to truncate {@link UndoGraph}
+     * @return  UndoGraph filled with values.
+     * @throws Exception Standard exception from {@link UndoGraph} if something goes wrong.
+     */
+    private UndoGraph fillFull(int limit) throws Exception {
         final TextSample subj = new TextSample();
         final UndoGraph graph = new UndoGraph(new ArrayList<String>());
         graph.getLocalContexts().put(TextSampleCommands.TEXT_CTX_KEY, subj);

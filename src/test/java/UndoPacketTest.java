@@ -74,7 +74,7 @@ public class UndoPacketTest implements Serializable {
         Circle circle = new Circle(20.0, Color.RED);
         // Circle is non-serializable subject.
         UndoStack stack = new UndoStackImpl(circle);
-        stack.setWatcher(new SimpleUndoWatcher());
+        stack.setWatcher(new SimpleUndoWatcher("UndoPacketTest"));
         for (int i = 0; i < count; ++i) {
             stack.push(new CircleRadiusUndoCmd(circle, i * 2.0));
         }
